@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          String    @default("EMPLOYEE") // ADMIN, EMPLOYEE
+  accounts      Account[]
+  sessions      Session[]
+  tasks         Task[]    @relation("TaskAssignee")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Client {
+  id           String   @id @default(cuid())
+  name         String
+  entityType   String   // e.g., Proprietorship, Partnership, Pvt Ltd, LLP
+  gstin        String?
+  pan          String?
+  
+  // Login Credentials
+  itxLogin     String?   // Income Tax Portal
+  itxPassword  String?
+  gstLogin     String?   // GST Portal
+  gstPassword  String?
+  tracesLogin  String?   // Traces Portal
+  tracesPassword String?
+  ptLogin      String?   // Professional Tax / PF / ESI
+  ptPassword   String?
+
+  tasks        Task[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  title       String   // Short descriptive title
+  taskType    String   // TDS_PAYMENT, GST_1, PF_ESI_PT, GSTR_3B, ACCOUNTING, OTHER
+  description String?
+  status      String   @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED
+  frequency   String   @default("ONCE") // ONCE, DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY
+  dueDate     DateTime?
+  period      String?  // e.g., "Jan-2026"
+  
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id])
+  
+  assigneeId  String?
+  assignee    User?    @relation("TaskAssignee", fields: [assigneeId], references: [id])
+
+  activities  Activity[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Activity {
+  id          String   @id @default(cuid())
+  title       String   // e.g., "Bank Reconciliation"
+  isCompleted Boolean  @default(false)
+  
+  taskId      String
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
