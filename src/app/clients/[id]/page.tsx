@@ -1,14 +1,42 @@
 import { prisma } from "@/lib/prisma"
 import { notFound } from "next/navigation"
 import Link from "next/link"
+import VaultCredential from "./VaultCredential"
+import CustomVaultSection from "./CustomVaultSection"
+import DocumentUploadSection from "./DocumentUploadSection"
 
-export default async function ClientDetailPage({ params }: { params: { id: string } }) {
+import { getServerSession } from "next-auth"
+import { authOptions } from "../../api/auth/[...nextauth]/route"
+
+import AuditLogViewer from "./AuditLogViewer"
+
+export const dynamic = "force-dynamic"
+
+export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params
+    const session = await getServerSession(authOptions)
+    const userRole = (session?.user as any)?.role || 'EMPLOYEE'
+    const userId = (session?.user as any)?.id
+
+    const baseTaskWhere = userRole === 'ADMIN' ? {} : { assigneeId: userId };
+
     const client = await prisma.client.findUnique({
-        where: { id: params.id },
+        where: { id },
         include: {
             tasks: {
+                where: baseTaskWhere,
                 orderBy: { dueDate: 'asc' },
                 take: 5
+            },
+            notes: {
+                orderBy: { date: 'desc' },
+                include: { author: true }
+            },
+            vaultEntries: {
+                orderBy: { createdAt: 'asc' }
+            },
+            documents: {
+                orderBy: { uploadedAt: 'desc' }
             }
         }
     })
@@ -18,150 +46,158 @@ export default async function ClientDetailPage({ params }: { params: { id: strin
     }
 
     return (
-        <div className="p-8 max-w-6xl mx-auto space-y-8 animate-fade-in">
-            <div className="flex justify-between items-center mb-6">
+        <div>
+            <div className="topbar">
                 <div>
-                    <Link href="/clients" className="text-sm text-blue-600 hover:underline mb-2 inline-block">&larr; Back to Clients</Link>
-                    <h1 className="text-3xl font-bold text-gray-900">{client.name}</h1>
-                    <p className="text-gray-500 mt-1">{client.entityType}</p>
+                    <Link href="/clients" style={{ color: 'var(--muted)', fontSize: '12.5px', textDecoration: 'none', marginBottom: '8px', display: 'inline-block' }}>&larr; Back to Clients</Link>
+                    <div className="ptitle">{client.name}</div>
+                    <div className="psub">
+                        <span className={`badge ${client.entityType?.includes('Pvt') ? 'b-admin' : client.entityType?.includes('LLP') ? 'b-entity' : 'b-member'}`} style={{ marginRight: '8px' }}>
+                            {client.entityType || 'Proprietorship'}
+                        </span>
+                        Client Profile & Vault
+                    </div>
                 </div>
-                <div className="flex gap-3">
-                    <Link
-                        href={`/tasks/new?clientId=${client.id}`}
-                        className="premium-btn text-sm py-2 px-4 whitespace-nowrap"
-                    >
-                        + Add Task
-                    </Link>
-                </div>
+                <div className="sep" />
+                <Link href={`/clients/${client.id}/edit`} className="btn btn-g">✏️ Edit Client</Link>
+                <Link href={`/tasks/new?clientId=${client.id}`} className="btn btn-p">+ New Task</Link>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {/* Basic Details */}
-                <div className="glass-panel p-6 col-span-1">
-                    <h2 className="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">Business Details</h2>
-                    <dl className="space-y-4">
-                        <div>
-                            <dt className="text-sm font-medium text-gray-500">GSTIN</dt>
-                            <dd className="mt-1 text-sm text-gray-900">{client.gstin || "Not provided"}</dd>
-                        </div>
-                        <div>
-                            <dt className="text-sm font-medium text-gray-500">PAN</dt>
-                            <dd className="mt-1 text-sm text-gray-900">{client.pan || "Not provided"}</dd>
-                        </div>
-                        <div>
-                            <dt className="text-sm font-medium text-gray-500">Client Since</dt>
-                            <dd className="mt-1 text-sm text-gray-900">{new Date(client.createdAt).toLocaleDateString()}</dd>
-                        </div>
-                    </dl>
-                </div>
-
-                {/* Portal Credentials */}
-                <div className="glass-panel p-6 col-span-1 md:col-span-2">
-                    <h2 className="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">Portal Credentials</h2>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        {/* Income Tax */}
-                        <div className="bg-white/50 border border-gray-100 p-4 rounded-lg shadow-sm">
-                            <h3 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                                Income Tax
-                            </h3>
-                            <div className="space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Login ID:</span>
-                                    <span className="font-medium">{client.itxLogin || "-"}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Password:</span>
-                                    <span className="font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-600">{client.itxPassword || "-"}</span>
-                                </div>
+            <div className="two-col">
+                {/* Entity Details */}
+                <div className="card">
+                    <div className="ctitle">🏢 Entity Details</div>
+                    <div className="fg" style={{ marginTop: '16px' }}>
+                        <div className="field">
+                            <label>PAN Number</label>
+                            <div style={{ color: 'var(--text)', fontFamily: 'monospace', fontSize: '14px', letterSpacing: '1px', background: 'rgba(255,255,255,.03)', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border)' }}>
+                                {client.pan || 'Not provided'}
                             </div>
                         </div>
-
-                        {/* GST */}
-                        <div className="bg-white/50 border border-gray-100 p-4 rounded-lg shadow-sm">
-                            <h3 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-purple-500"></span>
-                                GST Portal
-                            </h3>
-                            <div className="space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Login ID:</span>
-                                    <span className="font-medium">{client.gstLogin || "-"}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Password:</span>
-                                    <span className="font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-600">{client.gstPassword || "-"}</span>
-                                </div>
+                        <div className="field">
+                            <label>TAN Number</label>
+                            <div style={{ color: 'var(--text)', fontFamily: 'monospace', fontSize: '14px', letterSpacing: '1px', background: 'rgba(255,255,255,.03)', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border)' }}>
+                                {(client as any).tan || 'Not provided'}
                             </div>
                         </div>
-
-                        {/* Traces */}
-                        <div className="bg-white/50 border border-gray-100 p-4 rounded-lg shadow-sm">
-                            <h3 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                                Traces Portal
-                            </h3>
-                            <div className="space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Login ID:</span>
-                                    <span className="font-medium">{client.tracesLogin || "-"}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Password:</span>
-                                    <span className="font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-600">{client.tracesPassword || "-"}</span>
-                                </div>
+                        <div className="field">
+                            <label>GSTIN</label>
+                            <div style={{ color: 'var(--text)', fontFamily: 'monospace', fontSize: '14px', letterSpacing: '1px', background: 'rgba(255,255,255,.03)', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border)' }}>
+                                {client.gstin || 'Not provided'}
                             </div>
                         </div>
-
-                        {/* PT / PF / ESI */}
-                        <div className="bg-white/50 border border-gray-100 p-4 rounded-lg shadow-sm">
-                            <h3 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-orange-500"></span>
-                                PT / PF / ESI
-                            </h3>
-                            <div className="space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Login ID:</span>
-                                    <span className="font-medium">{client.ptLogin || "-"}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500">Password:</span>
-                                    <span className="font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-600">{client.ptPassword || "-"}</span>
-                                </div>
+                        <div className="field">
+                            <label>Contact Person / Phone</label>
+                            <div style={{ color: 'var(--text)', fontSize: '13px', background: 'rgba(255,255,255,.03)', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border)' }}>
+                                {client.contact || 'Not provided'}
+                            </div>
+                        </div>
+                        <div className="field">
+                            <label>Status</label>
+                            <div style={{ padding: '8px 0' }}>
+                                <span className={`badge ${client.active ? 'b-active' : 'b-inactive'}`}>
+                                    {client.active ? '● Active' : '○ Inactive'}
+                                </span>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                {/* Login Vault */}
+                <div className="card">
+                    <div className="ctitle">
+                        <span>🔐 Login Vault Initiation</span>
+                        <span className="badge b-high" style={{ fontSize: '9px' }}>CONFIDENTIAL</span>
+                    </div>
+
+                    {/* Standard Portals */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px', marginTop: '12px' }}>
+                        <VaultCredential clientId={client.id} portal="Income Tax Portal" username={client.itxLogin} password={client.itxPassword} color="#4FACFE" icon="🏦" />
+                        <VaultCredential clientId={client.id} portal="GST Portal" username={client.gstLogin} password={client.gstPassword} color="#B89AFF" icon="📊" />
+                        <VaultCredential clientId={client.id} portal="Traces / TDS" username={client.tracesLogin} password={client.tracesPassword} color="#00CF84" icon="📋" />
+                    </div>
+
+                    {/* Separated PF, ESI, PT */}
+                    <div style={{ marginTop: '12px', fontSize: '10px', fontWeight: 700, color: 'var(--gold)', letterSpacing: '1.5px', textTransform: 'uppercase', paddingBottom: '6px', borderBottom: '1px solid var(--border)' }}>
+                        Labour & Statutory
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px', marginTop: '8px' }}>
+                        <VaultCredential clientId={client.id} portal="PF (EPFO)" username={(client as any).pfLogin} password={(client as any).pfPassword} color="#FFB020" icon="🏛️" />
+                        <VaultCredential clientId={client.id} portal="ESI (ESIC)" username={(client as any).esiLogin} password={(client as any).esiPassword} color="#FF6B6B" icon="🏥" />
+                        <VaultCredential clientId={client.id} portal="Professional Tax (PT)" username={client.ptLogin} password={client.ptPassword} color="#4FACFE" icon="💼" />
+                    </div>
+
+                    {/* Custom Logins */}
+                    <CustomVaultSection clientId={client.id} entries={client.vaultEntries as any} />
+
+                    {userRole === 'ADMIN' && (
+                        <div style={{ marginTop: '16px', borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+                            <AuditLogViewer clientId={client.id} />
+                        </div>
+                    )}
+                </div>
             </div>
 
-            {/* Upcoming Tasks Overview */}
-            <div className="glass-panel p-6">
-                <div className="flex justify-between items-center mb-4 border-b pb-2">
-                    <h2 className="text-xl font-semibold text-gray-800">Upcoming Tasks</h2>
-                    <Link href={`/tasks?client=${client.id}`} className="text-sm text-blue-600 hover:underline">View All</Link>
+            {/* KYC Documents Section - Full Width */}
+            <div className="card" style={{ marginTop: '16px' }}>
+                <DocumentUploadSection clientId={client.id} documents={client.documents as any} />
+            </div>
+
+            <div className="two-col" style={{ marginTop: '16px' }}>
+                <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+                    <div className="ctitle" style={{ padding: '16px 16px 0' }}>Recent Tasks for {client.name}</div>
+                    {client.tasks.length === 0 ? (
+                        <div className="empty">
+                            <div className="empty-i">📋</div>
+                            <div style={{ fontSize: '13px' }}>No active tasks found.</div>
+                        </div>
+                    ) : (
+                        <table className="tbl" style={{ marginTop: '12px' }}>
+                            <tbody>
+                                {client.tasks.map(t => (
+                                    <tr key={t.id}>
+                                        <td>
+                                            <div style={{ fontWeight: 600, color: 'var(--text)' }}>{t.title}</div>
+                                            <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>{t.taskType.replace(/_/g, ' ')}</div>
+                                        </td>
+                                        <td>
+                                            <div className={`badge b-${t.status.toLowerCase()}`}>
+                                                {t.status.replace('_', ' ')}
+                                            </div>
+                                        </td>
+                                        <td style={{ textAlign: 'right' }}>
+                                            <Link href={`/tasks/${t.id}`} className="btn btn-g btn-sm">View</Link>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
                 </div>
-                {client.tasks.length > 0 ? (
-                    <div className="divide-y divide-gray-100">
-                        {client.tasks.map(task => (
-                            <div key={task.id} className="py-3 flex justify-between items-center group">
-                                <div>
-                                    <div className="font-medium text-gray-900 group-hover:text-blue-600 transition">
-                                        <Link href={`/tasks/${task.id}`}>{task.title}</Link>
+
+                <div className="card">
+                    <div className="ctitle">📝 Client Notes & Activity</div>
+                    {client.notes.length === 0 ? (
+                        <div className="empty" style={{ padding: '20px 0' }}>
+                            <div className="empty-i">📝</div>
+                            <div style={{ fontSize: '13px' }}>No notes explicitly added yet.</div>
+                        </div>
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '14px' }}>
+                            {client.notes.map(n => (
+                                <div key={n.id} style={{ background: 'var(--surface2)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                                        <span className="badge b-member" style={{ fontSize: '10px' }}>{n.type}</span>
+                                        <span style={{ fontSize: '10px', color: 'var(--muted)' }}>{new Date(n.date).toLocaleDateString()}</span>
                                     </div>
-                                    <div className="text-sm text-gray-500">{task.taskType} &bull; {task.status}</div>
+                                    <div style={{ fontSize: '12.5px', color: 'var(--text)', lineHeight: 1.5 }}>{n.text}</div>
+                                    <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '8px', textAlign: 'right' }}>— {n.author.name || 'User'}</div>
                                 </div>
-                                <div className="text-sm font-medium text-gray-700">
-                                    {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No Due Date'}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <p className="text-gray-500 text-sm py-4">No tasks found for this client.</p>
-                )}
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
-
         </div>
     )
 }

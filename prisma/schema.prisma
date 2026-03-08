@@ -42,9 +42,16 @@ model User {
   image         String?
   password      String?
   role          String    @default("EMPLOYEE") // ADMIN, EMPLOYEE
+  dept          String    @default("GST")
+  color         String    @default("#4FACFE")
+  phone         String?
   accounts      Account[]
   sessions      Session[]
   tasks         Task[]    @relation("TaskAssignee")
+  clientNotes   ClientNote[]
+  taskLogs      TaskLog[]
+  notifications Notification[]
+  vaultAuditLogs VaultAuditLog[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -60,34 +67,82 @@ model VerificationToken {
 model Client {
   id           String   @id @default(cuid())
   name         String
-  entityType   String   // e.g., Proprietorship, Partnership, Pvt Ltd, LLP
+  entityType   String   @default("Proprietorship")
+  active       Boolean  @default(true)
   gstin        String?
   pan          String?
+  tan          String?
+  contact      String?
   
-  // Login Credentials
-  itxLogin     String?   // Income Tax Portal
+  // Login Credentials - Standard Portals
+  itxLogin     String?   
   itxPassword  String?
-  gstLogin     String?   // GST Portal
+  gstLogin     String?   
   gstPassword  String?
-  tracesLogin  String?   // Traces Portal
+  tracesLogin  String?   
   tracesPassword String?
-  ptLogin      String?   // Professional Tax / PF / ESI
+  // Separate PF, ESI, PT
+  pfLogin      String?
+  pfPassword   String?
+  esiLogin     String?
+  esiPassword  String?
+  ptLogin      String?   
   ptPassword   String?
 
   tasks        Task[]
+  invoices     Invoice[]
+  notes        ClientNote[]
+  vaultEntries ClientVaultEntry[]
+  documents    ClientDocument[]
+  vaultAuditLogs VaultAuditLog[]
+  
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
 
+model ClientVaultEntry {
+  id          String   @id @default(cuid())
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  portalName  String
+  username    String?
+  password    String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ClientDocument {
+  id          String   @id @default(cuid())
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  category    String   // PAN, TAN, GST_CERT, PARTNER_KYC, DIRECTOR_KYC, COI, MOA, AOA, OTHER
+  fileName    String
+  filePath    String
+  fileSize    Int?
+  mimeType    String?
+  notes       String?
+  uploadedAt  DateTime @default(now())
+}
+
 model Task {
   id          String   @id @default(cuid())
-  title       String   // Short descriptive title
-  taskType    String   // TDS_PAYMENT, GST_1, PF_ESI_PT, GSTR_3B, ACCOUNTING, OTHER
+  title       String   
+  taskType    String   
   description String?
   status      String   @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED
-  frequency   String   @default("ONCE") // ONCE, DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY
+  priority    String   @default("medium") // high, medium, low
+  frequency   String   @default("ONCE") 
   dueDate     DateTime?
-  period      String?  // e.g., "Jan-2026"
+  period      String?  
+  timeLogged  Int      @default(0) // time logged in minutes
+  estimatedMinutes Int?
+  isCustom    Boolean  @default(false)
+  color       String?
+  icon        String?
+  month       Int?
+  year        Int?
+  dueDay      Int?
   
   clientId    String
   client      Client   @relation(fields: [clientId], references: [id])
@@ -95,7 +150,16 @@ model Task {
   assigneeId  String?
   assignee    User?    @relation("TaskAssignee", fields: [assigneeId], references: [id])
 
+  parentId    String?
+  parent      Task?    @relation("TaskToSubtasks", fields: [parentId], references: [id])
+  subtasks    Task[]   @relation("TaskToSubtasks")
+
+  blockedById String?
+  blockedBy   Task?    @relation("TaskDependencies", fields: [blockedById], references: [id])
+  blocking    Task[]   @relation("TaskDependencies")
+
   activities  Activity[]
+  logs        TaskLog[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -103,7 +167,7 @@ model Task {
 
 model Activity {
   id          String   @id @default(cuid())
-  title       String   // e.g., "Bank Reconciliation"
+  title       String   
   isCompleted Boolean  @default(false)
   
   taskId      String
@@ -112,3 +176,113 @@ model Activity {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model TaskLog {
+  id          String   @id @default(cuid())
+  taskId      String
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content     String   // The comment or activity description
+  type        String   @default("COMMENT") // COMMENT, STATUS_CHANGE
+  oldStatus   String?
+  newStatus   String?
+  createdAt   DateTime @default(now())
+}
+
+model Invoice {
+  id          String   @id @default(cuid())
+  number      String
+  date        DateTime
+  dueDate     DateTime
+  status      String   @default("draft") // draft, sent, paid, overdue
+  notes       String?
+  
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id])
+  items       InvoiceItem[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model InvoiceItem {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  amount      Float
+}
+
+model ClientNote {
+  id          String   @id @default(cuid())
+  type        String
+  text        String
+  date        DateTime @default(now())
+
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id])
+}
+
+model Reminder {
+  id          String   @id @default(cuid())
+  taskType    String
+  channel     String
+  trigger     String
+  enabled     Boolean  @default(true)
+  message     String
+}
+
+model TaskTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  items       TaskTemplateItem[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model TaskTemplateItem {
+  id             String   @id @default(cuid())
+  title          String
+  taskType       String
+  description    String?
+  priority       String   @default("medium")
+  dueDayOffset   Int      @default(0) // Days from template application date
+  
+  templateId     String
+  template       TaskTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+}
+
+model SystemSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  link      String?  
+  createdAt DateTime @default(now())
+}
+
+model VaultAuditLog {
+  id          String   @id @default(cuid())
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  portalName  String   // e.g. 'Income Tax Portal', 'PF (EPFO)', or custom portal name
+  action      String   // VIEW, COPY
+  createdAt   DateTime @default(now())
+}
+

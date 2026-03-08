@@ -36,6 +36,10 @@ export async function POST(request: Request) {
                 gstPassword: data.gstPassword,
                 tracesLogin: data.tracesLogin,
                 tracesPassword: data.tracesPassword,
+                pfLogin: data.pfLogin,
+                pfPassword: data.pfPassword,
+                esiLogin: data.esiLogin,
+                esiPassword: data.esiPassword,
                 ptLogin: data.ptLogin,
                 ptPassword: data.ptPassword,
             }
