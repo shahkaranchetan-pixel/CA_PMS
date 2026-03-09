@@ -4,14 +4,23 @@ import Link from "next/link"
 export const dynamic = "force-dynamic"
 
 export default async function TeamPage() {
-    const team = await prisma.user.findMany({
+    const teamRaw = await prisma.user.findMany({
         orderBy: { name: 'asc' },
         include: {
-            tasks: {
-                select: { id: true, status: true, priority: true, dueDate: true, title: true }
+            taskAssignees: {
+                include: {
+                    task: {
+                        select: { id: true, status: true, priority: true, dueDate: true, title: true }
+                    }
+                }
             }
         }
     });
+
+    const team = teamRaw.map(u => ({
+        ...u,
+        tasks: u.taskAssignees.map(ta => ta.task)
+    }));
 
     const now = new Date();
 
