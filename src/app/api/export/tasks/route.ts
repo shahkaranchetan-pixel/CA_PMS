@@ -11,19 +11,21 @@ export async function GET() {
         const user = session?.user as any
         if (!user) return new NextResponse("Unauthorized", { status: 401 })
 
-        const where: any = user.role === 'ADMIN' ? {} : { assigneeId: user.id }
+        const where: any = user.role === 'ADMIN'
+            ? {}
+            : { taskAssignees: { some: { userId: user.id } } }
 
         const tasks = await prisma.task.findMany({
             where,
             include: {
                 client: { select: { name: true } },
-                assignee: { select: { name: true } }
+                taskAssignees: { include: { user: { select: { name: true } } } }
             },
             orderBy: { dueDate: 'asc' }
         })
 
         // Generate CSV
-        const headers = ["ID", "Title", "Type", "Status", "Priority", "Frequency", "Due Date", "Period", "Client", "Assignee"]
+        const headers = ["ID", "Title", "Type", "Status", "Priority", "Frequency", "Due Date", "Period", "Client", "Assignees"]
         const rows = tasks.map(t => [
             t.id,
             `"${t.title.replace(/"/g, '""')}"`,
@@ -34,7 +36,7 @@ export async function GET() {
             t.dueDate ? new Date(t.dueDate).toLocaleDateString() : 'N/A',
             t.period || 'N/A',
             `"${t.client.name.replace(/"/g, '""')}"`,
-            `"${t.assignee?.name?.replace(/"/g, '""') || 'Unassigned'}"`
+            `"${t.taskAssignees.map(ta => ta.user?.name || 'Unknown').join(', ') || 'Unassigned'}"`
         ])
 
         const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n")

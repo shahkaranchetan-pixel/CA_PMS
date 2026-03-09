@@ -124,11 +124,13 @@ export default function BoardView({ tasks, taskMap }: { tasks: any[], taskMap: a
                                         )}
 
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                {task.assignee ? (
-                                                    <div style={{ width: 22, height: 22, borderRadius: '50%', background: task.assignee.color || 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 700, color: '#000' }} title={task.assignee.name}>
-                                                        {task.assignee.name?.substring(0, 2).toUpperCase() || 'U'}
-                                                    </div>
+                                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                {task.taskAssignees && task.taskAssignees.length > 0 ? (
+                                                    task.taskAssignees.slice(0, 3).map((ta: any, i: number) => (
+                                                        <div key={ta.id} style={{ width: 22, height: 22, borderRadius: '50%', background: ta.user?.color || 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 700, color: '#000', marginLeft: i > 0 ? '-6px' : 0, border: '2px solid var(--surface2)', zIndex: 3 - i }} title={ta.user?.name}>
+                                                            {ta.user?.name?.substring(0, 2).toUpperCase() || 'U'}
+                                                        </div>
+                                                    ))
                                                 ) : (
                                                     <div style={{ width: 22, height: 22, borderRadius: '50%', border: '1px dashed var(--muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', color: 'var(--muted)' }} title="Unassigned">
                                                         ?

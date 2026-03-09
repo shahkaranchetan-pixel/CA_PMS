@@ -13,7 +13,7 @@ export async function POST(request: Request) {
         }
 
         const body = await request.json()
-        const { clientIds, title, taskType, frequency, period, dueDate, priority, assigneeId } = body
+        const { clientIds, title, taskType, frequency, period, dueDate, priority, assigneeIds } = body
 
         if (!clientIds || !Array.isArray(clientIds) || clientIds.length === 0) {
             return new NextResponse(JSON.stringify({ error: "No clients selected" }), { status: 400 })
@@ -22,25 +22,29 @@ export async function POST(request: Request) {
             return new NextResponse(JSON.stringify({ error: "Title and Due Date are required" }), { status: 400 })
         }
 
-        const taskData = clientIds.map(clientId => ({
-            title,
-            taskType: taskType || 'other',
-            frequency: frequency || 'monthly',
-            period: period || null,
-            dueDate: new Date(dueDate),
-            priority: priority || 'medium',
-            status: 'PENDING',
-            clientId,
-            assigneeId: assigneeId || null
-        }))
+        let totalCreated = 0;
 
-        // Use createMany for bulk insert (Sqlite supports this if we are using it via Prisma, Postgres/MySQL do natively)
-        const result = await prisma.task.createMany({
-            data: taskData,
-            skipDuplicates: true
-        })
+        // Create tasks one by one so we can also create TaskAssignee records
+        for (const clientId of clientIds) {
+            const task = await prisma.task.create({
+                data: {
+                    title,
+                    taskType: taskType || 'other',
+                    frequency: frequency || 'monthly',
+                    period: period || null,
+                    dueDate: new Date(dueDate),
+                    priority: priority || 'medium',
+                    status: 'PENDING',
+                    clientId,
+                    taskAssignees: assigneeIds && assigneeIds.length > 0
+                        ? { create: assigneeIds.map((uid: string) => ({ userId: uid })) }
+                        : undefined,
+                }
+            });
+            totalCreated++;
+        }
 
-        return NextResponse.json({ success: true, count: result.count })
+        return NextResponse.json({ success: true, count: totalCreated })
     } catch (error) {
         console.error("[TASKS_BULK_GENERATE_ERROR]", error)
         return new NextResponse(JSON.stringify({ error: "Internal Error" }), { status: 500 })

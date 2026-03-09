@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 
@@ -11,6 +11,9 @@ export default function NewTaskPage() {
     const [clients, setClients] = useState<any[]>([])
     const [employees, setEmployees] = useState<any[]>([])
     const [templates, setTemplates] = useState<any[]>([])
+    const [selectedAssignees, setSelectedAssignees] = useState<string[]>([])
+    const [assigneeDropdownOpen, setAssigneeDropdownOpen] = useState(false)
+    const dropdownRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         fetch("/api/clients")
@@ -29,6 +32,22 @@ export default function NewTaskPage() {
             .catch(err => console.error("Failed to load templates", err))
     }, [])
 
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+                setAssigneeDropdownOpen(false)
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside)
+        return () => document.removeEventListener("mousedown", handleClickOutside)
+    }, [])
+
+    const toggleAssignee = (id: string) => {
+        setSelectedAssignees(prev =>
+            prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id]
+        )
+    }
+
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         setLoading(true)
@@ -43,7 +62,7 @@ export default function NewTaskPage() {
             period: formData.get("period"),
             clientId: formData.get("clientId"),
             frequency: formData.get("frequency"),
-            assigneeId: formData.get("assigneeId") || null,
+            assigneeIds: selectedAssignees,
             templateId: formData.get("templateId") || null,
             priority: formData.get("priority") || "medium",
             estimatedMinutes: formData.get("estimatedMinutes") ? parseInt(formData.get("estimatedMinutes") as string) : null,
@@ -100,14 +119,100 @@ export default function NewTaskPage() {
                         </select>
                     </div>
 
-                    <div className="field">
-                        <label htmlFor="assigneeId">Assign To (User)</label>
-                        <select id="assigneeId" name="assigneeId">
-                            <option value="">Unassigned</option>
-                            {employees.map(emp => (
-                                <option key={emp.id} value={emp.id}>{emp.name || emp.email}</option>
-                            ))}
-                        </select>
+                    <div className="field" ref={dropdownRef} style={{ position: 'relative', zIndex: assigneeDropdownOpen ? 100 : 1 }}>
+                        <label>Assign To (Multiple)</label>
+                        <div
+                            onClick={() => setAssigneeDropdownOpen(!assigneeDropdownOpen)}
+                            style={{
+                                background: 'var(--surface2)',
+                                border: '1px solid var(--border)',
+                                borderRadius: '8px',
+                                padding: '8px 12px',
+                                cursor: 'pointer',
+                                minHeight: '38px',
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                gap: '6px',
+                                alignItems: 'center',
+                                position: 'relative',
+                                fontSize: '13px',
+                                color: selectedAssignees.length === 0 ? 'var(--muted)' : 'var(--text)'
+                            }}
+                        >
+                            {selectedAssignees.length === 0 ? (
+                                <span>Select assignees...</span>
+                            ) : (
+                                selectedAssignees.map(id => {
+                                    const emp = employees.find(e => e.id === id);
+                                    return (
+                                        <span key={id} style={{
+                                            display: 'inline-flex', alignItems: 'center', gap: '4px',
+                                            background: 'var(--gold)', color: '#000',
+                                            borderRadius: '99px', padding: '2px 10px 2px 6px',
+                                            fontSize: '11.5px', fontWeight: 600
+                                        }}>
+                                            <span style={{
+                                                width: 16, height: 16, borderRadius: '50%',
+                                                background: emp?.color || '#4FACFE',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                fontSize: '8px', fontWeight: 700, color: '#000'
+                                            }}>
+                                                {emp?.name?.charAt(0).toUpperCase() || 'U'}
+                                            </span>
+                                            {emp?.name?.split(' ')[0] || emp?.email}
+                                            <span
+                                                onClick={(e) => { e.stopPropagation(); toggleAssignee(id); }}
+                                                style={{ cursor: 'pointer', marginLeft: '2px', opacity: 0.7, fontSize: '13px' }}
+                                            >×</span>
+                                        </span>
+                                    );
+                                })
+                            )}
+                            <span style={{ marginLeft: 'auto', fontSize: '10px', color: 'var(--muted)' }}>▼</span>
+                        </div>
+
+                        {assigneeDropdownOpen && (
+                            <div style={{
+                                position: 'absolute', zIndex: 9999, left: 0, right: 0, top: '100%',
+                                background: '#0e1c33', border: '1px solid rgba(255,255,255,0.15)',
+                                borderRadius: '8px', marginTop: '4px', maxHeight: '220px',
+                                overflowY: 'auto', boxShadow: '0 12px 32px rgba(0,0,0,.6)'
+                            }}>
+                                {employees.map(emp => (
+                                    <label key={emp.id} style={{
+                                        display: 'flex', alignItems: 'center', gap: '10px',
+                                        padding: '8px 12px', cursor: 'pointer',
+                                        background: selectedAssignees.includes(emp.id) ? 'rgba(232,160,32,0.15)' : '#0e1c33',
+                                        borderBottom: '1px solid rgba(255,255,255,0.06)',
+                                        fontSize: '13px'
+                                    }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedAssignees.includes(emp.id)}
+                                            onChange={() => toggleAssignee(emp.id)}
+                                            style={{ accentColor: 'var(--gold)' }}
+                                        />
+                                        <div style={{
+                                            width: 24, height: 24, borderRadius: '50%',
+                                            background: emp.color || 'var(--gold)',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            fontSize: '10px', fontWeight: 700, color: '#000'
+                                        }}>
+                                            {emp.name?.charAt(0).toUpperCase() || 'U'}
+                                        </div>
+                                        <div>
+                                            <div style={{ fontWeight: 500 }}>{emp.name || emp.email}</div>
+                                            <div style={{ fontSize: '10.5px', color: 'var(--muted)' }}>{emp.dept || emp.email}</div>
+                                        </div>
+                                    </label>
+                                ))}
+                                {employees.length === 0 && (
+                                    <div style={{ padding: '12px', color: 'var(--muted)', fontSize: '12px', textAlign: 'center' }}>
+                                        No employees found
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     <div className="fdiv">Compliance Setup</div>

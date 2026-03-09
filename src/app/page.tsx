@@ -17,12 +17,12 @@ export default async function Home() {
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
 
-    const baseTaskWhere = userRole === 'ADMIN' ? {} : { assigneeId: userId };
+    const baseTaskWhere: any = userRole === 'ADMIN' ? {} : { taskAssignees: { some: { userId } } };
 
     // All active (non-completed) tasks
     const allActiveTasks = await prisma.task.findMany({
         where: { ...baseTaskWhere, status: { not: 'COMPLETED' } },
-        include: { client: true, assignee: true },
+        include: { client: true, taskAssignees: { include: { user: true } } },
         orderBy: { dueDate: 'asc' }
     });
 
@@ -81,7 +81,7 @@ export default async function Home() {
 
     // Team workload
     const team = await prisma.user.findMany({
-        include: { tasks: { where: { status: { not: 'COMPLETED' } }, select: { id: true, priority: true } } }
+        include: { taskAssignees: { where: { task: { status: { not: 'COMPLETED' } } }, include: { task: { select: { id: true, priority: true } } } } }
     });
 
     const STATUS_COLORS: Record<string, string> = {
@@ -181,12 +181,16 @@ export default async function Home() {
                                                     {task.client?.name}
                                                 </td>
                                                 <td>
-                                                    {task.assignee ? (
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                            <div style={{ width: 20, height: 20, borderRadius: 5, background: task.assignee.color || 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 700, color: '#000' }}>
-                                                                {task.assignee.name?.substring(0, 2).toUpperCase()}
-                                                            </div>
-                                                            <span style={{ fontSize: '11px' }}>{task.assignee.name?.split(' ')[0]}</span>
+                                                    {task.taskAssignees && task.taskAssignees.length > 0 ? (
+                                                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                            {task.taskAssignees.slice(0, 3).map((ta: any, i: number) => (
+                                                                <div key={ta.id} style={{ width: 20, height: 20, borderRadius: 5, background: ta.user?.color || 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 700, color: '#000', marginLeft: i > 0 ? '-4px' : 0, border: '2px solid var(--surface)', zIndex: 3 - i }} title={ta.user?.name}>
+                                                                    {ta.user?.name?.substring(0, 2).toUpperCase() || 'U'}
+                                                                </div>
+                                                            ))}
+                                                            {task.taskAssignees.length === 1 && (
+                                                                <span style={{ fontSize: '11px', marginLeft: '4px' }}>{task.taskAssignees[0].user?.name?.split(' ')[0]}</span>
+                                                            )}
                                                         </div>
                                                     ) : (
                                                         <span style={{ fontSize: '10px', color: 'var(--muted)', fontStyle: 'italic' }}>—</span>
@@ -380,7 +384,8 @@ export default async function Home() {
                         <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--muted)', fontSize: '12px' }}>No team members</div>
                     ) : (
                         team.slice(0, 6).map(m => {
-                            const load = Math.min((m.tasks.length / 10) * 100, 100);
+                            const taskCount = m.taskAssignees.length;
+                            const load = Math.min((taskCount / 10) * 100, 100);
                             const color = load > 80 ? '#FF5757' : load > 50 ? '#FFB020' : '#00CF84';
                             return (
                                 <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '5px 0' }}>
@@ -391,7 +396,7 @@ export default async function Home() {
                                     <div style={{ width: '60px', height: '6px', background: 'rgba(255,255,255,.06)', borderRadius: '3px', overflow: 'hidden' }}>
                                         <div style={{ width: `${load}%`, height: '100%', background: color, borderRadius: '3px' }} />
                                     </div>
-                                    <span style={{ fontSize: '11px', fontWeight: 600, color, minWidth: '16px', textAlign: 'right' }}>{m.tasks.length}</span>
+                                    <span style={{ fontSize: '11px', fontWeight: 600, color, minWidth: '16px', textAlign: 'right' }}>{taskCount}</span>
                                 </div>
                             );
                         })

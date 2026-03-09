@@ -10,11 +10,11 @@ export default async function TaskDetailPage(props: { params: Promise<{ id: stri
         where: { id: params.id },
         include: {
             client: true,
-            assignee: true,
+            taskAssignees: { include: { user: true } },
             activities: true,
             blockedBy: true,
             subtasks: {
-                include: { assignee: true }
+                include: { taskAssignees: { include: { user: true } } }
             },
             logs: {
                 include: { user: { select: { name: true, image: true, email: true } } },

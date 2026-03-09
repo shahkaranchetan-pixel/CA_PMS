@@ -14,7 +14,7 @@ const NAV = [
     { id: "/settings", label: "Settings", icon: "⚙️" },
 ]
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean, onClose?: () => void }) {
     const pathname = usePathname()
     const { data: session } = useSession()
 
@@ -23,10 +23,19 @@ export default function Sidebar() {
     const role = user?.role === 'ADMIN' ? 'Admin' : 'Team Member'
 
     return (
-        <nav className="sb">
-            <div className="sb-logo">
-                <div className="sb-brand">TaskDesk</div>
-                <div className="sb-sub">CA Task Management · Pro</div>
+        <nav className={`sb ${isOpen ? 'open' : ''}`}>
+            <div className="sb-logo" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                    <div className="sb-brand">TaskDesk</div>
+                    <div className="sb-sub">CA Task Management · Pro</div>
+                </div>
+                <button
+                    onClick={onClose}
+                    className="mobile-show hamburger"
+                    style={{ background: 'none', border: 'none', fontSize: '20px', padding: '4px' }}
+                >
+                    ✕
+                </button>
             </div>
 
             <div className="sb-user">

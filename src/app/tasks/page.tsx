@@ -31,9 +31,9 @@ export default async function TasksPage(props: { searchParams: Promise<{ [key: s
     const filterConditions: any = { parentId: null };
 
     if (userRole === 'ADMIN') {
-        if (assigneeFilter) filterConditions.assigneeId = assigneeFilter;
+        if (assigneeFilter) filterConditions.taskAssignees = { some: { userId: assigneeFilter } };
     } else {
-        filterConditions.assigneeId = currentUserId;
+        filterConditions.taskAssignees = { some: { userId: currentUserId } };
     }
     if (typeFilter) {
         filterConditions.taskType = typeFilter;
@@ -43,9 +43,9 @@ export default async function TasksPage(props: { searchParams: Promise<{ [key: s
         where: filterConditions,
         include: {
             client: true,
-            assignee: true,
+            taskAssignees: { include: { user: true } },
             subtasks: {
-                include: { assignee: true }
+                include: { taskAssignees: { include: { user: true } } }
             }
         },
         orderBy: {
@@ -148,12 +148,19 @@ export default async function TasksPage(props: { searchParams: Promise<{ [key: s
                                                 {task.dueDate ? new Date(task.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '-'}
                                             </td>
                                             <td>
-                                                {task.assignee ? (
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                        <div style={{ width: 24, height: 24, borderRadius: 6, background: task.assignee.color || 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#000' }}>
-                                                            {task.assignee.name?.substring(0, 2).toUpperCase() || 'U'}
-                                                        </div>
-                                                        <span style={{ fontSize: '12px' }}>{task.assignee.name?.split(' ')[0]}</span>
+                                                {task.taskAssignees && task.taskAssignees.length > 0 ? (
+                                                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                        {task.taskAssignees.slice(0, 3).map((ta: any, i: number) => (
+                                                            <div key={ta.id} style={{ width: 24, height: 24, borderRadius: 6, background: ta.user?.color || 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#000', marginLeft: i > 0 ? '-6px' : 0, border: '2px solid var(--surface)', zIndex: 3 - i }} title={ta.user?.name}>
+                                                                {ta.user?.name?.substring(0, 2).toUpperCase() || 'U'}
+                                                            </div>
+                                                        ))}
+                                                        {task.taskAssignees.length > 3 && (
+                                                            <span style={{ marginLeft: '4px', fontSize: '10px', color: 'var(--muted)' }}>+{task.taskAssignees.length - 3}</span>
+                                                        )}
+                                                        {task.taskAssignees.length === 1 && (
+                                                            <span style={{ fontSize: '12px', marginLeft: '6px' }}>{task.taskAssignees[0].user?.name?.split(' ')[0]}</span>
+                                                        )}
                                                     </div>
                                                 ) : (
                                                     <span style={{ color: 'var(--muted)', fontSize: '12px', fontStyle: 'italic' }}>Unassigned</span>

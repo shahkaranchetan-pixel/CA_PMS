@@ -47,7 +47,7 @@ model User {
   phone         String?
   accounts      Account[]
   sessions      Session[]
-  tasks         Task[]    @relation("TaskAssignee")
+  taskAssignees TaskAssignee[]
   clientNotes   ClientNote[]
   taskLogs      TaskLog[]
   notifications Notification[]
@@ -147,8 +147,7 @@ model Task {
   clientId    String
   client      Client   @relation(fields: [clientId], references: [id])
   
-  assigneeId  String?
-  assignee    User?    @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  taskAssignees TaskAssignee[]
 
   parentId    String?
   parent      Task?    @relation("TaskToSubtasks", fields: [parentId], references: [id])
@@ -273,6 +272,17 @@ model Notification {
   isRead    Boolean  @default(false)
   link      String?  
   createdAt DateTime @default(now())
+}
+
+model TaskAssignee {
+  id        String   @id @default(cuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([taskId, userId])
 }
 
 model VaultAuditLog {

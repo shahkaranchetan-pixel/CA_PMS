@@ -20,7 +20,7 @@ export async function GET(
             where: { id },
             include: {
                 client: true,
-                assignee: true,
+                taskAssignees: { include: { user: true } },
                 blockedBy: true,
                 logs: {
                     include: { user: { select: { name: true, image: true, email: true } } },
@@ -30,7 +30,9 @@ export async function GET(
         });
         if (!task) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-        if (user.role !== 'ADMIN' && task.assigneeId !== user.id) {
+        // Check access: admin can see all, employees can see their assigned tasks
+        const isAssigned = task.taskAssignees.some(ta => ta.userId === user.id);
+        if (user.role !== 'ADMIN' && !isAssigned) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
@@ -41,7 +43,7 @@ export async function GET(
     }
 }
 
-// PATCH to update task status
+// PATCH to update task
 export async function PATCH(
     request: Request,
     { params }: { params: Promise<{ id: string }> }
@@ -54,12 +56,16 @@ export async function PATCH(
 
         const { id } = await params;
         const body = await request.json();
-        const { status, notifyClient, blockedById, estimatedMinutes, timeLogged, assigneeId, title, description, dueDate, priority } = body;
+        const { status, notifyClient, blockedById, estimatedMinutes, timeLogged, assigneeIds, title, description, dueDate, priority } = body;
 
-        const oldTask = await prisma.task.findUnique({ where: { id } });
+        const oldTask = await prisma.task.findUnique({
+            where: { id },
+            include: { taskAssignees: true }
+        });
         if (!oldTask) return NextResponse.json({ error: "Task not found" }, { status: 404 });
 
-        if (user.role !== 'ADMIN' && oldTask.assigneeId !== userId) {
+        const isAssigned = oldTask.taskAssignees.some(ta => ta.userId === userId);
+        if (user.role !== 'ADMIN' && !isAssigned) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
@@ -68,7 +74,6 @@ export async function PATCH(
         if (blockedById !== undefined) updateData.blockedById = blockedById;
         if (estimatedMinutes !== undefined) updateData.estimatedMinutes = estimatedMinutes;
         if (timeLogged !== undefined) updateData.timeLogged = timeLogged;
-        if (assigneeId !== undefined) updateData.assigneeId = assigneeId;
         if (title !== undefined) updateData.title = title;
         if (description !== undefined) updateData.description = description;
         if (dueDate !== undefined) updateData.dueDate = dueDate ? new Date(dueDate) : null;
@@ -79,42 +84,78 @@ export async function PATCH(
             data: updateData,
             include: {
                 client: true,
-                assignee: true
+                taskAssignees: { include: { user: true } }
             }
         });
 
-        // Trigger Notification & Email for Reassignment
-        if (assigneeId && assigneeId !== oldTask.assigneeId) {
-            await prisma.notification.create({
-                data: {
-                    userId: assigneeId,
-                    title: "Task Reassigned",
-                    message: `A task has been reassigned to you: ${task.title} for ${task.client.name}`,
-                    link: `/tasks/${task.id}`
-                }
-            });
+        // Handle assignee changes if assigneeIds is provided
+        if (assigneeIds !== undefined && Array.isArray(assigneeIds)) {
+            const oldAssigneeIds = oldTask.taskAssignees.map(ta => ta.userId);
+            const newAssigneeIds: string[] = assigneeIds;
 
-            if (task.assignee?.email) {
-                await sendEmail({
-                    to: task.assignee.email,
-                    subject: `Reassigned Task: ${task.title}`,
-                    html: `
-                        <div style="font-family: sans-serif; padding: 20px; color: #333;">
-                            <h2 style="color: #4FACFE;">Task Reassigned</h2>
-                            <p>Hi ${task.assignee.name},</p>
-                            <p>A task has been reassigned to you in TaskDesk Pro:</p>
-                            <div style="background: #f4f4f4; padding: 15px; border-radius: 8px; border-left: 4px solid #4FACFE;">
-                                <strong>Task:</strong> ${task.title}<br/>
-                                <strong>Client:</strong> ${task.client.name}<br/>
-                                <strong>Due Date:</strong> ${task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'}
-                            </div>
-                            <p style="margin-top: 20px;">
-                                <a href="${process.env.NEXTAUTH_URL}/tasks/${task.id}" style="background: #4FACFE; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Task</a>
-                            </p>
-                        </div>
-                    `
+            // Find removed and added assignees
+            const removedIds = oldAssigneeIds.filter(id => !newAssigneeIds.includes(id));
+            const addedIds = newAssigneeIds.filter(id => !oldAssigneeIds.includes(id));
+
+            // Remove old assignments
+            if (removedIds.length > 0) {
+                await prisma.taskAssignee.deleteMany({
+                    where: { taskId: id, userId: { in: removedIds } }
                 });
             }
+
+            // Add new assignments
+            if (addedIds.length > 0) {
+                await prisma.taskAssignee.createMany({
+                    data: addedIds.map(uid => ({ taskId: id, userId: uid })),
+                    skipDuplicates: true
+                });
+
+                // Notify newly added assignees
+                for (const newUserId of addedIds) {
+                    await prisma.notification.create({
+                        data: {
+                            userId: newUserId,
+                            title: "Task Reassigned",
+                            message: `A task has been assigned to you: ${task.title} for ${task.client.name}`,
+                            link: `/tasks/${task.id}`
+                        }
+                    });
+
+                    const assigneeUser = await prisma.user.findUnique({ where: { id: newUserId } });
+                    if (assigneeUser?.email) {
+                        await sendEmail({
+                            to: assigneeUser.email,
+                            subject: `Reassigned Task: ${task.title}`,
+                            html: `
+                                <div style="font-family: sans-serif; padding: 20px; color: #333;">
+                                    <h2 style="color: #4FACFE;">Task Assigned</h2>
+                                    <p>Hi ${assigneeUser.name},</p>
+                                    <p>A task has been assigned to you in TaskDesk Pro:</p>
+                                    <div style="background: #f4f4f4; padding: 15px; border-radius: 8px; border-left: 4px solid #4FACFE;">
+                                        <strong>Task:</strong> ${task.title}<br/>
+                                        <strong>Client:</strong> ${task.client.name}<br/>
+                                        <strong>Due Date:</strong> ${task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'}
+                                    </div>
+                                    <p style="margin-top: 20px;">
+                                        <a href="${process.env.NEXTAUTH_URL}/tasks/${task.id}" style="background: #4FACFE; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Task</a>
+                                    </p>
+                                </div>
+                            `
+                        });
+                    }
+                }
+            }
+
+            // Reload task with updated assignees
+            const updatedTask = await prisma.task.findUnique({
+                where: { id },
+                include: {
+                    client: true,
+                    taskAssignees: { include: { user: true } }
+                }
+            });
+            return NextResponse.json(updatedTask);
         }
 
         if (status && oldTask.status !== status && userId) {
@@ -132,10 +173,8 @@ export async function PATCH(
 
         // Trigger Email if optionally requested
         if (notifyClient && status === "COMPLETED" && task.client) {
-            // Use client's contact phone/email if possible, but for now we follow the existing pattern
-            // but we'll try to keep it reasonable. In a real system we'd have a client email field.
             await sendEmail({
-                to: "client@example.com", // Placeholder as per previous user pattern, or we could add a field
+                to: "client@example.com",
                 subject: `Task Completed: ${task.title}`,
                 html: `
                     <div style="font-family: sans-serif; padding: 20px; color: #333;">
@@ -145,7 +184,7 @@ export async function PATCH(
                         <div style="background: #f4f4f5; padding: 16px; border-left: 4px solid #E8A020; margin: 16px 0;">
                             <strong>Task:</strong> ${task.title}<br/>
                             <strong>Period:</strong> ${task.period || 'N/A'}<br/>
-                            <strong>Completed By:</strong> ${task.assignee?.name || 'CA Practice Team'}
+                            <strong>Completed By:</strong> ${task.taskAssignees.map(ta => ta.user?.name).filter(Boolean).join(', ') || 'CA Practice Team'}
                         </div>
                         <p>If you have any questions, please feel free to reach out to us.</p>
                         <p>Best Regards,<br/><strong>Your CA Practice Team</strong></p>

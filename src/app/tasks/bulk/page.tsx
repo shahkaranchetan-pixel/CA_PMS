@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 
@@ -30,7 +30,9 @@ export default function BulkTaskCreationPage() {
     const [period, setPeriod] = useState("")
     const [dueDate, setDueDate] = useState("")
     const [priority, setPriority] = useState("medium")
-    const [assigneeId, setAssigneeId] = useState("")
+    const [selectedAssignees, setSelectedAssignees] = useState<string[]>([])
+    const [assigneeDropdownOpen, setAssigneeDropdownOpen] = useState(false)
+    const dropdownRef = useRef<HTMLDivElement>(null)
 
     // Client selection map: clientId -> boolean
     const [selectedClients, setSelectedClients] = useState<Record<string, boolean>>({})
@@ -58,10 +60,26 @@ export default function BulkTaskCreationPage() {
             })
     }, [])
 
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+                setAssigneeDropdownOpen(false)
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside)
+        return () => document.removeEventListener("mousedown", handleClickOutside)
+    }, [])
+
     const handleSelectAll = (checked: boolean) => {
         const sel: Record<string, boolean> = {}
         clients.forEach(c => sel[c.id] = checked)
         setSelectedClients(sel)
+    }
+
+    const toggleAssignee = (id: string) => {
+        setSelectedAssignees(prev =>
+            prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id]
+        )
     }
 
     const getSelectedCount = () => Object.values(selectedClients).filter(v => v).length
@@ -95,7 +113,7 @@ export default function BulkTaskCreationPage() {
                     period,
                     dueDate,
                     priority,
-                    assigneeId: assigneeId || null
+                    assigneeIds: selectedAssignees
                 })
             })
 
@@ -203,14 +221,94 @@ export default function BulkTaskCreationPage() {
                             </select>
                         </div>
 
-                        <div className="field">
-                            <label>Assignee (Optional)</label>
-                            <select value={assigneeId} onChange={e => setAssigneeId(e.target.value)}>
-                                <option value="">Unassigned (Team Pool)</option>
-                                {users.map(u => (
-                                    <option key={u.id} value={u.id}>{u.name}</option>
-                                ))}
-                            </select>
+                        <div className="field" ref={dropdownRef} style={{ position: 'relative', zIndex: assigneeDropdownOpen ? 100 : 1 }}>
+                            <label>Assignees (Multiple)</label>
+                            <div
+                                onClick={() => setAssigneeDropdownOpen(!assigneeDropdownOpen)}
+                                style={{
+                                    background: 'var(--surface2)',
+                                    border: '1px solid var(--border)',
+                                    borderRadius: '8px',
+                                    padding: '8px 12px',
+                                    cursor: 'pointer',
+                                    minHeight: '38px',
+                                    display: 'flex',
+                                    flexWrap: 'wrap',
+                                    gap: '6px',
+                                    alignItems: 'center',
+                                    fontSize: '13px',
+                                    color: selectedAssignees.length === 0 ? 'var(--muted)' : 'var(--text)'
+                                }}
+                            >
+                                {selectedAssignees.length === 0 ? (
+                                    <span>Select assignees...</span>
+                                ) : (
+                                    selectedAssignees.map(id => {
+                                        const u = users.find(usr => usr.id === id);
+                                        return (
+                                            <span key={id} style={{
+                                                display: 'inline-flex', alignItems: 'center', gap: '4px',
+                                                background: 'var(--gold)', color: '#000',
+                                                borderRadius: '99px', padding: '2px 10px 2px 6px',
+                                                fontSize: '11.5px', fontWeight: 600
+                                            }}>
+                                                <span style={{
+                                                    width: 16, height: 16, borderRadius: '50%',
+                                                    background: u?.color || '#4FACFE',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    fontSize: '8px', fontWeight: 700, color: '#000'
+                                                }}>
+                                                    {u?.name?.charAt(0).toUpperCase() || 'U'}
+                                                </span>
+                                                {u?.name?.split(' ')[0] || 'User'}
+                                                <span
+                                                    onClick={(e) => { e.stopPropagation(); toggleAssignee(id); }}
+                                                    style={{ cursor: 'pointer', marginLeft: '2px', opacity: 0.7, fontSize: '13px' }}
+                                                >×</span>
+                                            </span>
+                                        );
+                                    })
+                                )}
+                                <span style={{ marginLeft: 'auto', fontSize: '10px', color: 'var(--muted)' }}>▼</span>
+                            </div>
+
+                            {assigneeDropdownOpen && (
+                                <div style={{
+                                    position: 'absolute', zIndex: 9999, left: 0, right: 0, top: '100%',
+                                    background: '#0e1c33', border: '1px solid rgba(255,255,255,0.15)',
+                                    borderRadius: '8px', marginTop: '4px', maxHeight: '220px',
+                                    overflowY: 'auto', boxShadow: '0 12px 32px rgba(0,0,0,.6)'
+                                }}>
+                                    {users.map(u => (
+                                        <label key={u.id} style={{
+                                            display: 'flex', alignItems: 'center', gap: '10px',
+                                            padding: '8px 12px', cursor: 'pointer',
+                                            background: selectedAssignees.includes(u.id) ? 'rgba(232,160,32,0.15)' : '#0e1c33',
+                                            borderBottom: '1px solid rgba(255,255,255,0.06)',
+                                            fontSize: '13px'
+                                        }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedAssignees.includes(u.id)}
+                                                onChange={() => toggleAssignee(u.id)}
+                                                style={{ accentColor: 'var(--gold)' }}
+                                            />
+                                            <div style={{
+                                                width: 24, height: 24, borderRadius: '50%',
+                                                background: u.color || 'var(--gold)',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                fontSize: '10px', fontWeight: 700, color: '#000'
+                                            }}>
+                                                {u.name?.charAt(0).toUpperCase() || 'U'}
+                                            </div>
+                                            <div>
+                                                <div style={{ fontWeight: 500 }}>{u.name}</div>
+                                                <div style={{ fontSize: '10.5px', color: 'var(--muted)' }}>{u.dept || u.email}</div>
+                                            </div>
+                                        </label>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
 

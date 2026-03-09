@@ -147,11 +147,13 @@ export default function TaskDetailClient({ task }: { task: any }) {
                                         <span style={{ flex: 1, fontWeight: 500, textDecoration: sub.status === 'COMPLETED' ? 'line-through' : 'none', opacity: sub.status === 'COMPLETED' ? 0.6 : 1 }}>
                                             {sub.title}
                                         </span>
-                                        {sub.assignee && (
-                                            <div style={{ width: 20, height: 20, borderRadius: '50%', background: sub.assignee.color || 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px', fontWeight: 700, color: '#000' }}>
-                                                {sub.assignee.name?.substring(0, 2).toUpperCase() || 'U'}
-                                            </div>
-                                        )}
+                                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                                            {sub.taskAssignees && sub.taskAssignees.map((ta: any, i: number) => (
+                                                <div key={ta.id} style={{ width: 20, height: 20, borderRadius: '50%', background: ta.user?.color || 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px', fontWeight: 700, color: '#000', marginLeft: i > 0 ? '-4px' : 0, border: '2px solid var(--surface2)' }}>
+                                                    {ta.user?.name?.substring(0, 2).toUpperCase() || 'U'}
+                                                </div>
+                                            ))}
+                                        </div>
                                         <span className={`badge b-${sub.status?.toLowerCase()}`} style={{ fontSize: '9px', padding: '1px 5px' }}>
                                             {sub.status?.replace('_', ' ')}
                                         </span>
@@ -220,15 +222,19 @@ export default function TaskDetailClient({ task }: { task: any }) {
                         <div className="ctitle">👤 Assignment</div>
                         <div style={{ marginBottom: '14px' }}>
                             <div style={{ fontSize: '9px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600, marginBottom: '6px' }}>Assigned To</div>
-                            {task.assignee ? (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <div style={{ width: 36, height: 36, borderRadius: '10px', background: task.assignee.color || 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '13px', color: '#000' }}>
-                                        {task.assignee.name ? task.assignee.name.charAt(0).toUpperCase() : 'U'}
-                                    </div>
-                                    <div>
-                                        <div style={{ fontWeight: 600, fontSize: '13px' }}>{task.assignee.name || 'Unnamed User'}</div>
-                                        <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{task.assignee.email}</div>
-                                    </div>
+                            {task.taskAssignees && task.taskAssignees.length > 0 ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    {task.taskAssignees.map((ta: any) => (
+                                        <div key={ta.id} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <div style={{ width: 36, height: 36, borderRadius: '10px', background: ta.user?.color || 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '13px', color: '#000' }}>
+                                                {ta.user?.name ? ta.user.name.charAt(0).toUpperCase() : 'U'}
+                                            </div>
+                                            <div>
+                                                <div style={{ fontWeight: 600, fontSize: '13px' }}>{ta.user?.name || 'Unnamed User'}</div>
+                                                <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{ta.user?.email}</div>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             ) : (
                                 <div style={{ color: 'var(--muted)', fontSize: '12px', fontStyle: 'italic', background: 'var(--surface2)', padding: '10px', borderRadius: '8px' }}>

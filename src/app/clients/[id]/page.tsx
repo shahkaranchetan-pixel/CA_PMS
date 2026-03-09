@@ -18,7 +18,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     const userRole = (session?.user as any)?.role || 'EMPLOYEE'
     const userId = (session?.user as any)?.id
 
-    const baseTaskWhere = userRole === 'ADMIN' ? {} : { assigneeId: userId };
+    const baseTaskWhere: any = userRole === 'ADMIN' ? {} : { taskAssignees: { some: { userId } } };
 
     const client = await prisma.client.findUnique({
         where: { id },

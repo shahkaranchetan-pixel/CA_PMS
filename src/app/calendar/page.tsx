@@ -21,7 +21,9 @@ export default async function CalendarPage() {
     const firstDay = new Date(currentYear, currentMonth, 1).getDay();
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
-    const baseTaskWhere = userRole === 'ADMIN' ? {} : { assigneeId: userId };
+    const baseTaskWhere: any = userRole === 'ADMIN'
+        ? {}
+        : { taskAssignees: { some: { userId } } };
 
     const tasks = await prisma.task.findMany({
         where: {
@@ -31,7 +33,10 @@ export default async function CalendarPage() {
                 lte: new Date(currentYear, currentMonth, daysInMonth, 23, 59, 59)
             }
         },
-        include: { client: true, assignee: true },
+        include: {
+            client: true,
+            taskAssignees: { include: { user: true } }
+        },
         orderBy: { dueDate: 'asc' }
     });
 
@@ -102,22 +107,41 @@ export default async function CalendarPage() {
 
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                             {dayTasks.map(task => (
-                                                <Link href="/tasks" key={task.id} style={{
+                                                <Link href={`/tasks/${task.id}`} key={task.id} style={{
                                                     textDecoration: 'none',
                                                     padding: '4px 6px',
                                                     background: task.status === 'COMPLETED' ? 'rgba(34, 197, 94, 0.1)' : 'var(--surface2)',
                                                     borderLeft: `2px solid ${task.status === 'COMPLETED' ? 'var(--success)' : (task.priority === 'high' ? 'var(--danger)' : 'var(--gold)')}`,
                                                     borderRadius: '4px',
                                                     fontSize: '11px',
-                                                    display: 'block',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '4px',
                                                     whiteSpace: 'nowrap',
                                                     overflow: 'hidden',
                                                     textOverflow: 'ellipsis'
-                                                }} title={`${task.client?.name} - ${task.title}`}>
-                                                    <span style={{ fontWeight: 600, color: task.status === 'COMPLETED' ? 'var(--success)' : 'var(--text)' }}>
+                                                }} title={`${task.client?.name} - ${task.title}${task.parentId ? ' (subtask)' : ''}`}>
+                                                    {task.parentId && <span style={{ fontSize: '9px', color: 'var(--muted)' }}>↳</span>}
+                                                    <span style={{ fontWeight: 600, color: task.status === 'COMPLETED' ? 'var(--success)' : 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                         {task.client?.name?.substring(0, 10)}
                                                     </span>
-                                                    <span style={{ color: 'var(--muted)' }}> - {task.title}</span>
+                                                    <span style={{ color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis' }}> - {task.title}</span>
+                                                    {task.taskAssignees && task.taskAssignees.length > 0 && (
+                                                        <div style={{ display: 'flex', marginLeft: 'auto', flexShrink: 0 }}>
+                                                            {task.taskAssignees.slice(0, 2).map((ta: any, idx: number) => (
+                                                                <div key={ta.id} style={{
+                                                                    width: 14, height: 14, borderRadius: '50%',
+                                                                    background: ta.user?.color || 'var(--gold)',
+                                                                    fontSize: '6px', fontWeight: 700, color: '#000',
+                                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                    marginLeft: idx > 0 ? '-3px' : 0,
+                                                                    border: '1px solid var(--surface2)'
+                                                                }}>
+                                                                    {ta.user?.name?.charAt(0).toUpperCase() || 'U'}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
                                                 </Link>
                                             ))}
                                         </div>

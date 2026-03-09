@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { title, description, dueDate, period, clientId, taskType, frequency, assigneeId, templateId, priority, estimatedMinutes, blockedById } = body;
+        const { title, description, dueDate, period, clientId, taskType, frequency, assigneeIds, templateId, priority, estimatedMinutes, blockedById } = body;
 
         if (!title || !clientId || !taskType) {
             return NextResponse.json(
@@ -25,48 +25,52 @@ export async function POST(request: Request) {
                 dueDate: dueDate ? new Date(dueDate) : null,
                 period,
                 clientId,
-                assigneeId: assigneeId || null,
                 priority: priority || "medium",
                 estimatedMinutes: estimatedMinutes || null,
                 blockedById: blockedById || null,
+                taskAssignees: assigneeIds && assigneeIds.length > 0
+                    ? { create: assigneeIds.map((uid: string) => ({ userId: uid })) }
+                    : undefined,
             },
             include: {
                 client: true,
-                assignee: true
+                taskAssignees: { include: { user: true } }
             }
         });
 
-        // Trigger Notification & Email for Assignee
-        if (task.assigneeId) {
-            await prisma.notification.create({
-                data: {
-                    userId: task.assigneeId,
-                    title: "New Task Assigned",
-                    message: `You have been assigned a new task: ${task.title} for ${task.client.name}`,
-                    link: `/tasks/${task.id}`
-                }
-            });
-
-            if (task.assignee?.email) {
-                await sendEmail({
-                    to: task.assignee.email,
-                    subject: `New Task: ${task.title}`,
-                    html: `
-                        <div style="font-family: sans-serif; padding: 20px; color: #333;">
-                            <h2 style="color: #4FACFE;">New Task Assigned</h2>
-                            <p>Hi ${task.assignee.name},</p>
-                            <p>You have been assigned a new task in TaskDesk Pro:</p>
-                            <div style="background: #f4f4f4; padding: 15px; border-radius: 8px; border-left: 4px solid #4FACFE;">
-                                <strong>Task:</strong> ${task.title}<br/>
-                                <strong>Client:</strong> ${task.client.name}<br/>
-                                <strong>Due Date:</strong> ${task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'}
-                            </div>
-                            <p style="margin-top: 20px;">
-                                <a href="${process.env.NEXTAUTH_URL}/tasks/${task.id}" style="background: #4FACFE; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Task</a>
-                            </p>
-                        </div>
-                    `
+        // Trigger Notification & Email for each Assignee
+        if (task.taskAssignees && task.taskAssignees.length > 0) {
+            for (const ta of task.taskAssignees) {
+                await prisma.notification.create({
+                    data: {
+                        userId: ta.userId,
+                        title: "New Task Assigned",
+                        message: `You have been assigned a new task: ${task.title} for ${task.client.name}`,
+                        link: `/tasks/${task.id}`
+                    }
                 });
+
+                if (ta.user?.email) {
+                    await sendEmail({
+                        to: ta.user.email,
+                        subject: `New Task: ${task.title}`,
+                        html: `
+                            <div style="font-family: sans-serif; padding: 20px; color: #333;">
+                                <h2 style="color: #4FACFE;">New Task Assigned</h2>
+                                <p>Hi ${ta.user.name},</p>
+                                <p>You have been assigned a new task in TaskDesk Pro:</p>
+                                <div style="background: #f4f4f4; padding: 15px; border-radius: 8px; border-left: 4px solid #4FACFE;">
+                                    <strong>Task:</strong> ${task.title}<br/>
+                                    <strong>Client:</strong> ${task.client.name}<br/>
+                                    <strong>Due Date:</strong> ${task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'}
+                                </div>
+                                <p style="margin-top: 20px;">
+                                    <a href="${process.env.NEXTAUTH_URL}/tasks/${task.id}" style="background: #4FACFE; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Task</a>
+                                </p>
+                            </div>
+                        `
+                    });
+                }
             }
         }
 
@@ -78,12 +82,10 @@ export async function POST(request: Request) {
             });
 
             if (template && template.items.length > 0) {
-                const subtasks = template.items.map(item => {
-                    // Try to calculate due date based on dueDayOffset if applicable
+                for (const item of template.items) {
                     let subtaskDueDate = null;
                     if (item.dueDayOffset && item.dueDayOffset > 0 && period) {
                         try {
-                            // simplistic: parse period (e.g. Aug-2026) and set day to offset
                             const [m, y] = period.split('-');
                             if (m && y) {
                                 const d = new Date(`${m} 1, ${y}`);
@@ -93,22 +95,22 @@ export async function POST(request: Request) {
                         } catch (e) { }
                     }
 
-                    return {
-                        title: item.title,
-                        taskType: item.taskType,
-                        description: item.description,
-                        priority: item.priority,
-                        dueDate: subtaskDueDate || (dueDate ? new Date(dueDate) : null),
-                        period,
-                        clientId,
-                        assigneeId: assigneeId || null, // assign subtasks to same user by default
-                        parentId: task.id // Link to the newly created parent task
-                    };
-                });
-
-                await prisma.task.createMany({
-                    data: subtasks
-                });
+                    const subtask = await prisma.task.create({
+                        data: {
+                            title: item.title,
+                            taskType: item.taskType,
+                            description: item.description,
+                            priority: item.priority,
+                            dueDate: subtaskDueDate || (dueDate ? new Date(dueDate) : null),
+                            period,
+                            clientId,
+                            parentId: task.id,
+                            taskAssignees: assigneeIds && assigneeIds.length > 0
+                                ? { create: assigneeIds.map((uid: string) => ({ userId: uid })) }
+                                : undefined,
+                        }
+                    });
+                }
             }
         }
 
