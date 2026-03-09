@@ -127,7 +127,7 @@ export default function SettingsPage() {
                             name="EMAIL_FROM"
                             value={config.EMAIL_FROM}
                             onChange={e => setConfig({ ...config, EMAIL_FROM: e.target.value })}
-                            placeholder="e.g. TaskDesk Notifications <noreply@yourfirm.com>"
+                            placeholder="e.g. KCS TaskPro Notifications <noreply@yourfirm.com>"
                         />
                     </div>
                 </div>

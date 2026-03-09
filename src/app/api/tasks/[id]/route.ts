@@ -131,7 +131,7 @@ export async function PATCH(
                                 <div style="font-family: sans-serif; padding: 20px; color: #333;">
                                     <h2 style="color: #4FACFE;">Task Assigned</h2>
                                     <p>Hi ${assigneeUser.name},</p>
-                                    <p>A task has been assigned to you in TaskDesk Pro:</p>
+                                    <p>A task has been assigned to you in KCS TaskPro:</p>
                                     <div style="background: #f4f4f4; padding: 15px; border-radius: 8px; border-left: 4px solid #4FACFE;">
                                         <strong>Task:</strong> ${task.title}<br/>
                                         <strong>Client:</strong> ${task.client.name}<br/>

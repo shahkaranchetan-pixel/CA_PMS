@@ -58,7 +58,7 @@ export async function POST(request: Request) {
                             <div style="font-family: sans-serif; padding: 20px; color: #333;">
                                 <h2 style="color: #4FACFE;">New Task Assigned</h2>
                                 <p>Hi ${ta.user.name},</p>
-                                <p>You have been assigned a new task in TaskDesk Pro:</p>
+                                <p>You have been assigned a new task in KCS TaskPro:</p>
                                 <div style="background: #f4f4f4; padding: 15px; border-radius: 8px; border-left: 4px solid #4FACFE;">
                                     <strong>Task:</strong> ${task.title}<br/>
                                     <strong>Client:</strong> ${task.client.name}<br/>

@@ -48,7 +48,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                         fontWeight: 700,
                         color: 'var(--gold)',
                         marginBottom: '8px'
-                    }}>TaskDesk Pro</div>
+                    }}>KCS TaskPro</div>
                     <div style={{ fontSize: '12px', color: 'var(--muted)', letterSpacing: '2px', textTransform: 'uppercase' }}>Loading...</div>
                 </div>
             </div>

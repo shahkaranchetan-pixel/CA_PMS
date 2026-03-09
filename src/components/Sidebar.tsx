@@ -26,8 +26,8 @@ export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean, onClose
         <nav className={`sb ${isOpen ? 'open' : ''}`}>
             <div className="sb-logo" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                    <div className="sb-brand">TaskDesk</div>
-                    <div className="sb-sub">CA Task Management · Pro</div>
+                    <div className="sb-brand">KCS TaskPro</div>
+                    <div className="sb-sub">Practice Management Suite</div>
                 </div>
                 <button
                     onClick={onClose}

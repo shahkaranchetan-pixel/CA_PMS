@@ -26,8 +26,7 @@ export default function LoginPage() {
             if (result?.error) {
                 setError("Invalid email or password")
             } else {
-                router.push("/")
-                router.refresh()
+                window.location.href = "/"
             }
         } catch (err) {
             setError("Something went wrong. Please try again.")
@@ -87,7 +86,7 @@ export default function LoginPage() {
                         lineHeight: 1,
                         marginBottom: '6px'
                     }}>
-                        TaskDesk
+                        KCS TaskPro
                     </div>
                     <div style={{
                         fontSize: '9px',
@@ -96,7 +95,7 @@ export default function LoginPage() {
                         textTransform: 'uppercase',
                         fontWeight: 600
                     }}>
-                        CA TASK MANAGEMENT · PRO
+                        PRACTICE MANAGEMENT SUITE
                     </div>
                 </div>
 
@@ -240,7 +239,7 @@ export default function LoginPage() {
                 }}>
                     <div>Admin & Employee accounts supported</div>
                     <div style={{ marginTop: '4px', color: 'var(--muted)', opacity: .5 }}>
-                        TaskDesk Pro · {new Date().getFullYear()}
+                        KCS TaskPro · {new Date().getFullYear()}
                     </div>
                 </div>
             </div>

@@ -97,7 +97,7 @@ export default async function Home() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
                 <div>
                     <div className="ptitle">Dashboard</div>
-                    <div className="psub" style={{ marginBottom: 0 }}>{monthNames[currentMonth]} {currentYear} · TaskDesk Pro</div>
+                    <div className="psub" style={{ marginBottom: 0 }}>{monthNames[currentMonth]} {currentYear} · KCS TaskPro</div>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                     <Link href="/tasks/new" className="btn btn-p">+ New Task</Link>

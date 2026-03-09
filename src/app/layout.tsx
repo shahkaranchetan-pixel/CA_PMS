@@ -4,7 +4,7 @@ import Providers from '@/components/Providers'
 import AuthLayout from '@/components/AuthLayout'
 
 export const metadata: Metadata = {
-    title: 'TaskDesk Pro',
+    title: 'KCS TaskPro',
     description: 'CA Task Management Suite',
     manifest: '/manifest.json',
     themeColor: '#E8A020',

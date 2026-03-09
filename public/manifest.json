@@ -1,7 +1,7 @@
 {
-    "name": "TaskDesk Pro",
-    "short_name": "TaskDesk",
-    "description": "CA Task Management Suite - Practice Management Software",
+    "name": "KCS TaskPro",
+    "short_name": "KCS TaskPro",
+    "description": "KCS Practice Management Suite",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#07101f",
