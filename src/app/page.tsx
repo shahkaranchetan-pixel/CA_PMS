@@ -2,11 +2,17 @@ import { prisma } from "@/lib/prisma"
 import Link from "next/link"
 import { getServerSession } from "next-auth"
 import { authOptions } from "./api/auth/[...nextauth]/route"
+import { redirect } from "next/navigation"
 
 export const dynamic = "force-dynamic"
 
 export default async function Home() {
     const session = await getServerSession(authOptions)
+
+    if (!session) {
+        redirect("/login")
+    }
+
     const userRole = (session?.user as any)?.role || 'EMPLOYEE'
     const userId = (session?.user as any)?.id
 
@@ -84,6 +90,11 @@ export default async function Home() {
         include: { taskAssignees: { where: { task: { status: { not: 'COMPLETED' } } }, include: { task: { select: { id: true, priority: true } } } } }
     });
 
+    const currentPeriod = `${monthNames[currentMonth].substring(0, 3)}-${currentYear}`;
+    const statutoryTasksCount = await prisma.task.count({
+        where: { ...baseTaskWhere, period: currentPeriod, frequency: 'MONTHLY' }
+    });
+
     const STATUS_COLORS: Record<string, string> = {
         PENDING: '#FFB020',
         IN_PROGRESS: '#4FACFE',
@@ -92,8 +103,28 @@ export default async function Home() {
         COMPLETED: '#00CF84',
     };
 
+    const STATUTORY_COLORS: Record<string, string> = {
+        TDS_PAYMENT: '#FF6B6B',
+        GST_1: '#FFB020',
+        PF_ESI_PT: '#4FACFE',
+        GSTR_3B: '#00D4AA',
+        ACCOUNTING: '#B89AFF'
+    };
+
     return (
         <div>
+            {userRole === 'ADMIN' && statutoryTasksCount === 0 && (
+                <div className="card" style={{ background: 'rgba(79, 172, 254, 0.05)', border: '1px solid rgba(79, 172, 254, 0.2)', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ fontSize: '24px' }}>✨</div>
+                        <div>
+                            <div style={{ fontWeight: 600, color: 'var(--text)' }}>Monthly Statutory Tasks</div>
+                            <div style={{ fontSize: '13px', color: 'var(--muted)' }}>It looks like you haven't populated statutory tasks for {currentPeriod} yet.</div>
+                        </div>
+                    </div>
+                    <Link href="/tasks" className="btn btn-p" style={{ background: '#4FACFE', color: '#fff' }}>Populate Now</Link>
+                </div>
+            )}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
                 <div>
                     <div className="ptitle">Dashboard</div>

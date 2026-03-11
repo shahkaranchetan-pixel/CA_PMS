@@ -9,6 +9,7 @@ const NAV = [
     { id: "/calendar", label: "Calendar", icon: "📅" },
     { id: "/clients", label: "Clients", icon: "👥" },
     { id: "/tasks", label: "Tasks", icon: "📋" },
+    { id: "/training", label: "Training", icon: "🎓" },
     { id: "/team", label: "Team Workload", icon: "📊" },
     { id: "/templates", label: "Templates", icon: "📄" },
     { id: "/settings", label: "Settings", icon: "⚙️" },

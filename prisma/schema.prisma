@@ -52,9 +52,51 @@ model User {
   taskLogs      TaskLog[]
   notifications Notification[]
   vaultAuditLogs VaultAuditLog[]
+  trainingProgress UserTrainingProgress[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
+
+// ... (existing code)
+
+model TrainingModule {
+  id          String             @id @default(cuid())
+  title       String
+  description String?
+  category    String             // e.g., 'Excel', 'Tally', 'Income Tax', 'GST'
+  order       Int                @default(0)
+  materials   TrainingMaterial[]
+  progress    UserTrainingProgress[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+}
+
+model TrainingMaterial {
+  id          String         @id @default(cuid())
+  moduleId    String
+  module      TrainingModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  title       String
+  type        String         // 'TEXT', 'LINK', 'VIDEO_EMBED'
+  content     String         // Markdown text, URL, or Embed code
+  order       Int            @default(0)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model UserTrainingProgress {
+  id          String         @id @default(cuid())
+  userId      String
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  moduleId    String
+  module      TrainingModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  completed   Boolean        @default(false)
+  lastViewed  DateTime       @default(now())
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@unique([userId, moduleId])
+}
+
 
 model VerificationToken {
   identifier String

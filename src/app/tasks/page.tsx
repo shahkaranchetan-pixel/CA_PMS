@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
+import { redirect } from "next/navigation"
 
 export const dynamic = "force-dynamic"
 
@@ -8,6 +9,7 @@ import { authOptions } from "../api/auth/[...nextauth]/route";
 import TaskFilters from "./TaskFilters";
 import TaskStatusSelect from "./TaskStatusSelect";
 import BoardView from "./BoardView";
+import StatutoryTaskButton from "./StatutoryTaskButton";
 
 const TASK_MAP: Record<string, { label: string, color: string, icon: string }> = {
     tds: { label: 'TDS Payment', color: '#FF6B6B', icon: '🏦' },
@@ -19,6 +21,9 @@ const TASK_MAP: Record<string, { label: string, color: string, icon: string }> =
 export default async function TasksPage(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
     const searchParams = await props.searchParams;
     const session = await getServerSession(authOptions);
+    if (!session) {
+        redirect("/login");
+    }
     const currentUserId = (session?.user as any)?.id;
 
     const assigneeFilter = searchParams.assignee === 'all' ? undefined : (searchParams.assignee as string);
@@ -76,7 +81,10 @@ export default async function TasksPage(props: { searchParams: Promise<{ [key: s
                         </Link>
                     </div>
                     {userRole === 'ADMIN' && (
-                        <Link href="/tasks/bulk" className="btn btn-g">⚡ Bulk Create</Link>
+                        <>
+                            <StatutoryTaskButton />
+                            <Link href="/tasks/bulk" className="btn btn-g">⚡ Bulk Create</Link>
+                        </>
                     )}
                     <a href="/api/export/tasks" className="btn btn-g">📥 Export CSV</a>
                     <Link href="/tasks/new" className="btn btn-p">+ New Task</Link>

@@ -9,13 +9,21 @@
 1. **Core Development:**
    - Completed the task management logic, employee roles, client management features, and basic user interface.
    - Resolved all Prisma client generation and database build issues.
-   - Ensure the application builds successfully (`npm run build`). Next.js static and dynamic routing is properly configured.
+   - Built successfully (`npm run build`). Next.js static and dynamic routing is properly configured.
 2. **Setup & Migration:**
    - Moved the entire codebase from the temporary scratch space to a permanent development directory (`C:\Development\ca-practice`).
 3. **Version Control:**
    - Initialized a Git repository.
-   - Committed all current files into the main branch.
    - Connected the local codebase to the remote GitHub repository: `https://github.com/shahkaranchetan-pixel/CA_PMS.git`.
+4. **Recent UI & UX Improvements (KCS TaskPro Rebrand):**
+   - **Rebrand:** Renamed application from "TaskDesk" to "KCS TaskPro" across all modules.
+   - **Login Fix:** Resolved a race condition during authentication by using `window.location.href` to force a full session state refresh.
+   - **Theme Support:** Implemented a full light mode with a refined warm palette and a persistent mode toggle (☀️/🌙).
+
+## Deployment Status
+- Code is pushed to GitHub (`main` branch).
+- Vercel is connected for automatic deployments.
+- **Note:** Production DB currently uses SQLite; migration to PostgreSQL (Neon/Supabase) is recommended for long-term Vercel hosting.
 
 ## Immediate Next Steps (For the User)
 1. **Authenticate and Push Code:**

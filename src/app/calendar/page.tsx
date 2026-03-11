@@ -3,11 +3,15 @@ import Link from "next/link"
 
 import { getServerSession } from "next-auth"
 import { authOptions } from "../api/auth/[...nextauth]/route"
+import { redirect } from "next/navigation"
 
 export const dynamic = "force-dynamic"
 
 export default async function CalendarPage() {
     const session = await getServerSession(authOptions)
+    if (!session) {
+        redirect("/login")
+    }
     const userRole = (session?.user as any)?.role || 'EMPLOYEE'
     const userId = (session?.user as any)?.id
 
