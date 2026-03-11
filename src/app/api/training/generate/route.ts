@@ -129,6 +129,69 @@ const SMART_TEMPLATES: Record<string, any> = {
     }
 }
 
+// --- GEMINI AI INTEGRATION ---
+async function callGeminiAPI(topic: string, category: string) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey || apiKey === "PASTE_YOUR_GEMINI_API_KEY_HERE") {
+        throw new Error("Missing Gemini API Key");
+    }
+
+    const prompt = `
+    You are an expert Indian Chartered Accountant and corporate trainer.
+    Create a professional training module for the topic: "${topic}" in the category: "${category}".
+    
+    The content must be tailored for staff working in an Indian CA firm. 
+    Use current Financial Year rules, Section numbers from the Income Tax Act or GST Act where applicable.
+    
+    Return the response as a valid JSON object with the following structure:
+    {
+      "description": "Short 1-2 sentence overview of the module",
+      "materials": [
+        {
+          "title": "Clear and Professional Title",
+          "type": "TEXT",
+          "content": "Detailed, step-by-step professional explanation in markdown format. Use bullet points, bold text for key terms, and code blocks for section numbers or form names."
+        },
+        {
+          "title": "Related Official Resource",
+          "type": "LINK",
+          "content": "https://official-government-portal-link-or-high-authority-site"
+        },
+        {
+          "title": "Interactive Quiz",
+          "type": "QUIZ",
+          "content": "[{\\"q\\":\\"Question text?\\",\\"opts\\":[\\"Opt 1\\",\\"Opt 2\\",\\"Opt 3\\",\\"Opt 4\\"],\\"ans\\":0,\\"expl\\":\\"Detailed explanation of the correct answer...\\"}]"
+        }
+      ]
+    }
+
+    Ensure you provide at least 2 TEXT materials (lessons) and 1 QUIZ material.
+    The QUIZ "content" field MUST be a stringified JSON array as shown above.
+    Important: Return ONLY the JSON object. Do not add any preamble or markdown code blocks (like \`\`\`json).
+    `;
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }]
+        })
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error?.message || "Gemini API call failed");
+    }
+
+    const data = await response.json();
+    let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    // Clean up potential markdown formatting if the AI adds it despite instructions
+    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
+
+    return JSON.parse(text);
+}
+
 export async function POST(req: Request) {
     try {
         const session = await getServerSession(authOptions)
@@ -145,29 +208,33 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Category and Topic are required" }, { status: 400 })
         }
 
-        /* 
-           FUTURE: CORE AI INTEGRATION POINT
-           const aiResponse = await callGeminiAPI(topic, category); 
-           const generatedData = JSON.parse(aiResponse);
-        */
+        let moduleData;
 
-        // Smart Fallback Logic
-        const template = SMART_TEMPLATES[category]?.[topic] || {
-            description: `AI Generated curriculum for ${topic} in ${category}`,
-            materials: [
-                { title: `Introduction to ${topic}`, type: 'TEXT', content: `Start your learning journey for ${topic}. This content was automatically generated.` },
-                { title: 'General Resource', type: 'LINK', content: 'https://www.google.com/search?q=' + encodeURIComponent(topic) }
-            ]
+        try {
+            // Priority 1: Try Gemini AI
+            console.log(`Attempting Gemini generation for: ${topic}`);
+            moduleData = await callGeminiAPI(topic, category);
+        } catch (aiError) {
+            console.warn("AI Generation failed, falling back to templates:", aiError);
+
+            // Priority 2: Fallback to Smart Templates
+            moduleData = SMART_TEMPLATES[category]?.[topic] || {
+                description: `AI Generated curriculum for ${topic} in ${category}`,
+                materials: [
+                    { title: `Introduction to ${topic}`, type: 'TEXT', content: `Start your learning journey for ${topic}. This content was automatically generated.` },
+                    { title: 'General Resource', type: 'LINK', content: 'https://www.google.com/search?q=' + encodeURIComponent(topic) }
+                ]
+            };
         }
 
         // Create the module
         const newModule = await prisma.trainingModule.create({
             data: {
                 title: topic,
-                description: template.description,
+                description: moduleData.description,
                 category: category,
                 materials: {
-                    create: template.materials.map((m: any, i: number) => ({
+                    create: moduleData.materials.map((m: any, i: number) => ({
                         ...m,
                         order: i
                     }))
@@ -178,7 +245,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json(newModule)
     } catch (error) {
-        console.error("AI Generation Error:", error)
-        return NextResponse.json({ error: "Failed to generate AI content" }, { status: 500 })
+        console.error("Critical Generation Error:", error)
+        return NextResponse.json({ error: "Failed to generate training content" }, { status: 500 })
     }
 }
