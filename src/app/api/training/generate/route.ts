@@ -219,8 +219,8 @@ async function callClaudeAPI(topic: string, category: string) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
-            model: "claude-3-5-sonnet-20240620",
-            max_tokens: 4000,
+            model: "claude-sonnet-4-6",
+            max_tokens: 8000,
             messages: [{ role: "user", content: prompt }]
         })
     });
