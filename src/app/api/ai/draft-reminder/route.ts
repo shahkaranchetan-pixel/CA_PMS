@@ -17,34 +17,14 @@ async function callClaudeAPI(prompt: string) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
-            model: "claude-3-5-sonnet-20241022",
+            model: "claude-sonnet-4-6",
             max_tokens: 1000,
             messages: [{ role: "user", content: prompt }]
         })
     });
 
     if (!response.ok) {
-        // Fallback to older sonnet
-        const fallbackRes = await fetch("https://api.anthropic.com/v1/messages", {
-            method: "POST",
-            headers: {
-                "x-api-key": apiKey,
-                "anthropic-version": "2023-06-01",
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                model: "claude-3-5-sonnet-20240620",
-                max_tokens: 1000,
-                messages: [{ role: "user", content: prompt }]
-            })
-        });
-
-        if (fallbackRes.ok) {
-            const data = await fallbackRes.json();
-            return data.content[0].text;
-        }
-
-        // Final Claude fallback to Haiku
+        // Final Claude fallback to Haiku 4.5
         const haikuRes = await fetch("https://api.anthropic.com/v1/messages", {
             method: "POST",
             headers: {
@@ -53,7 +33,7 @@ async function callClaudeAPI(prompt: string) {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                model: "claude-3-haiku-20240307",
+                model: "claude-haiku-4-5",
                 max_tokens: 1000,
                 messages: [{ role: "user", content: prompt }]
             })
@@ -65,7 +45,7 @@ async function callClaudeAPI(prompt: string) {
         }
 
         const error = await response.json();
-        throw new Error(error?.error?.message || "Claude API call failed");
+        throw new Error(error?.error?.message || "All Claude models failed.");
     }
 
     const data = await response.json();

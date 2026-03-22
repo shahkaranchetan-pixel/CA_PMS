@@ -219,7 +219,7 @@ async function callClaudeAPI(topic: string, category: string) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
-            model: "claude-3-5-sonnet-20241022",
+            model: "claude-sonnet-4-6",
             max_tokens: 8000,
             messages: [{ role: "user", content: prompt }]
         })
@@ -227,27 +227,8 @@ async function callClaudeAPI(topic: string, category: string) {
 
     if (!response.ok) {
         const error = await response.json();
-        // Fallback to older sonnet if latest isn't yet available on this key
-        const fallbackRes = await fetch("https://api.anthropic.com/v1/messages", {
-            method: "POST",
-            headers: {
-                "x-api-key": apiKey,
-                "anthropic-version": "2023-06-01",
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                model: "claude-3-5-sonnet-20240620",
-                max_tokens: 8000,
-                messages: [{ role: "user", content: prompt }]
-            })
-        });
-
-        if (fallbackRes.ok) {
-            const data = await fallbackRes.json();
-            return JSON.parse(data.content[0].text.replace(/```json/g, "").replace(/```/g, "").trim());
-        }
-
-        // Final Claude fallback to Haiku (Always works)
+        
+        // Final Claude fallback to Haiku 4.5 (Fastest & most compatible)
         const haikuRes = await fetch("https://api.anthropic.com/v1/messages", {
             method: "POST",
             headers: {
@@ -256,7 +237,7 @@ async function callClaudeAPI(topic: string, category: string) {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                model: "claude-3-haiku-20240307",
+                model: "claude-haiku-4-5",
                 max_tokens: 8000,
                 messages: [{ role: "user", content: prompt }]
             })
