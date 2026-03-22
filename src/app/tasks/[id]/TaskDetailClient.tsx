@@ -437,8 +437,38 @@ export default function TaskDetailClient({ task, isAdmin }: { task: any, isAdmin
 function AIReminderDraft({ taskId, client, taskTitle, period }: { taskId: string, client: any, taskTitle: string, period?: string }) {
     const [draft, setDraft] = useState("");
     const [loading, setLoading] = useState(false);
+    const [sendingEmail, setSendingEmail] = useState(false);
     const [channel, setChannel] = useState("whatsapp");
     const [urgency, setUrgency] = useState("gentle");
+
+    const handleSendEmail = async () => {
+        if (!client?.contactEmail) {
+            alert("No contact email found for this client.");
+            return;
+        }
+        setSendingEmail(true);
+        try {
+            const res = await fetch("/api/ai/send-reminder", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    to: client.contactEmail,
+                    subject: `Reminder: ${taskTitle} - KCS Team`,
+                    content: draft
+                }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert("Email sent successfully!");
+            } else {
+                throw new Error(data.error || "Failed to send email");
+            }
+        } catch (err: any) {
+            alert(err.message);
+        } finally {
+            setSendingEmail(false);
+        }
+    };
 
     const handleDraft = async () => {
         setLoading(true);
@@ -511,6 +541,16 @@ function AIReminderDraft({ taskId, client, taskTitle, period }: { taskId: string
                         >
                             Open in WhatsApp
                         </a>
+                    )}
+                    {channel === 'email' && client?.contactEmail && (
+                        <button 
+                            onClick={handleSendEmail} 
+                            disabled={sendingEmail} 
+                            className="btn btn-p" 
+                            style={{ width: '100%', marginTop: '8px', fontSize: '11px' }}
+                        >
+                            {sendingEmail ? "Sending..." : `📧 Email to ${client.contactEmail}`}
+                        </button>
                     )}
                 </div>
             )}
