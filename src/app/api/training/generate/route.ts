@@ -168,7 +168,7 @@ async function callGeminiAPI(topic: string, category: string) {
     Return ONLY the JSON. No markdown blocks.
     `;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -219,7 +219,7 @@ async function callClaudeAPI(topic: string, category: string) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
-            model: "claude-sonnet-4-6",
+            model: "claude-3-5-sonnet-latest",
             max_tokens: 8000,
             messages: [{ role: "user", content: prompt }]
         })
@@ -254,7 +254,7 @@ export async function POST(req: Request) {
 
         let moduleData;
 
-        // TIERED LOADING LOGIC: Claude (Best) -> Gemini (Fast) -> Templates (Local)
+        // TIERED LOADING LOGIC: Claude (Best) -> Gemini (Fast)
         try {
             console.log(`[AI] Attempting Claude generation: ${topic}`);
             moduleData = await callClaudeAPI(topic, category);
@@ -263,14 +263,10 @@ export async function POST(req: Request) {
             try {
                 moduleData = await callGeminiAPI(topic, category);
             } catch (geminiError: any) {
-                console.warn("[AI] Gemini failed, falling back to templates:", geminiError.message);
-                moduleData = SMART_TEMPLATES[category]?.[topic] || {
-                    description: `Professional training for ${topic}`,
-                    materials: [
-                        { title: `Introduction to ${topic}`, type: 'TEXT', content: `Focus on fundamentals for ${topic}.` },
-                        { title: 'Learn More', type: 'LINK', content: 'https://www.google.com/search?q=' + encodeURIComponent(topic) }
-                    ]
-                };
+                console.error("[AI] Both AI providers failed:", geminiError.message);
+                return NextResponse.json({ 
+                    error: `AI Generation Failed.\nClaude Error: ${claudeError.message}\nGemini Error: ${geminiError.message}.\nPlease check your Vercel Environment Variables.` 
+                }, { status: 500 });
             }
         }
 

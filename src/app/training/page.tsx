@@ -80,9 +80,13 @@ export default function TrainingPage() {
                 setShowAIModal(false)
                 setAiTopic('')
                 fetchData()
+            } else {
+                const data = await res.json()
+                alert(data.error || "Generation failed. Please check your AI API keys in Vercel settings.")
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("AI Error:", error)
+            alert("Error: " + error.message)
         } finally {
             setGenerating(false)
         }
