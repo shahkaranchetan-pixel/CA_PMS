@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
+import ReassignButton from "./ReassignButton"
 
 export const dynamic = "force-dynamic"
 
@@ -22,6 +23,8 @@ export default async function TeamPage() {
         tasks: u.taskAssignees.map(ta => ta.task)
     }));
 
+    // List of all members for the reassign dropdown
+    const allMembers = team.map(m => ({ id: m.id, name: m.name || "Unknown" }));
     const now = new Date();
 
     return (
@@ -148,13 +151,16 @@ export default async function TeamPage() {
                                     <div style={{ fontSize: '10px', fontWeight: 700, color: '#FF5757', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>
                                         ⚠️ Overdue Tasks
                                     </div>
-                                    {overdueTasks.slice(0, 3).map(t => (
-                                        <Link key={t.id} href={`/tasks/${t.id}`} style={{ display: 'block', fontSize: '11.5px', color: 'var(--text)', padding: '3px 0', fontWeight: 500 }}>
-                                            • {t.title}
-                                        </Link>
+                                    {overdueTasks.slice(0, 4).map(t => (
+                                        <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                            <Link href={`/tasks/${t.id}`} style={{ fontSize: '11.5px', color: 'var(--text)', fontWeight: 500, flex: 1, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                                                • {t.title}
+                                            </Link>
+                                            <ReassignButton taskId={t.id} team={allMembers} />
+                                        </div>
                                     ))}
-                                    {overdueTasks.length > 3 && (
-                                        <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px' }}>+{overdueTasks.length - 3} more</div>
+                                    {overdueTasks.length > 4 && (
+                                        <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '4px' }}>+{overdueTasks.length - 4} more overdue</div>
                                     )}
                                 </div>
                             )}

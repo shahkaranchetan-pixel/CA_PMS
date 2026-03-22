@@ -1,17 +1,24 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/mailer";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
     try {
+        const session = await getServerSession(authOptions);
+        if (!session) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
         const body = await request.json();
         const { title, description, dueDate, period, clientId, taskType, frequency, assigneeIds, templateId, priority, estimatedMinutes, blockedById } = body;
 
-        if (!title || !clientId || !taskType) {
+        if (!title || !clientId || !taskType || !dueDate) {
             return NextResponse.json(
-                { error: "Title, Client ID, and Task Type are required" },
+                { error: "Title, Client ID, Task Type, and Due Date are required" },
                 { status: 400 }
             );
         }
@@ -121,5 +128,33 @@ export async function POST(request: Request) {
             { error: "Failed to create task" },
             { status: 500 }
         );
+    }
+}
+
+export async function GET(request: Request) {
+    try {
+        const { searchParams } = new URL(request.url);
+        const clientId = searchParams.get("clientId");
+        const taskType = searchParams.get("taskType");
+        const period = searchParams.get("period");
+
+        const where: any = { deletedAt: null };
+        if (clientId) where.clientId = clientId;
+        if (taskType) where.taskType = taskType;
+        if (period) where.period = period;
+
+        const tasks = await prisma.task.findMany({
+            where,
+            include: {
+                client: true,
+                taskAssignees: { include: { user: true } }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        return NextResponse.json(tasks);
+    } catch (error) {
+        console.error("Failed to fetch tasks:", error);
+        return NextResponse.json({ error: "Failed to fetch tasks" }, { status: 500 });
     }
 }

@@ -4,10 +4,25 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
+import GoogleProvider from "next-auth/providers/google"
 
 export const authOptions: NextAuthOptions = {
     adapter: PrismaAdapter(prisma) as any,
     providers: [
+        GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID || "",
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+            allowDangerousEmailAccountLinking: true, // Links Google sign-in to existing Admin-created employee record
+            profile(profile) {
+                return {
+                    id: profile.sub,
+                    name: profile.name,
+                    email: profile.email,
+                    image: profile.picture,
+                    role: profile.role ?? "EMPLOYEE",
+                }
+            },
+        }),
         CredentialsProvider({
             name: "Credentials",
             credentials: {
@@ -39,12 +54,26 @@ export const authOptions: NextAuthOptions = {
     ],
     session: { strategy: "jwt" },
     callbacks: {
-        async jwt({ token, user }: { token: any, user: any }) {
-            if (user) {
-                token.role = user.role
-                token.id = user.id
+        async signIn({ user, account, profile }) {
+            // Ensure that Google logins are ONLY allowed for pre-registered employees
+            if (account?.provider === "google") {
+                if (!user.email) return false;
+                const existingUser = await prisma.user.findUnique({
+                    where: { email: user.email }
+                });
+                // Reject sign in if the Admin hasn't created this employee yet
+                if (!existingUser) {
+                    return false;
+                }
             }
-            return token
+            return true;
+        },
+        async jwt({ token, user, trigger, session }: { token: any, user: any, trigger?: any, session?: any }) {
+            if (user) {
+                token.role = user.role;
+                token.id = user.id;
+            }
+            return token;
         },
         async session({ session, token }: { session: any, token: any }) {
             if (session.user) {
@@ -57,7 +86,7 @@ export const authOptions: NextAuthOptions = {
     pages: {
         signIn: "/login",
     },
-    secret: process.env.NEXTAUTH_SECRET || "SUPER_SECRET_FALLBACK",
+    secret: process.env.NEXTAUTH_SECRET,
 };
 
 const handler = NextAuth(authOptions);

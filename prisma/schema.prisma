@@ -34,6 +34,11 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+enum Role {
+  ADMIN
+  EMPLOYEE
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -41,7 +46,7 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String?
-  role          String    @default("EMPLOYEE") // ADMIN, EMPLOYEE
+  role          Role      @default(EMPLOYEE)
   dept          String    @default("GST")
   color         String    @default("#4FACFE")
   phone         String?
@@ -90,6 +95,8 @@ model UserTrainingProgress {
   moduleId    String
   module      TrainingModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   completed   Boolean        @default(false)
+  score       Int?
+  attemptCount Int           @default(0)
   lastViewed  DateTime       @default(now())
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
@@ -110,11 +117,14 @@ model Client {
   id           String   @id @default(cuid())
   name         String
   entityType   String   @default("Proprietorship")
+  gstCategory  String   @default("MONTHLY") // MONTHLY, QUARTERLY, EXEMPT
   active       Boolean  @default(true)
   gstin        String?
   pan          String?
   tan          String?
-  contact      String?
+  contactPerson String?
+  contactEmail  String?
+  contactPhone  String?
   
   // Login Credentials - Standard Portals
   itxLogin     String?   
@@ -132,14 +142,14 @@ model Client {
   ptPassword   String?
 
   tasks        Task[]
-  invoices     Invoice[]
   notes        ClientNote[]
   vaultEntries ClientVaultEntry[]
   documents    ClientDocument[]
   vaultAuditLogs VaultAuditLog[]
   
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }
 
 model ClientVaultEntry {
@@ -172,14 +182,16 @@ model Task {
   title       String   
   taskType    String   
   description String?
-  status      String   @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED
+  status      String   @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED, BLOCKED, UNDER_REVIEW
   priority    String   @default("medium") // high, medium, low
-  frequency   String   @default("ONCE") 
+  frequency   String   @default("ONCE") // ONCE, DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY
   dueDate     DateTime?
   period      String?  
   timeLogged  Int      @default(0) // time logged in minutes
   estimatedMinutes Int?
   isCustom    Boolean  @default(false)
+
+  deletedAt   DateTime?
   color       String?
   icon        String?
   month       Int?
@@ -231,29 +243,7 @@ model TaskLog {
   createdAt   DateTime @default(now())
 }
 
-model Invoice {
-  id          String   @id @default(cuid())
-  number      String
-  date        DateTime
-  dueDate     DateTime
-  status      String   @default("draft") // draft, sent, paid, overdue
-  notes       String?
-  
-  clientId    String
-  client      Client   @relation(fields: [clientId], references: [id])
-  items       InvoiceItem[]
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model InvoiceItem {
-  id          String   @id @default(cuid())
-  invoiceId   String
-  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  description String
-  amount      Float
-}
 
 model ClientNote {
   id          String   @id @default(cuid())

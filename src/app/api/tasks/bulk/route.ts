@@ -1,31 +1,41 @@
 import { NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
-import { authOptions } from "../../auth/[...nextauth]/route"
 import { prisma } from "@/lib/prisma"
+import { requireAuth } from "@/lib/auth-helpers"
 
 export const dynamic = "force-dynamic"
 
+const MONTHS: Record<string, number> = {
+    Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+    Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11
+};
+
 export async function POST(request: Request) {
     try {
-        const session = await getServerSession(authOptions)
-        if (!session || (session.user as any).role !== "ADMIN") {
-            return new NextResponse(JSON.stringify({ error: "Unauthorized" }), { status: 401 })
-        }
+        const { user, error } = await requireAuth("ADMIN");
+        if (error) return error;
 
         const body = await request.json()
-        const { clientIds, title, taskType, frequency, period, dueDate, priority, assigneeIds } = body
+        const { clientIds, title, taskType, frequency, period, dueDate, priority, assigneeIds, templateId } = body
 
         if (!clientIds || !Array.isArray(clientIds) || clientIds.length === 0) {
-            return new NextResponse(JSON.stringify({ error: "No clients selected" }), { status: 400 })
+            return NextResponse.json({ error: "No clients selected" }, { status: 400 })
         }
         if (!title || !dueDate) {
-            return new NextResponse(JSON.stringify({ error: "Title and Due Date are required" }), { status: 400 })
+            return NextResponse.json({ error: "Title and Due Date are required" }, { status: 400 })
         }
 
         let totalCreated = 0;
+        let template = null;
+        if (templateId) {
+            template = await prisma.taskTemplate.findUnique({
+                where: { id: templateId },
+                include: { items: true }
+            });
+        }
 
-        // Create tasks one by one so we can also create TaskAssignee records
-        for (const clientId of clientIds) {
+        // Parallel creation is still best if we need IDs for assignees/subtasks
+        // but we can optimize the subtask data generation
+        await Promise.all(clientIds.map(async (clientId: string) => {
             const task = await prisma.task.create({
                 data: {
                     title,
@@ -42,11 +52,46 @@ export async function POST(request: Request) {
                 }
             });
             totalCreated++;
-        }
+
+            // If template is selected, generate subtasks
+            if (template && template.items.length > 0) {
+                const subtasksPromises = template.items.map(async (item) => {
+                    let subtaskDueDate = null;
+                    if (item.dueDayOffset && item.dueDayOffset > 0 && period) {
+                        try {
+                            // FIXED: Robust period parsing (e.g. "Mar-2026")
+                            const [m, y] = period.split(/[\-\s\/]/);
+                            if (m && y && MONTHS[m] !== undefined) {
+                                subtaskDueDate = new Date(parseInt(y), MONTHS[m], item.dueDayOffset);
+                            }
+                        } catch (e) {
+                            console.error("Subtask date parsing error", e);
+                        }
+                    }
+
+                    return prisma.task.create({
+                        data: {
+                            title: item.title,
+                            taskType: item.taskType,
+                            description: item.description,
+                            priority: item.priority,
+                            dueDate: subtaskDueDate || new Date(dueDate),
+                            period,
+                            clientId,
+                            parentId: task.id,
+                            taskAssignees: assigneeIds && assigneeIds.length > 0
+                                ? { create: assigneeIds.map((uid: string) => ({ userId: uid })) }
+                                : undefined,
+                        }
+                    });
+                });
+                await Promise.all(subtasksPromises);
+            }
+        }));
 
         return NextResponse.json({ success: true, count: totalCreated })
     } catch (error) {
         console.error("[TASKS_BULK_GENERATE_ERROR]", error)
-        return new NextResponse(JSON.stringify({ error: "Internal Error" }), { status: 500 })
+        return NextResponse.json({ error: "Internal Error" }, { status: 500 })
     }
 }

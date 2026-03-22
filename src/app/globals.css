@@ -126,7 +126,12 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: 'DM Sans', sans-serif;
-  overflow-x: hidden
+  overflow-x: hidden;
+  color-scheme: dark;
+}
+
+[data-theme="light"] body {
+  color-scheme: light;
 }
 
 .app {
@@ -136,7 +141,8 @@ body {
 
 .sb {
   width: var(--sidebar);
-  background: rgba(7, 16, 31, .97);
+  background: rgba(7, 16, 31, 0.95);
+  backdrop-filter: blur(20px);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -145,7 +151,20 @@ body {
   top: 0;
   left: 0;
   z-index: 200;
-  overflow-y: auto
+  overflow-y: auto;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sb-collapsed {
+  --sidebar: 70px;
+}
+
+.sb-collapsed .main {
+  margin-left: 70px !important;
+}
+
+.sb-collapsed .topbar-main {
+  left: 70px !important;
 }
 
 .sb-logo {
@@ -295,9 +314,9 @@ body {
   margin-bottom: 22px
 }
 
-.stats {
+.stats-dashboard {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 12px;
   margin-bottom: 20px
 }
@@ -791,6 +810,16 @@ body {
   resize: vertical
 }
 
+option {
+  background-color: #1a2340; /* Dark background for options */
+  color: #DDE4F0;
+}
+
+[data-theme="light"] option {
+  background-color: #ffffff;
+  color: #0A0F1E;
+}
+
 .field input:focus,
 .field select:focus,
 .field textarea:focus {
@@ -1170,22 +1199,31 @@ body {
 
 .fab {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
-  width: 56px;
-  height: 56px;
-  border-radius: 28px;
+  bottom: 32px;
+  right: 32px;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
   background: var(--gold);
   color: #07101f;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
-  box-shadow: 0 4px 12px rgba(232, 160, 32, 0.4);
+  font-size: 22px;
+  box-shadow: 0 8px 32px rgba(232, 160, 32, 0.35);
   z-index: 1000;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.fab:hover {
+  transform: scale(1.1) rotate(90deg);
+  box-shadow: 0 12px 40px rgba(232, 160, 32, 0.5);
+}
+
+.fab:active {
+  transform: scale(0.95);
 }
 
 .fab:active {

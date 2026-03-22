@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
 
 export default function ProfilePage() {
@@ -11,8 +11,20 @@ export default function ProfilePage() {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
     const [success, setSuccess] = useState("")
+    const [tasks, setTasks] = useState<any[]>([])
 
     const user = session?.user as any
+
+    useEffect(() => {
+        if (user?.id) {
+            fetch(`/api/tasks?assignee=${user.id}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (Array.isArray(data)) setTasks(data)
+                })
+                .catch(console.error)
+        }
+    }, [user?.id])
 
     const handlePasswordChange = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -69,20 +81,51 @@ export default function ProfilePage() {
             </div>
 
             <div className="two-col">
-                <div className="card">
-                    <div className="ctitle">👤 Personal Details</div>
-                    <div className="fg" style={{ marginTop: '16px' }}>
-                        <div className="field">
-                            <label>Name</label>
-                            <input type="text" value={user.name || ''} disabled style={{ background: 'var(--surface2)', cursor: 'not-allowed' }} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div className="card">
+                        <div className="ctitle">👤 Personal Details</div>
+                        <div className="fg" style={{ marginTop: '16px' }}>
+                            <div className="field">
+                                <label>Name</label>
+                                <input type="text" value={user.name || ''} disabled style={{ background: 'var(--surface2)', cursor: 'not-allowed' }} />
+                            </div>
+                            <div className="field">
+                                <label>Email Address</label>
+                                <input type="text" value={user.email || ''} disabled style={{ background: 'var(--surface2)', cursor: 'not-allowed' }} />
+                            </div>
+                            <div className="field">
+                                <label>Role</label>
+                                <input type="text" value={user.role || 'EMPLOYEE'} disabled style={{ background: 'var(--surface2)', cursor: 'not-allowed' }} />
+                            </div>
                         </div>
-                        <div className="field">
-                            <label>Email Address</label>
-                            <input type="text" value={user.email || ''} disabled style={{ background: 'var(--surface2)', cursor: 'not-allowed' }} />
-                        </div>
-                        <div className="field">
-                            <label>Role</label>
-                            <input type="text" value={user.role || 'EMPLOYEE'} disabled style={{ background: 'var(--surface2)', cursor: 'not-allowed' }} />
+                    </div>
+
+                    <div className="card">
+                        <div className="ctitle">📊 My Task Insights</div>
+                        <div style={{ marginTop: '16px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                <div style={{ background: 'var(--surface2)', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
+                                    <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--gold)' }}>{tasks.filter(t => t.status !== 'COMPLETED').length}</div>
+                                    <div style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '4px' }}>Pending</div>
+                                </div>
+                                <div style={{ background: 'var(--surface2)', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
+                                    <div style={{ fontSize: '24px', fontWeight: 700, color: '#00CF84' }}>{tasks.filter(t => t.status === 'COMPLETED').length}</div>
+                                    <div style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '4px' }}>Completed</div>
+                                </div>
+                            </div>
+                            
+                            <div style={{ marginTop: '20px' }}>
+                                <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '12px' }}>Recent Tasks</div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    {tasks.slice(0, 5).map(task => (
+                                        <div key={task.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                                            <div style={{ fontSize: '12px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '160px' }}>{task.title}</div>
+                                            <span className={`badge b-${task.status.toLowerCase()}`} style={{ fontSize: '8px' }}>{task.status}</span>
+                                        </div>
+                                    ))}
+                                    {tasks.length === 0 && <div style={{ fontSize: '11px', color: 'var(--muted)', textAlign: 'center' }}>No tasks assigned yet.</div>}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

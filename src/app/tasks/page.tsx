@@ -10,6 +10,7 @@ import TaskFilters from "./TaskFilters";
 import TaskStatusSelect from "./TaskStatusSelect";
 import BoardView from "./BoardView";
 import StatutoryTaskButton from "./StatutoryTaskButton";
+import SearchInput from "@/components/SearchInput";
 
 const TASK_MAP: Record<string, { label: string, color: string, icon: string }> = {
     tds: { label: 'TDS Payment', color: '#FF6B6B', icon: '🏦' },
@@ -31,17 +32,52 @@ export default async function TasksPage(props: { searchParams: Promise<{ [key: s
     const view = searchParams.view === 'kanban' ? 'kanban' : 'list';
 
     const userRole = (session?.user as any)?.role || 'EMPLOYEE';
+    const user = await prisma.user.findUnique({ where: { id: currentUserId } });
+    const userDept = user?.dept || 'GST';
 
     // Build the query where clause
-    const filterConditions: any = { parentId: null };
+    const filterConditions: any = { 
+        parentId: null,
+        deletedAt: null // S4: exclude deleted tasks
+    };
 
     if (userRole === 'ADMIN') {
         if (assigneeFilter) filterConditions.taskAssignees = { some: { userId: assigneeFilter } };
     } else {
-        filterConditions.taskAssignees = { some: { userId: currentUserId } };
+        // Employees see tasks assigned to them OR tasks in their department
+        const deptTaskTypes: Record<string, string[]> = {
+            'GST': ['GST_1', 'GSTR_3B'],
+            'TDS': ['TDS_PAYMENT', 'TDS_RETURN'],
+            'ACCOUNTING': ['ACCOUNTING']
+        };
+        const allowedTypes = deptTaskTypes[userDept] || [];
+        
+        filterConditions.OR = [
+            { taskAssignees: { some: { userId: currentUserId } } },
+            { taskType: { in: allowedTypes } }
+        ];
     }
     if (typeFilter) {
         filterConditions.taskType = typeFilter;
+    }
+
+    const q = searchParams.q as string;
+    if (q) {
+        if (!filterConditions.OR) filterConditions.OR = [];
+        filterConditions.OR.push(
+            { title: { contains: q, mode: 'insensitive' } },
+            { client: { name: { contains: q, mode: 'insensitive' } } }
+        );
+        // If there was an existing OR from employee filtering, Prisma handles nested ORs via AND, but we can just use AND for the search term
+        // To be safe and compliant with Prisma structure when dealing with multiple conditions:
+        filterConditions.AND = [
+            {
+                OR: [
+                    { title: { contains: q, mode: 'insensitive' } },
+                    { client: { name: { contains: q, mode: 'insensitive' } } }
+                ]
+            }
+        ];
     }
 
     const tasks = await prisma.task.findMany({
@@ -66,10 +102,7 @@ export default async function TasksPage(props: { searchParams: Promise<{ [key: s
                     <div className="psub">Manage monthly compliances, deadlines, and team workload</div>
                 </div>
                 <div className="sep" />
-                <div className="sbox">
-                    <span style={{ color: 'var(--muted)' }}>🔍</span>
-                    <input type="text" placeholder="Search tasks or clients..." />
-                </div>
+                <SearchInput />
 
                 <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto' }}>
                     <div style={{ background: 'var(--surface2)', borderRadius: '8px', padding: '4px', display: 'flex', gap: '4px' }}>

@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/mailer";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { requireAuth } from "@/lib/auth-helpers";
+
+const MONTHS: Record<string, number> = {
+    Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+    Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11
+};
+const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export const dynamic = "force-dynamic";
 
@@ -11,9 +16,8 @@ export async function GET(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const session = await getServerSession(authOptions);
-        const user = session?.user as any;
-        if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const { user, error } = await requireAuth();
+        if (error) return error;
 
         const { id } = await params;
         const task = await prisma.task.findUnique({
@@ -49,9 +53,8 @@ export async function PATCH(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const session = await getServerSession(authOptions);
-        const user = session?.user as any;
-        if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const { user, error } = await requireAuth();
+        if (error) return error;
         const userId = user.id;
 
         const { id } = await params;
@@ -88,6 +91,56 @@ export async function PATCH(
             }
         });
 
+        // Always log status changes, regardless of other fields
+        if (status && oldTask.status !== status && userId) {
+            await prisma.taskLog.create({
+                data: {
+                    taskId: id,
+                    userId,
+                    type: "STATUS_CHANGE",
+                    oldStatus: oldTask.status,
+                    newStatus: status,
+                    content: `Status changed from ${oldTask.status} to ${status}`
+                }
+            });
+
+            // Feature: Auto-rollover monthly tasks
+            if (status === 'COMPLETED' && oldTask.frequency === 'MONTHLY' && oldTask.period) {
+                try {
+                    const [mon, yr] = oldTask.period.split(/[\-\s\/]/);
+                    if (mon && yr && MONTHS[mon] !== undefined) {
+                        const monthIndex = MONTHS[mon];
+                        const nextMonth = new Date(parseInt(yr), monthIndex + 1, 1);
+                        const nextPeriod = `${MONTH_NAMES[nextMonth.getMonth()]}-${nextMonth.getFullYear()}`;
+                        
+                        const exists = await prisma.task.findFirst({
+                            where: { clientId: oldTask.clientId, taskType: oldTask.taskType, period: nextPeriod }
+                        });
+                        
+                        if (!exists) {
+                            let nextDue = oldTask.dueDate ? new Date(oldTask.dueDate) : new Date();
+                            if (oldTask.dueDate) {
+                                nextDue.setMonth(nextDue.getMonth() + 1);
+                            }
+                            
+                            await prisma.task.create({
+                                data: {
+                                    title: oldTask.title.replace(oldTask.period, nextPeriod).replace(mon, MONTH_NAMES[nextMonth.getMonth()]),
+                                    taskType: oldTask.taskType,
+                                    frequency: 'MONTHLY',
+                                    period: nextPeriod,
+                                    clientId: oldTask.clientId,
+                                    dueDate: nextDue,
+                                    status: 'PENDING',
+                                    priority: oldTask.priority
+                                }
+                            });
+                        }
+                    }
+                } catch (e) { console.error("Auto-rollover failed", e) }
+            }
+        }
+
         // Handle assignee changes if assigneeIds is provided
         if (assigneeIds !== undefined && Array.isArray(assigneeIds)) {
             const oldAssigneeIds = oldTask.taskAssignees.map(ta => ta.userId);
@@ -107,7 +160,7 @@ export async function PATCH(
             // Add new assignments
             if (addedIds.length > 0) {
                 await prisma.taskAssignee.createMany({
-                    data: addedIds.map(uid => ({ taskId: id, userId: uid })),
+                    data: addedIds.map((uid: string) => ({ taskId: id, userId: uid })),
                     skipDuplicates: true
                 });
 
@@ -146,7 +199,7 @@ export async function PATCH(
                     }
                 }
             }
-
+            
             // Reload task with updated assignees
             const updatedTask = await prisma.task.findUnique({
                 where: { id },
@@ -158,23 +211,10 @@ export async function PATCH(
             return NextResponse.json(updatedTask);
         }
 
-        if (status && oldTask.status !== status && userId) {
-            await prisma.taskLog.create({
-                data: {
-                    taskId: id,
-                    userId,
-                    type: "STATUS_CHANGE",
-                    oldStatus: oldTask.status,
-                    newStatus: status,
-                    content: `Status changed from ${oldTask.status} to ${status}`
-                }
-            });
-        }
-
         // Trigger Email if optionally requested
         if (notifyClient && status === "COMPLETED" && task.client) {
             await sendEmail({
-                to: "client@example.com",
+                to: task.client.contactEmail || "client@example.com",
                 subject: `Task Completed: ${task.title}`,
                 html: `
                     <div style="font-family: sans-serif; padding: 20px; color: #333;">
@@ -198,6 +238,38 @@ export async function PATCH(
         console.error("Failed to update task:", error);
         return NextResponse.json(
             { error: "Failed to update task" },
+            { status: 500 }
+        );
+    }
+}
+
+// DELETE to soft-delete task
+export async function DELETE(
+    request: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const { user, error } = await requireAuth("ADMIN");
+        if (error) return error;
+
+        const { id } = await params;
+        
+        // Cascade delete subtasks
+        await prisma.task.updateMany({
+            where: { parentId: id },
+            data: { deletedAt: new Date() }
+        });
+
+        const task = await prisma.task.update({
+            where: { id },
+            data: { deletedAt: new Date() }
+        });
+
+        return NextResponse.json({ success: true, task });
+    } catch (error: any) {
+        console.error("Failed to delete task:", error);
+        return NextResponse.json(
+            { error: "Failed to delete task" },
             { status: 500 }
         );
     }

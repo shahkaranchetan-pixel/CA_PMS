@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
+import PeriodSelector from "./PeriodSelector"
 
 interface QuickTaskModalProps {
     isOpen: boolean
@@ -9,11 +10,17 @@ interface QuickTaskModalProps {
 }
 
 export default function QuickTaskModal({ isOpen, onClose }: QuickTaskModalProps) {
+    const today = new Date();
+    const prevMonthIdx = today.getMonth() === 0 ? 11 : today.getMonth() - 1;
+    const prevYear = today.getMonth() === 0 ? today.getFullYear() - 1 : today.getFullYear();
+    const MONTH_ABBRS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
     const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState("")
     const [clients, setClients] = useState<any[]>([])
     const [title, setTitle] = useState("")
+    const [period, setPeriod] = useState(`${MONTH_ABBRS[prevMonthIdx]}-${prevYear}`)
     const [isListening, setIsListening] = useState(false)
     const modalRef = useRef<HTMLDivElement>(null)
 
@@ -70,6 +77,7 @@ export default function QuickTaskModal({ isOpen, onClose }: QuickTaskModalProps)
             clientId: formData.get("clientId"),
             taskType: formData.get("taskType") || "OTHER",
             dueDate: formData.get("dueDate") || null,
+            period: period,
             priority: "medium",
             frequency: "ONCE"
         }
@@ -170,8 +178,10 @@ export default function QuickTaskModal({ isOpen, onClose }: QuickTaskModalProps)
 
                     <div className="field">
                         <label htmlFor="modalDueDate">Due Date</label>
-                        <input type="date" id="modalDueDate" name="dueDate" style={{ colorScheme: 'dark' }} />
+                        <input type="date" id="modalDueDate" name="dueDate" required style={{ colorScheme: 'dark' }} />
                     </div>
+
+                    <PeriodSelector value={period} onChange={setPeriod} />
 
                     <div style={{ gridColumn: '1 / -1', marginTop: '12px', display: 'flex', gap: '8px' }}>
                         <button type="submit" disabled={loading} className="btn btn-p" style={{ flex: 1, justifyContent: 'center' }}>

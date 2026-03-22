@@ -77,7 +77,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                         <div className="field">
                             <label>TAN Number</label>
                             <div style={{ color: 'var(--text)', fontFamily: 'monospace', fontSize: '14px', letterSpacing: '1px', background: 'rgba(255,255,255,.03)', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border)' }}>
-                                {(client as any).tan || 'Not provided'}
+                                {client.tan || 'Not provided'}
                             </div>
                         </div>
                         <div className="field">
@@ -87,9 +87,21 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                             </div>
                         </div>
                         <div className="field">
-                            <label>Contact Person / Phone</label>
+                            <label>Contact Person</label>
                             <div style={{ color: 'var(--text)', fontSize: '13px', background: 'rgba(255,255,255,.03)', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border)' }}>
-                                {client.contact || 'Not provided'}
+                                {client.contactPerson || '—'}
+                            </div>
+                        </div>
+                        <div className="field">
+                            <label>Contact Email</label>
+                            <div style={{ color: 'var(--text)', fontSize: '13px', background: 'rgba(255,255,255,.03)', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border)' }}>
+                                {client.contactEmail || '—'}
+                            </div>
+                        </div>
+                        <div className="field">
+                            <label>Contact Phone</label>
+                            <div style={{ color: 'var(--text)', fontSize: '13px', background: 'rgba(255,255,255,.03)', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border)' }}>
+                                {client.contactPhone || '—'}
                             </div>
                         </div>
                         <div className="field">

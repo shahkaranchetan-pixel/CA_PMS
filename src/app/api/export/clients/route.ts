@@ -25,7 +25,7 @@ export async function GET() {
             c.gstin || 'N/A',
             c.pan || 'N/A',
             c.tan || 'N/A',
-            `"${c.contact?.replace(/"/g, '""') || 'N/A'}"`,
+            `"${c.contactEmail?.replace(/"/g, '""') || 'N/A'}"`,
             new Date(c.createdAt).toLocaleDateString()
         ])
 

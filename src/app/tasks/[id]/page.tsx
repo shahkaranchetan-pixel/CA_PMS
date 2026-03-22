@@ -1,10 +1,15 @@
 import { prisma } from "@/lib/prisma"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import TaskDetailClient from "./TaskDetailClient"
+import { getServerSession } from "next-auth"
+import { authOptions } from "../../api/auth/[...nextauth]/route"
 
 export const dynamic = "force-dynamic"
 
 export default async function TaskDetailPage(props: { params: Promise<{ id: string }> }) {
+    const session = await getServerSession(authOptions);
+    if (!session) redirect("/login");
+
     const params = await props.params;
     const task = await prisma.task.findUnique({
         where: { id: params.id },
@@ -25,5 +30,5 @@ export default async function TaskDetailPage(props: { params: Promise<{ id: stri
 
     if (!task) notFound()
 
-    return <TaskDetailClient task={task} />
+    return <TaskDetailClient task={task} isAdmin={(session.user as any).role === 'ADMIN'} />
 }

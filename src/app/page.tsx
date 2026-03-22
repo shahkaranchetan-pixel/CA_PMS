@@ -3,96 +3,91 @@ import Link from "next/link"
 import { getServerSession } from "next-auth"
 import { authOptions } from "./api/auth/[...nextauth]/route"
 import { redirect } from "next/navigation"
+import ComplianceMatrix from "@/components/ComplianceMatrix"
+import MyTasksDashboard from "@/components/MyTasksDashboard"
 
 export const dynamic = "force-dynamic"
 
-export default async function Home() {
+export default async function Home({ searchParams }: { searchParams: Promise<{ month?: string, year?: string }> }) {
     const session = await getServerSession(authOptions)
 
     if (!session) {
         redirect("/login")
     }
 
-    const userRole = (session?.user as any)?.role || 'EMPLOYEE'
-    const userId = (session?.user as any)?.id
-
-    const totalClients = await prisma.client.count()
-    const activeClients = await prisma.client.findMany({ where: { active: true }, select: { name: true, id: true } })
-
+    const params = await searchParams;
     const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
+    const displayMonth = params.month ? parseInt(params.month) : now.getMonth();
+    const displayYear = params.year ? parseInt(params.year) : now.getFullYear();
+
+    const userRole = (session?.user as any)?.role || 'EMPLOYEE';
+    const userId = (session?.user as any)?.id;
 
     const baseTaskWhere: any = userRole === 'ADMIN' ? {} : { taskAssignees: { some: { userId } } };
 
-    // All active (non-completed) tasks
-    const allActiveTasks = await prisma.task.findMany({
-        where: { ...baseTaskWhere, status: { not: 'COMPLETED' } },
-        include: { client: true, taskAssignees: { include: { user: true } } },
-        orderBy: { dueDate: 'asc' }
-    });
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const currentPeriod = `${monthNames[displayMonth].substring(0, 3)}-${displayYear}`;
 
-    const completedThisMonth = await prisma.task.count({
-        where: { ...baseTaskWhere, status: 'COMPLETED', updatedAt: { gte: new Date(currentYear, currentMonth, 1) } }
-    });
+    const [totalClients, activeClients, dashboardTasks, recentLogs, team, statutoryTasksCount] = await Promise.all([
+        prisma.client.count({ where: { deletedAt: null } }),
+        prisma.client.findMany({ 
+            where: { active: true, deletedAt: null }, 
+            select: { name: true, id: true } 
+        }),
+        prisma.task.findMany({
+            where: { 
+                ...baseTaskWhere, 
+                deletedAt: null 
+            },
+            include: { client: true, taskAssignees: { include: { user: true } } },
+            orderBy: { dueDate: 'asc' }
+        }),
+        prisma.taskLog.findMany({
+            take: 8,
+            orderBy: { createdAt: 'desc' },
+            include: {
+                user: { select: { name: true, color: true } },
+                task: { select: { title: true, id: true } }
+            }
+        }),
+        prisma.user.findMany({
+            include: { taskAssignees: { where: { task: { status: { not: 'COMPLETED' } } }, include: { task: { select: { id: true, priority: true } } } } }
+        }),
+        prisma.task.count({
+            where: { 
+                ...baseTaskWhere, 
+                period: currentPeriod, 
+                frequency: 'MONTHLY',
+                deletedAt: null
+            }
+        })
+    ]);
 
-    const overdueTasks = allActiveTasks.filter(t => t.dueDate && new Date(t.dueDate) < now);
-    const blockedTasks = allActiveTasks.filter(t => t.status === 'BLOCKED');
-    const underReviewTasks = allActiveTasks.filter(t => t.status === 'UNDER_REVIEW');
-
-    // Recent activity logs
-    const recentLogs = await prisma.taskLog.findMany({
-        take: 8,
-        orderBy: { createdAt: 'desc' },
-        include: {
-            user: { select: { name: true, color: true } },
-            task: { select: { title: true, id: true } }
-        }
-    });
+    const overdueTasksCount = dashboardTasks.filter(t => t.status !== 'COMPLETED' && t.dueDate && new Date(t.dueDate) < now).length;
+    const completedThisMonth = dashboardTasks.filter(t => t.status === 'COMPLETED' && t.updatedAt >= new Date(displayYear, displayMonth, 1)).length;
+    const blockedTasksCount = dashboardTasks.filter(t => t.status === 'BLOCKED').length;
+    const underReviewTasksCount = dashboardTasks.filter(t => t.status === 'UNDER_REVIEW').length;
 
     // Upcoming deadlines (next 7 tasks due)
-    const upcomingDeadlines = allActiveTasks
-        .filter(t => t.dueDate && new Date(t.dueDate) >= now)
+    const upcomingDeadlines = dashboardTasks
+        .filter(t => t.status !== 'COMPLETED' && t.dueDate && new Date(t.dueDate) >= now)
         .slice(0, 7);
 
-    // Calendar
-    const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-
-    const calendarTasks = await prisma.task.findMany({
-        where: {
-            ...baseTaskWhere,
-            dueDate: {
-                gte: new Date(currentYear, currentMonth, 1),
-                lte: new Date(currentYear, currentMonth, daysInMonth, 23, 59, 59)
-            }
-        },
-        include: { client: true },
-        orderBy: { dueDate: 'asc' }
-    });
+    // Calendar logic
+    const firstDay = new Date(displayYear, displayMonth, 1).getDay();
+    const daysInMonth = new Date(displayYear, displayMonth + 1, 0).getDate();
 
     const calDays: (number | null)[] = [];
     for (let i = 0; i < firstDay; i++) calDays.push(null);
     for (let i = 1; i <= daysInMonth; i++) calDays.push(i);
 
     const tasksByDay: Record<number, any[]> = {};
-    calendarTasks.forEach(task => {
-        if (task.dueDate) {
+    dashboardTasks.forEach(task => {
+        if (task.dueDate && task.dueDate.getMonth() === displayMonth && task.dueDate.getFullYear() === displayYear) {
             const d = task.dueDate.getDate();
             if (!tasksByDay[d]) tasksByDay[d] = [];
             tasksByDay[d].push(task);
         }
-    });
-
-    // Team workload
-    const team = await prisma.user.findMany({
-        include: { taskAssignees: { where: { task: { status: { not: 'COMPLETED' } } }, include: { task: { select: { id: true, priority: true } } } } }
-    });
-
-    const currentPeriod = `${monthNames[currentMonth].substring(0, 3)}-${currentYear}`;
-    const statutoryTasksCount = await prisma.task.count({
-        where: { ...baseTaskWhere, period: currentPeriod, frequency: 'MONTHLY' }
     });
 
     const STATUS_COLORS: Record<string, string> = {
@@ -103,13 +98,11 @@ export default async function Home() {
         COMPLETED: '#00CF84',
     };
 
-    const STATUTORY_COLORS: Record<string, string> = {
-        TDS_PAYMENT: '#FF6B6B',
-        GST_1: '#FFB020',
-        PF_ESI_PT: '#4FACFE',
-        GSTR_3B: '#00D4AA',
-        ACCOUNTING: '#B89AFF'
-    };
+    // Navigation URLs
+    const prevMonth = displayMonth === 0 ? 11 : displayMonth - 1;
+    const prevYear = displayMonth === 0 ? displayYear - 1 : displayYear;
+    const nextMonth = displayMonth === 11 ? 0 : displayMonth + 1;
+    const nextYear = displayMonth === 11 ? displayYear + 1 : displayYear;
 
     return (
         <div>
@@ -128,7 +121,7 @@ export default async function Home() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
                 <div>
                     <div className="ptitle">Dashboard</div>
-                    <div className="psub" style={{ marginBottom: 0 }}>{monthNames[currentMonth]} {currentYear} · KCS TaskPro</div>
+                    <div className="psub" style={{ marginBottom: 0 }}>{monthNames[displayMonth]} {displayYear} · KCS TaskPro</div>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                     <Link href="/tasks/new" className="btn btn-p">+ New Task</Link>
@@ -137,7 +130,7 @@ export default async function Home() {
             </div>
 
             {/* Stats Row */}
-            <div className="stats">
+            <div className="stats-dashboard">
                 <div className="scard">
                     <div className="scard-accent" style={{ background: '#4FACFE' }} />
                     <div style={{ fontSize: '18px' }}>👥</div>
@@ -153,102 +146,37 @@ export default async function Home() {
                 <div className="scard">
                     <div className="scard-accent" style={{ background: '#FF5757' }} />
                     <div style={{ fontSize: '18px' }}>⚠️</div>
-                    <div className="scard-val" style={{ color: '#FF5757' }}>{overdueTasks.length}</div>
+                    <div className="scard-val" style={{ color: '#FF5757' }}>{overdueTasksCount}</div>
                     <div className="scard-lbl">Overdue Tasks</div>
                     <div className="scard-trend">need attention</div>
                 </div>
                 <div className="scard">
                     <div className="scard-accent" style={{ background: '#B89AFF' }} />
                     <div style={{ fontSize: '18px' }}>🚧</div>
-                    <div className="scard-val" style={{ color: '#B89AFF' }}>{blockedTasks.length}</div>
+                    <div className="scard-val" style={{ color: '#B89AFF' }}>{blockedTasksCount}</div>
                     <div className="scard-lbl">Blocked Tasks</div>
-                    <div className="scard-trend">{underReviewTasks.length} under review</div>
+                    <div className="scard-trend">{underReviewTasksCount} under review</div>
                 </div>
             </div>
 
-            {/* Main Grid: Compliance Matrix + Calendar */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            {/* My Tasks Section */}
+            <div style={{ marginBottom: '24px' }}>
+                <MyTasksDashboard tasks={dashboardTasks} />
+            </div>
 
-                {/* Compliance Matrix – All Pending Tasks */}
-                <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                    <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div className="ctitle" style={{ margin: 0 }}>📊 Compliance Matrix</div>
-                        <Link href="/tasks" style={{ fontSize: '11px', color: 'var(--gold)' }}>View All →</Link>
-                    </div>
-                    <div style={{ maxHeight: '460px', overflowY: 'auto' }}>
-                        <table className="tbl">
-                            <thead style={{ background: 'rgba(255,255,255,.01)', position: 'sticky', top: 0 }}>
-                                <tr>
-                                    <th>Task</th>
-                                    <th>Client</th>
-                                    <th>Assignee</th>
-                                    <th>Due</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {allActiveTasks.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={5}>
-                                            <div className="empty">
-                                                <div className="empty-i">✅</div>
-                                                <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', marginBottom: '4px' }}>All clear!</div>
-                                                <div style={{ fontSize: '12px' }}>No pending tasks right now.</div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    allActiveTasks.map(task => {
-                                        const isOverdue = task.dueDate && new Date(task.dueDate) < now;
-                                        return (
-                                            <tr key={task.id}>
-                                                <td>
-                                                    <Link href={`/tasks/${task.id}`} style={{ fontWeight: 600, fontSize: '12px', color: 'var(--text)', display: 'block', maxWidth: '180px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                        {task.title}
-                                                    </Link>
-                                                    <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '1px' }}>{task.taskType?.replace(/_/g, ' ')}</div>
-                                                </td>
-                                                <td style={{ fontSize: '11.5px', fontWeight: 500, maxWidth: '100px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                    {task.client?.name}
-                                                </td>
-                                                <td>
-                                                    {task.taskAssignees && task.taskAssignees.length > 0 ? (
-                                                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                            {task.taskAssignees.slice(0, 3).map((ta: any, i: number) => (
-                                                                <div key={ta.id} style={{ width: 20, height: 20, borderRadius: 5, background: ta.user?.color || 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, fontWeight: 700, color: '#000', marginLeft: i > 0 ? '-4px' : 0, border: '2px solid var(--surface)', zIndex: 3 - i }} title={ta.user?.name}>
-                                                                    {ta.user?.name?.substring(0, 2).toUpperCase() || 'U'}
-                                                                </div>
-                                                            ))}
-                                                            {task.taskAssignees.length === 1 && (
-                                                                <span style={{ fontSize: '11px', marginLeft: '4px' }}>{task.taskAssignees[0].user?.name?.split(' ')[0]}</span>
-                                                            )}
-                                                        </div>
-                                                    ) : (
-                                                        <span style={{ fontSize: '10px', color: 'var(--muted)', fontStyle: 'italic' }}>—</span>
-                                                    )}
-                                                </td>
-                                                <td style={{ fontSize: '11px', fontWeight: 500, color: isOverdue ? 'var(--danger)' : 'var(--text)' }}>
-                                                    {isOverdue && '⚠️ '}
-                                                    {task.dueDate ? new Date(task.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—'}
-                                                </td>
-                                                <td>
-                                                    <span className={`badge b-${task.status.toLowerCase()}`} style={{ fontSize: '9px', padding: '2px 6px' }}>
-                                                        {task.status.replace('_', ' ')}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+            {/* Main Grid: Calendar Section */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px', marginBottom: '16px' }}>
 
                 {/* Mini Calendar */}
                 <div className="card" style={{ padding: '14px 16px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                        <div className="ctitle" style={{ margin: 0 }}>📅 {monthNames[currentMonth]} {currentYear}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <div className="ctitle" style={{ margin: 0 }}>📅 {monthNames[displayMonth]} {displayYear}</div>
+                            <div style={{ display: 'flex', gap: '4px' }}>
+                                <Link href={`/?month=${prevMonth}&year=${prevYear}`} className="btn-ic" style={{ padding: '2px 8px', fontSize: '14px' }}>‹</Link>
+                                <Link href={`/?month=${nextMonth}&year=${nextYear}`} className="btn-ic" style={{ padding: '2px 8px', fontSize: '14px' }}>›</Link>
+                            </div>
+                        </div>
                         <Link href="/calendar" style={{ fontSize: '11px', color: 'var(--gold)' }}>Full View →</Link>
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', background: 'var(--border)', borderRadius: '10px', overflow: 'hidden' }}>

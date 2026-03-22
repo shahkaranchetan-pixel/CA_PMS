@@ -20,7 +20,9 @@ export default function NewClientPage() {
             entityType: formData.get("entityType"),
             gstin: formData.get("gstin"),
             pan: formData.get("pan"),
-            contact: formData.get("contact"),
+            contactPerson: formData.get("contactPerson"),
+            contactEmail: formData.get("contactEmail"),
+            contactPhone: formData.get("contactPhone"),
             itxLogin: formData.get("itxLogin"),
             itxPassword: formData.get("itxPassword"),
             gstLogin: formData.get("gstLogin"),
@@ -88,8 +90,16 @@ export default function NewClientPage() {
                             </select>
                         </div>
                         <div className="field">
-                            <label htmlFor="contact">Contact Person / Phone</label>
-                            <input type="text" id="contact" name="contact" placeholder="e.g. John Doe - 9876543210" />
+                            <label htmlFor="contactPerson">Contact Person Name</label>
+                            <input type="text" id="contactPerson" name="contactPerson" placeholder="e.g. John Doe" />
+                        </div>
+                        <div className="field">
+                            <label htmlFor="contactEmail">Contact Email</label>
+                            <input type="email" id="contactEmail" name="contactEmail" placeholder="e.g. john@example.com" />
+                        </div>
+                        <div className="field">
+                            <label htmlFor="contactPhone">Contact Phone</label>
+                            <input type="text" id="contactPhone" name="contactPhone" placeholder="e.g. 9876543210" />
                         </div>
 
                         <div className="fdiv">Tax Identifiers</div>
@@ -102,7 +112,7 @@ export default function NewClientPage() {
                             <label htmlFor="tan">TAN Number</label>
                             <input type="text" id="tan" name="tan" placeholder="ABCD12345E" style={{ textTransform: 'uppercase' }} />
                         </div>
-                        <div className="field">
+                        <div className="field" style={{ gridColumn: '1 / -1' }}>
                             <label htmlFor="gstin">GSTIN</label>
                             <input type="text" id="gstin" name="gstin" placeholder="22AAAAA0000A1Z5" style={{ textTransform: 'uppercase' }} />
                         </div>

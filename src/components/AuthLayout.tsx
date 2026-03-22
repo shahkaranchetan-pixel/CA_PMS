@@ -12,9 +12,18 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     const pathname = usePathname()
     const router = useRouter()
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
     const [isQuickTaskOpen, setIsQuickTaskOpen] = useState(false)
 
     const isLoginPage = pathname === "/login"
+
+    // Load sidebar state from localStorage on mount
+    useEffect(() => {
+        const saved = localStorage.getItem('sb_collapsed')
+        if (saved !== null) {
+            setIsSidebarCollapsed(saved === 'true')
+        }
+    }, [])
 
     useEffect(() => {
         setIsSidebarOpen(false) // Close sidebar on route change
@@ -61,11 +70,21 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     }
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen)
+    const toggleCollapse = () => {
+        const nextState = !isSidebarCollapsed
+        setIsSidebarCollapsed(nextState)
+        localStorage.setItem('sb_collapsed', String(nextState))
+    }
 
     // Authenticated — full app layout
     return (
-        <div className="app">
-            <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+        <div className={`app ${isSidebarCollapsed ? 'sb-collapsed' : ''}`}>
+            <Sidebar 
+                isOpen={isSidebarOpen} 
+                isCollapsed={isSidebarCollapsed}
+                onToggleCollapse={toggleCollapse}
+                onClose={() => setIsSidebarOpen(false)} 
+            />
             {isSidebarOpen && <div className="sb-overlay" onClick={() => setIsSidebarOpen(false)} />}
 
             <QuickTaskModal isOpen={isQuickTaskOpen} onClose={() => setIsQuickTaskOpen(false)} />

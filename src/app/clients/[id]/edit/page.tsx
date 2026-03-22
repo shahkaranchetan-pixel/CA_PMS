@@ -1,89 +1,104 @@
 "use client"
 
-import { useState, useEffect, use } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter, useParams } from "next/navigation"
 import Link from "next/link"
 
-export default function EditClientPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params)
+export default function EditClientPage() {
     const router = useRouter()
+    const { id } = useParams()
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [error, setError] = useState("")
-    const [client, setClient] = useState<any>(null)
+    const [formData, setFormData] = useState<any>({
+        name: "",
+        entityType: "Proprietorship",
+        gstin: "",
+        pan: "",
+        tan: "",
+        contactPerson: "",
+        contactEmail: "",
+        contactPhone: "",
+        active: true,
+        itxLogin: "",
+        itxPassword: "",
+        gstLogin: "",
+        gstPassword: "",
+        tracesLogin: "",
+        tracesPassword: "",
+        pfLogin: "",
+        pfPassword: "",
+        esiLogin: "",
+        esiPassword: "",
+        ptLogin: "",
+        ptPassword: "",
+    })
 
     useEffect(() => {
-        if (!id) return;
         fetch(`/api/clients/${id}`)
             .then(res => res.json())
             .then(data => {
-                setClient(data)
+                if (data.error) throw new Error(data.error)
+                setFormData({
+                    ...data,
+                    itxPassword: data.itxPassword || "",
+                    gstPassword: data.gstPassword || "",
+                    tracesPassword: data.tracesPassword || "",
+                    pfPassword: data.pfPassword || "",
+                    esiPassword: data.esiPassword || "",
+                    ptPassword: data.ptPassword || "",
+                })
                 setLoading(false)
             })
             .catch(err => {
-                console.error(err)
-                setError("Failed to load client details")
+                setError(err.message || "Failed to load client data")
                 setLoading(false)
             })
     }, [id])
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value, type } = e.target as HTMLInputElement
+        setFormData((prev: any) => ({
+            ...prev,
+            [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+        }))
+    }
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         setSaving(true)
         setError("")
 
-        const formData = new FormData(e.currentTarget)
-        const data = {
-            name: formData.get("name"),
-            entityType: formData.get("entityType"),
-            gstin: formData.get("gstin"),
-            pan: formData.get("pan"),
-            tan: formData.get("tan"),
-            contact: formData.get("contact"),
-            active: formData.get("active") === "true",
-            itxLogin: formData.get("itxLogin"),
-            itxPassword: formData.get("itxPassword"),
-            gstLogin: formData.get("gstLogin"),
-            gstPassword: formData.get("gstPassword"),
-            tracesLogin: formData.get("tracesLogin"),
-            tracesPassword: formData.get("tracesPassword"),
-            pfLogin: formData.get("pfLogin"),
-            pfPassword: formData.get("pfPassword"),
-            esiLogin: formData.get("esiLogin"),
-            esiPassword: formData.get("esiPassword"),
-            ptLogin: formData.get("ptLogin"),
-            ptPassword: formData.get("ptPassword"),
-        }
-
         try {
             const res = await fetch(`/api/clients/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data),
+                body: JSON.stringify(formData),
             })
 
             if (!res.ok) {
-                throw new Error("Failed to update client")
+                const err = await res.json()
+                throw new Error(err.error || "Failed to update client")
             }
 
             router.push(`/clients/${id}`)
             router.refresh()
         } catch (err: any) {
             setError(err.message)
+        } finally {
             setSaving(false)
         }
     }
 
-    if (loading) return <div style={{ padding: '20px', color: 'var(--muted)' }}>Loading client data...</div>
-    if (!client) return <div style={{ padding: '20px', color: 'var(--danger)' }}>Client not found.</div>
+    if (loading) return <div style={{ padding: '80px', textAlign: 'center', color: 'var(--muted)' }}>Loading client data...</div>
 
     return (
         <div>
             <div className="topbar">
                 <div>
-                    <Link href={`/clients/${id}`} style={{ color: 'var(--muted)', fontSize: '12.5px', textDecoration: 'none', marginBottom: '8px', display: 'inline-block' }}>&larr; Back to Client</Link>
-                    <div className="ptitle">Edit Client: {client.name}</div>
-                    <div className="psub">Update primary information and standard login vault</div>
+                    <Link href={`/clients/${id}`} style={{ color: 'var(--muted)', fontSize: '12.5px', textDecoration: 'none', marginBottom: '8px', display: 'inline-block' }}>&larr; Back to Client Profile</Link>
+                    <div className="ptitle">Edit Client: {formData.name}</div>
+                    <div className="psub">Update entity details and login vault credentials</div>
                 </div>
             </div>
 
@@ -99,11 +114,11 @@ export default function EditClientPage({ params }: { params: Promise<{ id: strin
                     <div className="fg" style={{ marginTop: '16px' }}>
                         <div className="field" style={{ gridColumn: '1 / -1' }}>
                             <label htmlFor="name">Entity Name *</label>
-                            <input type="text" id="name" name="name" defaultValue={client.name} required />
+                            <input type="text" id="name" name="name" required value={formData.name} onChange={handleChange} />
                         </div>
                         <div className="field">
                             <label htmlFor="entityType">Entity Type *</label>
-                            <select id="entityType" name="entityType" defaultValue={client.entityType} required>
+                            <select id="entityType" name="entityType" required value={formData.entityType} onChange={handleChange}>
                                 <option value="Proprietorship">Proprietorship</option>
                                 <option value="Partnership">Partnership</option>
                                 <option value="LLP">LLP</option>
@@ -114,41 +129,49 @@ export default function EditClientPage({ params }: { params: Promise<{ id: strin
                             </select>
                         </div>
                         <div className="field">
-                            <label htmlFor="active">Client Status *</label>
-                            <select id="active" name="active" defaultValue={client.active ? "true" : "false"}>
-                                <option value="true">Active</option>
-                                <option value="false">Inactive</option>
-                            </select>
+                             <label>Status</label>
+                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 0' }}>
+                                 <input type="checkbox" name="active" id="active" checked={formData.active} onChange={handleChange} style={{ width: '18px', height: '18px' }} />
+                                 <label htmlFor="active" style={{ textTransform: 'none', fontSize: '13px', color: 'var(--text)' }}>Active Client</label>
+                             </div>
                         </div>
-                        <div className="field" style={{ gridColumn: '1 / -1' }}>
-                            <label htmlFor="contact">Contact Person / Phone</label>
-                            <input type="text" id="contact" name="contact" defaultValue={client.contact || ''} />
+                        <div className="field">
+                            <label htmlFor="contactPerson">Contact Person Name</label>
+                            <input type="text" id="contactPerson" name="contactPerson" value={formData.contactPerson || ""} onChange={handleChange} />
+                        </div>
+                        <div className="field">
+                            <label htmlFor="contactEmail">Contact Email</label>
+                            <input type="email" id="contactEmail" name="contactEmail" value={formData.contactEmail || ""} onChange={handleChange} />
+                        </div>
+                        <div className="field">
+                            <label htmlFor="contactPhone">Contact Phone</label>
+                            <input type="text" id="contactPhone" name="contactPhone" value={formData.contactPhone || ""} onChange={handleChange} />
                         </div>
 
                         <div className="fdiv">Tax Identifiers</div>
 
                         <div className="field">
                             <label htmlFor="pan">PAN Number</label>
-                            <input type="text" id="pan" name="pan" defaultValue={client.pan || ''} style={{ textTransform: 'uppercase' }} />
+                            <input type="text" id="pan" name="pan" value={formData.pan || ""} onChange={handleChange} style={{ textTransform: 'uppercase' }} />
                         </div>
                         <div className="field">
                             <label htmlFor="tan">TAN Number</label>
-                            <input type="text" id="tan" name="tan" defaultValue={client.tan || ''} style={{ textTransform: 'uppercase' }} />
+                            <input type="text" id="tan" name="tan" value={formData.tan || ""} onChange={handleChange} style={{ textTransform: 'uppercase' }} />
                         </div>
-                        <div className="field">
+                        <div className="field" style={{ gridColumn: '1 / -1' }}>
                             <label htmlFor="gstin">GSTIN</label>
-                            <input type="text" id="gstin" name="gstin" defaultValue={client.gstin || ''} style={{ textTransform: 'uppercase' }} />
+                            <input type="text" id="gstin" name="gstin" value={formData.gstin || ""} onChange={handleChange} style={{ textTransform: 'uppercase' }} />
                         </div>
                     </div>
                 </div>
 
                 <div className="card">
                     <div className="ctitle">
-                        <span>🔐 Login Vault Initiation</span>
-                        <span className="badge b-high" style={{ fontSize: '9px' }}>CONFIDENTIAL</span>
+                        <span>🔐 Login Vault Update</span>
+                        <span className="badge b-high" style={{ fontSize: '9px' }}>SENSITIVE</span>
                     </div>
                     <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '4px' }}>
-                        Leave passwords empty if you do not want to overwrite them.
+                        Leave password as <b>••••••••</b> to keep it unchanged.
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
@@ -157,11 +180,11 @@ export default function EditClientPage({ params }: { params: Promise<{ id: strin
                             <div className="fg">
                                 <div className="field">
                                     <label>User ID</label>
-                                    <input type="text" name="itxLogin" defaultValue={client.itxLogin || ''} />
+                                    <input type="text" name="itxLogin" value={formData.itxLogin || ""} onChange={handleChange} />
                                 </div>
                                 <div className="field">
                                     <label>Password</label>
-                                    <input type="text" name="itxPassword" defaultValue={client.itxPassword || ''} />
+                                    <input type="password" name="itxPassword" value={formData.itxPassword || ""} onChange={handleChange} />
                                 </div>
                             </div>
                         </div>
@@ -171,11 +194,11 @@ export default function EditClientPage({ params }: { params: Promise<{ id: strin
                             <div className="fg">
                                 <div className="field">
                                     <label>User ID</label>
-                                    <input type="text" name="gstLogin" defaultValue={client.gstLogin || ''} />
+                                    <input type="text" name="gstLogin" value={formData.gstLogin || ""} onChange={handleChange} />
                                 </div>
                                 <div className="field">
                                     <label>Password</label>
-                                    <input type="text" name="gstPassword" defaultValue={client.gstPassword || ''} />
+                                    <input type="password" name="gstPassword" value={formData.gstPassword || ""} onChange={handleChange} />
                                 </div>
                             </div>
                         </div>
@@ -185,11 +208,11 @@ export default function EditClientPage({ params }: { params: Promise<{ id: strin
                             <div className="fg">
                                 <div className="field">
                                     <label>User ID</label>
-                                    <input type="text" name="tracesLogin" defaultValue={client.tracesLogin || ''} />
+                                    <input type="text" name="tracesLogin" value={formData.tracesLogin || ""} onChange={handleChange} />
                                 </div>
                                 <div className="field">
                                     <label>Password</label>
-                                    <input type="text" name="tracesPassword" defaultValue={client.tracesPassword || ''} />
+                                    <input type="password" name="tracesPassword" value={formData.tracesPassword || ""} onChange={handleChange} />
                                 </div>
                             </div>
                         </div>
@@ -203,11 +226,11 @@ export default function EditClientPage({ params }: { params: Promise<{ id: strin
                             <div className="fg">
                                 <div className="field">
                                     <label>User ID</label>
-                                    <input type="text" name="pfLogin" defaultValue={client.pfLogin || ''} />
+                                    <input type="text" name="pfLogin" value={formData.pfLogin || ""} onChange={handleChange} />
                                 </div>
                                 <div className="field">
                                     <label>Password</label>
-                                    <input type="text" name="pfPassword" defaultValue={client.pfPassword || ''} />
+                                    <input type="password" name="pfPassword" value={formData.pfPassword || ""} onChange={handleChange} />
                                 </div>
                             </div>
                         </div>
@@ -217,11 +240,11 @@ export default function EditClientPage({ params }: { params: Promise<{ id: strin
                             <div className="fg">
                                 <div className="field">
                                     <label>User ID</label>
-                                    <input type="text" name="esiLogin" defaultValue={client.esiLogin || ''} />
+                                    <input type="text" name="esiLogin" value={formData.esiLogin || ""} onChange={handleChange} />
                                 </div>
                                 <div className="field">
                                     <label>Password</label>
-                                    <input type="text" name="esiPassword" defaultValue={client.esiPassword || ''} />
+                                    <input type="password" name="esiPassword" value={formData.esiPassword || ""} onChange={handleChange} />
                                 </div>
                             </div>
                         </div>
@@ -231,11 +254,11 @@ export default function EditClientPage({ params }: { params: Promise<{ id: strin
                             <div className="fg">
                                 <div className="field">
                                     <label>User ID</label>
-                                    <input type="text" name="ptLogin" defaultValue={client.ptLogin || ''} />
+                                    <input type="text" name="ptLogin" value={formData.ptLogin || ""} onChange={handleChange} />
                                 </div>
                                 <div className="field">
                                     <label>Password</label>
-                                    <input type="text" name="ptPassword" defaultValue={client.ptPassword || ''} />
+                                    <input type="password" name="ptPassword" value={formData.ptPassword || ""} onChange={handleChange} />
                                 </div>
                             </div>
                         </div>
@@ -244,7 +267,7 @@ export default function EditClientPage({ params }: { params: Promise<{ id: strin
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
                         <button type="button" onClick={() => router.back()} className="btn btn-g">Cancel</button>
                         <button type="submit" disabled={saving} className="btn btn-p">
-                            {saving ? "Saving..." : "Save Changes"}
+                            {saving ? "Saving Changes..." : "Update Client"}
                         </button>
                     </div>
                 </div>

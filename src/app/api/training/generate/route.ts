@@ -137,37 +137,27 @@ async function callGeminiAPI(topic: string, category: string) {
     }
 
     const prompt = `
-    You are an expert Indian Chartered Accountant and corporate trainer.
-    Create a professional training module for the topic: "${topic}" in the category: "${category}".
+    You are an expert Indian Chartered Accountant and corporate trainer with 20+ years of experience.
+    Create a highly professional training module for the topic: "${topic}" in the category: "${category}".
     
-    The content must be tailored for staff working in an Indian CA firm. 
-    Use current Financial Year rules, Section numbers from the Income Tax Act or GST Act where applicable.
-    
+    The content must be specifically tailored for junior staff working in an Indian CA firm. 
+    It MUST include:
+    1. CURRENT Financial Year compliance rules (e.g. FY 2024-25).
+    2. SPECIFIC SECTION NUMBERS (e.g. Section 194R, Rule 42, etc.).
+    3. PRACTICAL EXAMPLES: Use realistic scenario names to illustrate a real-world scenario.
+    4. COMMON PITFALLS: What do staff usually get wrong?
+
     Return the response as a valid JSON object with the following structure:
     {
-      "description": "Short 1-2 sentence overview of the module",
+      "description": "Short overview",
       "materials": [
-        {
-          "title": "Clear and Professional Title",
-          "type": "TEXT",
-          "content": "Detailed, step-by-step professional explanation in markdown format. Use bullet points, bold text for key terms, and code blocks for section numbers or form names."
-        },
-        {
-          "title": "Related Official Resource",
-          "type": "LINK",
-          "content": "https://official-government-portal-link-or-high-authority-site"
-        },
-        {
-          "title": "Interactive Quiz",
-          "type": "QUIZ",
-          "content": "[{\\"q\\":\\"Question text?\\",\\"opts\\":[\\"Opt 1\\",\\"Opt 2\\",\\"Opt 3\\",\\"Opt 4\\"],\\"ans\\":0,\\"expl\\":\\"Detailed explanation of the correct answer...\\"}]"
-        }
+        { "title": "Lesson 1", "type": "TEXT", "content": "..." },
+        { "title": "Lesson 2", "type": "TEXT", "content": "..." },
+        { "title": "Quiz", "type": "QUIZ", "content": "[...]" }
       ]
     }
 
-    Ensure you provide at least 2 TEXT materials (lessons) and 1 QUIZ material.
-    The QUIZ "content" field MUST be a stringified JSON array as shown above.
-    Important: Return ONLY the JSON object. Do not add any preamble or markdown code blocks (like \`\`\`json).
+    Return ONLY the JSON. No markdown blocks.
     `;
 
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`, {
@@ -179,16 +169,62 @@ async function callGeminiAPI(topic: string, category: string) {
     });
 
     if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error?.message || "Gemini API call failed");
+        throw new Error("Gemini API call failed");
     }
 
     const data = await response.json();
     let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    // Clean up potential markdown formatting if the AI adds it despite instructions
     text = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    return JSON.parse(text);
+}
 
+// --- CLAUDE AI INTEGRATION ---
+async function callClaudeAPI(topic: string, category: string) {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+        throw new Error("Missing Anthropic API Key");
+    }
+
+    const prompt = `
+    You are an elite Indian Chartered Accountant and corporate trainer.
+    Generate a comprehensive training module for junior CA staff on: "${topic}" (Category: "${category}").
+    
+    REQUIREMENTS:
+    - Use latest Indian Tax/Corporate laws (FY 2024-25).
+    - Include specific Section numbers (e.g., Sec 194Q).
+    - Provide 2 detailed TEXT lessons with structured markdown.
+    - Provide 1 QUIZ with 5 high-quality, scenario-based multiple-choice questions.
+
+    FORMAT:
+    Return a valid JSON object with this exact keys: "description", "materials". 
+    Each material needs "title", "type" (TEXT, LINK, or QUIZ), and "content".
+    For QUIZ type, "content" should be a JSON-stringified array of {q, opts, ans, expl}.
+    
+    IMPORTANT: Provide ONLY the raw JSON object. No preamble, no explanation.
+    `;
+
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+            "x-api-key": apiKey,
+            "anthropic-version": "2023-06-01",
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            model: "claude-3-5-sonnet-20240620",
+            max_tokens: 4000,
+            messages: [{ role: "user", content: prompt }]
+        })
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error?.error?.message || "Claude API call failed");
+    }
+
+    const data = await response.json();
+    let text = data.content[0].text;
+    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
     return JSON.parse(text);
 }
 
@@ -210,24 +246,26 @@ export async function POST(req: Request) {
 
         let moduleData;
 
+        // TIERED LOADING LOGIC: Claude (Best) -> Gemini (Fast) -> Templates (Local)
         try {
-            // Priority 1: Try Gemini AI
-            console.log(`Attempting Gemini generation for: ${topic}`);
-            moduleData = await callGeminiAPI(topic, category);
-        } catch (aiError) {
-            console.warn("AI Generation failed, falling back to templates:", aiError);
-
-            // Priority 2: Fallback to Smart Templates
-            moduleData = SMART_TEMPLATES[category]?.[topic] || {
-                description: `AI Generated curriculum for ${topic} in ${category}`,
-                materials: [
-                    { title: `Introduction to ${topic}`, type: 'TEXT', content: `Start your learning journey for ${topic}. This content was automatically generated.` },
-                    { title: 'General Resource', type: 'LINK', content: 'https://www.google.com/search?q=' + encodeURIComponent(topic) }
-                ]
-            };
+            console.log(`[AI] Attempting Claude generation: ${topic}`);
+            moduleData = await callClaudeAPI(topic, category);
+        } catch (claudeError: any) {
+            console.warn("[AI] Claude failed, falling back to Gemini:", claudeError.message);
+            try {
+                moduleData = await callGeminiAPI(topic, category);
+            } catch (geminiError: any) {
+                console.warn("[AI] Gemini failed, falling back to templates:", geminiError.message);
+                moduleData = SMART_TEMPLATES[category]?.[topic] || {
+                    description: `Professional training for ${topic}`,
+                    materials: [
+                        { title: `Introduction to ${topic}`, type: 'TEXT', content: `Focus on fundamentals for ${topic}.` },
+                        { title: 'Learn More', type: 'LINK', content: 'https://www.google.com/search?q=' + encodeURIComponent(topic) }
+                    ]
+                };
+            }
         }
 
-        // Create the module
         const newModule = await prisma.trainingModule.create({
             data: {
                 title: topic,
@@ -245,7 +283,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json(newModule)
     } catch (error) {
-        console.error("Critical Generation Error:", error)
-        return NextResponse.json({ error: "Failed to generate training content" }, { status: 500 })
+        console.error("[CRITICAL] Generation Error:", error)
+        return NextResponse.json({ error: "Generation failed" }, { status: 500 })
     }
 }

@@ -12,12 +12,13 @@ const STATUS_MAP: Record<string, { label: string, color: string }> = {
     COMPLETED: { label: 'Completed', color: '#00CF84' },
 }
 
-export default function TaskDetailClient({ task }: { task: any }) {
+export default function TaskDetailClient({ task, isAdmin }: { task: any, isAdmin?: boolean }) {
     const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [status, setStatus] = useState(task.status)
     const [comment, setComment] = useState("")
     const [submittingComment, setSubmittingComment] = useState(false)
+    const [activities, setActivities] = useState(task.activities || [])
 
     const handleStatusChange = async (newStatus: string) => {
         setLoading(true)
@@ -37,6 +38,65 @@ export default function TaskDetailClient({ task }: { task: any }) {
             setLoading(false)
         }
     }
+
+    const handleDelete = async () => {
+        if (!confirm("Are you sure you want to delete this task? This cannot be undone.")) return;
+        setLoading(true);
+        try {
+            const res = await fetch(`/api/tasks/${task.id}`, { method: "DELETE" });
+            if (res.ok) {
+                router.push("/tasks");
+                router.refresh();
+            } else {
+                throw new Error("Failed to delete task");
+            }
+        } catch (err) {
+            alert("Error deleting task");
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    const handleClone = async () => {
+        setLoading(true);
+        try {
+            // Simply call existing Task GET and then POST to create a duplicate
+            const res = await fetch(`/api/tasks`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    title: `${task.title} (Clone)`,
+                    description: task.description,
+                    taskType: task.taskType,
+                    clientId: task.clientId,
+                    priority: task.priority,
+                    dueDate: task.dueDate,
+                    period: task.period,
+                    assigneeIds: task.taskAssignees?.map((ta: any) => ta.userId) || []
+                }),
+            });
+            if (res.ok) {
+                const newTask = await res.json();
+                router.push(`/tasks/${newTask.id}/edit`);
+                router.refresh();
+            }
+        } catch (err) { alert("Error cloning task"); }
+        finally { setLoading(false); }
+    };
+
+    const toggleActivity = async (id: string, current: boolean) => {
+        try {
+            const res = await fetch(`/api/tasks/${task.id}/activities/${id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ isCompleted: !current }),
+            });
+            if (res.ok) {
+                setActivities(activities.map((a: any) => a.id === id ? { ...a, isCompleted: !current } : a));
+                router.refresh();
+            }
+        } catch (err) { console.error(err); }
+    };
 
     const submitComment = async () => {
         if (!comment.trim()) return;
@@ -94,11 +154,13 @@ export default function TaskDetailClient({ task }: { task: any }) {
                             {loading ? "..." : "👁️ Send to Review"}
                         </button>
                     )}
-                    {status !== 'COMPLETED' && (
+                     {status !== 'COMPLETED' && (
                         <button onClick={() => handleStatusChange('COMPLETED')} disabled={loading} className="btn btn-p">
                             {loading ? "..." : "✅ Complete"}
                         </button>
                     )}
+                     <Link href={`/tasks/${task.id}/edit`} className="btn btn-g">✏️ Edit</Link>
+                    <button onClick={handleClone} disabled={loading} className="btn btn-g">👯 Clone</button>
                 </div>
             </div>
 
@@ -125,11 +187,53 @@ export default function TaskDetailClient({ task }: { task: any }) {
                         </div>
                     </div>
 
-                    {/* Subtasks */}
+                    {/* Activities (Checklist) */}
+                    {activities.length > 0 && (
+                        <div className="card">
+                            <div className="ctitle">
+                                <span>📋 Task Checklist</span>
+                                <span style={{ fontSize: '11px', color: 'var(--muted)' }}>
+                                    {activities.filter((a: any) => a.isCompleted).length}/{activities.length} completed
+                                </span>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                {activities.map((act: any) => (
+                                    <div 
+                                        key={act.id} 
+                                        onClick={() => toggleActivity(act.id, act.isCompleted)}
+                                        style={{ 
+                                            display: 'flex', gap: '10px', padding: '10px 12px', background: 'var(--surface2)', 
+                                            borderRadius: '8px', border: '1px solid var(--border)', cursor: 'pointer',
+                                            transition: 'transform 0.1s'
+                                        }}
+                                    >
+                                        <div style={{ 
+                                            width: 18, height: 18, borderRadius: 4, 
+                                            border: `2px solid ${act.isCompleted ? '#00CF84' : 'var(--muted)'}`,
+                                            background: act.isCompleted ? '#00CF84' : 'transparent',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            flexShrink: 0
+                                        }}>
+                                            {act.isCompleted && <span style={{ color: '#000', fontSize: '12px', fontWeight: 900 }}>✓</span>}
+                                        </div>
+                                        <div style={{ 
+                                            fontSize: '13px', color: 'var(--text)', 
+                                            textDecoration: act.isCompleted ? 'line-through' : 'none',
+                                            opacity: act.isCompleted ? 0.6 : 1
+                                        }}>
+                                            {act.title}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Subtasks (Child Tasks) */}
                     {task.subtasks && task.subtasks.length > 0 && (
                         <div className="card">
                             <div className="ctitle">
-                                <span>📋 Subtasks</span>
+                                <span>🔗 Child Tasks</span>
                                 <span style={{ fontSize: '11px', color: 'var(--muted)' }}>
                                     {task.subtasks.filter((s: any) => s.status === 'COMPLETED').length}/{task.subtasks.length} done
                                 </span>
@@ -298,15 +402,118 @@ export default function TaskDetailClient({ task }: { task: any }) {
                                     🔄 Unblock & Resume
                                 </button>
                             )}
+                            {task.client?.contactPhone && (
+                                <a 
+                                    href={`https://wa.me/${task.client.contactPhone.replace(/\D/g, '')}?text=${encodeURIComponent(`Dear ${task.client.name}, your ${task.title} for ${task.period || 'current period'} is due on ${task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'time'}. Please share your data at the earliest. - KCS Team`)}`} 
+                                    target="_blank" 
+                                    rel="noreferrer" 
+                                    className="btn btn-g" 
+                                    style={{ width: '100%', justifyContent: 'center', background: '#25D366', color: '#fff', borderColor: '#25D366' }}
+                                >
+                                    💬 WhatsApp Reminder
+                                </a>
+                            )}
                             {status === 'COMPLETED' && (
                                 <button onClick={() => handleStatusChange('PENDING')} disabled={loading} className="btn btn-g" style={{ width: '100%', justifyContent: 'center' }}>
                                     ↩ Reopen Task
                                 </button>
                             )}
+                            {isAdmin && (
+                                <button onClick={handleDelete} disabled={loading} className="btn btn-d" style={{ width: '100%', justifyContent: 'center', marginTop: '8px', background: 'transparent', border: '1px solid var(--danger)', color: 'var(--danger)' }}>
+                                    🗑️ Delete Task
+                                </button>
+                            )}
                         </div>
                     </div>
+
+                    {/* AI Quick Draft */}
+                    <AIReminderDraft taskId={task.id} client={task.client} taskTitle={task.title} period={task.period} />
                 </div>
             </div>
         </div>
     )
+}
+
+function AIReminderDraft({ taskId, client, taskTitle, period }: { taskId: string, client: any, taskTitle: string, period?: string }) {
+    const [draft, setDraft] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [channel, setChannel] = useState("whatsapp");
+    const [urgency, setUrgency] = useState("gentle");
+
+    const handleDraft = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch("/api/ai/draft-reminder", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ taskId, channel, urgency }),
+            });
+            const data = await res.json();
+            if (data.draft) setDraft(data.draft);
+            else throw new Error(data.error || "Failed to draft");
+        } catch (err: any) {
+            alert(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(draft);
+        alert("Draft copied to clipboard!");
+    };
+
+    return (
+        <div className="card" style={{ border: '1px solid var(--gold-soft)', background: 'rgba(232,160,32,0.03)' }}>
+            <div className="ctitle" style={{ color: 'var(--gold)' }}>✨ AI Reminder Draft</div>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                <select 
+                    value={channel} 
+                    onChange={e => setChannel(e.target.value)}
+                    style={{ flex: 1, fontSize: '11px', padding: '6px', borderRadius: '4px', background: 'var(--surface2)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                >
+                    <option value="whatsapp">WhatsApp</option>
+                    <option value="email">Email</option>
+                </select>
+                <select 
+                    value={urgency} 
+                    onChange={e => setUrgency(e.target.value)}
+                    style={{ flex: 1, fontSize: '11px', padding: '6px', borderRadius: '4px', background: 'var(--surface2)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                >
+                    <option value="gentle">Gentle Nudge</option>
+                    <option value="firm">Firm/Urgent</option>
+                </select>
+            </div>
+            {!draft ? (
+                <button 
+                    onClick={handleDraft} 
+                    disabled={loading} 
+                    className="btn btn-p" 
+                    style={{ width: '100%', fontSize: '12px' }}
+                >
+                    {loading ? "Generating Draft..." : "Generate AI Draft"}
+                </button>
+            ) : (
+                <div style={{ animation: 'fadeIn 0.3s ease' }}>
+                    <div style={{ background: 'var(--surface2)', padding: '10px', borderRadius: '8px', fontSize: '12px', border: '1px solid var(--border)', maxHeight: '150px', overflowY: 'auto', marginBottom: '10px', whiteSpace: 'pre-wrap', fontStyle: 'italic' }}>
+                        {draft}
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <button onClick={handleCopy} className="btn btn-g" style={{ flex: 1, fontSize: '11px' }}>📋 Copy</button>
+                        <button onClick={() => setDraft("")} className="btn btn-d" style={{ flex: 1, fontSize: '11px', background: 'transparent' }}>Clear</button>
+                    </div>
+                    {channel === 'whatsapp' && client?.contactPhone && (
+                        <a 
+                            href={`https://wa.me/${client.contactPhone.replace(/\D/g, '')}?text=${encodeURIComponent(draft)}`} 
+                            target="_blank" 
+                            className="btn btn-g" 
+                            style={{ width: '100%', marginTop: '8px', background: '#25D366', color: '#fff', fontSize: '11px', justifyContent: 'center' }}
+                        >
+                            Open in WhatsApp
+                        </a>
+                    )}
+                </div>
+            )}
+        </div>
+    );
 }

@@ -1,0 +1,135 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+interface ComplianceMatrixProps {
+    clients: any[];
+    tasks: any[];
+    currentPeriod: string;
+}
+
+function getStatusIcon(status: string) {
+    const config: Record<string, { color: string, glow: string, label: string }> = {
+        'COMPLETED': { color: '#00CF84', glow: 'rgba(0, 207, 132, 0.4)', label: 'Completed' },
+        'IN_PROGRESS': { color: '#4FACFE', glow: 'rgba(79, 172, 254, 0.4)', label: 'In Progress' },
+        'BLOCKED': { color: '#FF5757', glow: 'rgba(255, 87, 87, 0.4)', label: 'Blocked' },
+        'UNDER_REVIEW': { color: '#B89AFF', glow: 'rgba(184, 154, 255, 0.4)', label: 'Under Review' },
+        'PENDING': { color: 'rgba(255, 255, 255, 0.15)', glow: 'transparent', label: 'Pending' }
+    };
+
+    const s = config[status] || config['PENDING'];
+
+    return (
+        <div 
+            title={s.label}
+            style={{ 
+                width: '10px', 
+                height: '10px', 
+                borderRadius: '50%', 
+                background: s.color,
+                margin: '0 auto',
+                boxShadow: status !== 'PENDING' ? `0 0 8px ${s.glow}` : 'none',
+                border: status === 'PENDING' ? '1px solid rgba(255, 255, 255, 0.1)' : 'none'
+            }} 
+        />
+    );
+}
+
+export default function ComplianceMatrix({ clients, tasks, currentPeriod }: ComplianceMatrixProps) {
+    const router = useRouter();
+    
+    const STATUTORY_TYPES = [
+        { key: 'GST_1', label: 'GST-1' },
+        { key: 'GSTR_3B', label: 'GST-3B' },
+        { key: 'TDS_PAYMENT', label: 'TDS' },
+        { key: 'PF_ESI_PT', label: 'PF/ESI' },
+        { key: 'ACCOUNTING', label: 'Acc.' }
+    ];
+
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const currentYear = new Date().getFullYear();
+    const periods = [];
+    
+    // Generate last 6 months and next 3 months for filter
+    const now = new Date();
+    for (let i = -6; i <= 3; i++) {
+        const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+        periods.push(`${months[d.getMonth()]}-${d.getFullYear()}`);
+    }
+
+    const handlePeriodChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const newPeriod = e.target.value;
+        router.push(`/calendar?period=${newPeriod}`);
+    };
+
+    return (
+        <div className="card" style={{ padding: 0, overflow: 'hidden', border: '1px solid var(--border)' }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)' }}>
+                <div style={{ fontSize: '12px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                    STATUTORY COMPLIANCE MATRIX
+                </div>
+                <select 
+                    value={currentPeriod} 
+                    onChange={handlePeriodChange}
+                    style={{
+                        background: 'var(--surface2)',
+                        border: '1px solid var(--border)',
+                        color: 'var(--text)',
+                        fontSize: '11px',
+                        padding: '4px 8px',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontWeight: 600
+                    }}
+                >
+                    {periods.map(p => (
+                        <option key={p} value={p}>{p.replace('-', ' ')}</option>
+                    ))}
+                </select>
+            </div>
+            <div style={{ maxHeight: '500px', overflowX: 'auto', overflowY: 'auto' }}>
+                <table className="tbl" style={{ borderCollapse: 'separate', borderSpacing: 0, width: '100%' }}>
+                    <thead style={{ background: 'var(--surface2)', position: 'sticky', top: 0, zIndex: 10 }}>
+                        <tr>
+                            <th style={{ position: 'sticky', left: 0, background: 'var(--surface2)', zIndex: 20, minWidth: '120px', borderRight: '1px solid var(--border)', fontSize: '9px', letterSpacing: '1px' }}>ENTITY</th>
+                            {STATUTORY_TYPES.map(type => (
+                                <th key={type.key} style={{ textAlign: 'center', minWidth: '60px', fontSize: '9px', letterSpacing: '1px' }}>{type.label}</th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {clients.map(client => (
+                            <tr key={client.id}>
+                                <td style={{ position: 'sticky', left: 0, background: 'var(--surface)', zIndex: 5, fontWeight: 700, fontSize: '11.5px', borderRight: '1px solid var(--border)', whiteSpace: 'nowrap', fontStyle: 'italic' }}>
+                                    {client.name}
+                                </td>
+                                {STATUTORY_TYPES.map(type => {
+                                    const task = tasks.find(t => t.clientId === client.id && t.taskType === type.key);
+                                    return (
+                                        <td key={type.key} style={{ textAlign: 'center', padding: '12px 4px' }}>
+                                            {task ? (
+                                                <Link href={`/tasks/${task.id}`} style={{ textDecoration: 'none', display: 'block' }}>
+                                                    {getStatusIcon(task.status)}
+                                                </Link>
+                                            ) : (
+                                                <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', margin: '0 auto' }} />
+                                            )}
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+            <div style={{ padding: '10px 16px', borderTop: '1px solid var(--border)', display: 'flex', flexWrap: 'wrap', gap: '15px', fontSize: '10px', fontWeight: 600, background: 'rgba(255,255,255,0.01)', color: 'var(--muted)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#00CF84' }} /> Done</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4FACFE' }} /> Doing</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: 8, height: 8, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.2)' }} /> Todo</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#FF5757' }} /> Stuck</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#B89AFF' }} /> Check</div>
+            </div>
+        </div>
+    );
+}

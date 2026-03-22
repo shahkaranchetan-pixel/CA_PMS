@@ -1,21 +1,19 @@
 import { NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
-import { authOptions } from "../../auth/[...nextauth]/route"
 import { prisma } from "@/lib/prisma"
+import { requireAuth } from "@/lib/auth-helpers"
 
 export const dynamic = "force-dynamic"
 
 export async function POST() {
     try {
-        const session = await getServerSession(authOptions)
-        if (!session || (session.user as any).role !== "ADMIN") {
-            return new NextResponse("Unauthorized", { status: 401 })
-        }
+        const { user, error } = await requireAuth("ADMIN");
+        if (error) return error;
 
         const now = new Date()
-        const currentMonthShort = now.toLocaleString('default', { month: 'short' })
-        const currentYear = now.getFullYear()
-        const currentPeriod = `${currentMonthShort}-${currentYear}` // e.g. "Mar-2026"
+        const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const currentMonthIdx = now.getMonth();
+        const currentYear = now.getFullYear();
+        const currentPeriod = `${MONTH_NAMES[currentMonthIdx]}-${currentYear}`;
 
         const clients = await prisma.client.findMany()
         let newTasksCount = 0
@@ -25,7 +23,17 @@ export async function POST() {
 
             // 1. GST Tasks (if GSTIN is present)
             if (client.gstin) {
-                monthlyTasks.push({ title: `GSTR-1 Filing - ${currentPeriod}`, type: 'GST_1', dueDay: 10 })
+                if (client.gstCategory === 'MONTHLY') {
+                    monthlyTasks.push({ title: `GSTR-1 Filing - ${currentPeriod}`, type: 'GST_1', dueDay: 11 })
+                } else if (client.gstCategory === 'QUARTERLY') {
+                    const quarterlyMonths = [0, 3, 6, 9]; // Jan, Apr, Jul, Oct (filing months for previous quarter)
+                    if (quarterlyMonths.includes(now.getMonth())) {
+                        const quarters: Record<number, string> = { 0: 'Q3', 3: 'Q4', 6: 'Q1', 9: 'Q2' };
+                        const qName = quarters[now.getMonth()];
+                        monthlyTasks.push({ title: `GSTR-1 (Quarterly) - ${qName}`, type: 'GST_1', dueDay: 13 })
+                    }
+                }
+                
                 monthlyTasks.push({ title: `GSTR-3B Filing - ${currentPeriod}`, type: 'GSTR_3B', dueDay: 20 })
             }
 
@@ -39,7 +47,17 @@ export async function POST() {
                 monthlyTasks.push({ title: `PF/ESI/PT - ${currentPeriod}`, type: 'PF_ESI_PT', dueDay: 15 })
             }
 
-            // 4. Standard Accounting (Always for active clients)
+            // 4. TDS Return (Quarterly) - Form 24Q / 26Q
+            // Quarterly tasks generated in the month they are due (often end of following month)
+            // Apr (Q4), Jul (Q1), Oct (Q2), Jan (Q3)
+            const quarterlyMonths = [0, 3, 6, 9]; // Jan, Apr, Jul, Oct (0-indexed)
+            if (client.tan && quarterlyMonths.includes(now.getMonth())) {
+                const quarters: Record<number, string> = { 0: 'Q3', 3: 'Q4', 6: 'Q1', 9: 'Q2' };
+                const qName = quarters[now.getMonth()];
+                monthlyTasks.push({ title: `TDS Return (${qName}) - ${currentYear}`, type: 'TDS_RETURN', dueDay: 30 });
+            }
+
+            // 5. Standard Accounting (Always for active clients)
             monthlyTasks.push({ title: `Monthly Accounting - ${currentPeriod}`, type: 'ACCOUNTING', dueDay: 30 })
 
             for (const taskTemplate of monthlyTasks) {

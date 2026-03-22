@@ -223,12 +223,43 @@ export default function LoginPage() {
                             opacity: loading ? 0.7 : 1,
                             letterSpacing: '.5px'
                         }}
-                        onMouseEnter={e => { if (!loading) { (e.target as HTMLElement).style.background = 'var(--gold2)'; (e.target as HTMLElement).style.transform = 'translateY(-1px)'; (e.target as HTMLElement).style.boxShadow = '0 6px 20px rgba(232,160,32,.35)' } }}
-                        onMouseLeave={e => { (e.target as HTMLElement).style.background = 'var(--gold)'; (e.target as HTMLElement).style.transform = 'translateY(0)'; (e.target as HTMLElement).style.boxShadow = 'none' }}
                     >
                         {loading ? "Signing in..." : "Sign In →"}
                     </button>
                 </form>
+
+                <div style={{ display: 'flex', alignItems: 'center', margin: '24px 0', gap: '16px' }}>
+                    <div style={{ flex: 1, height: '1px', background: 'var(--border)' }}></div>
+                    <div style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 600 }}>OR</div>
+                    <div style={{ flex: 1, height: '1px', background: 'var(--border)' }}></div>
+                </div>
+
+                <button
+                    onClick={() => signIn("google", { callbackUrl: "/" })}
+                    disabled={loading}
+                    style={{
+                        width: '100%',
+                        padding: '12px',
+                        background: 'rgba(255,255,255,0.05)',
+                        color: 'var(--text)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '10px',
+                        fontFamily: 'DM Sans, sans-serif',
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '12px',
+                        transition: 'all .2s'
+                    }}
+                    onMouseEnter={e => { (e.target as HTMLElement).style.background = 'rgba(255,255,255,0.08)'; (e.target as HTMLElement).style.borderColor = 'var(--gold)' }}
+                    onMouseLeave={e => { (e.target as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; (e.target as HTMLElement).style.borderColor = 'var(--border)' }}
+                >
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="18" height="18" />
+                    Sign in with Google
+                </button>
 
                 <div style={{
                     textAlign: 'center',

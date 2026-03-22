@@ -56,7 +56,7 @@ export default async function TemplatesPage() {
                                         </div>
                                     </td>
                                     <td style={{ textAlign: 'right' }}>
-                                        <button className="btn btn-g btn-sm">Edit</button>
+                                        <Link href={`/templates/${tmp.id}/edit`} className="btn btn-g btn-sm">Edit</Link>
                                     </td>
                                 </tr>
                             ))
