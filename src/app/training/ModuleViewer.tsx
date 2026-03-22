@@ -4,6 +4,8 @@ import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 export default function ModuleViewer({ params }: { params: { id: string } }) {
     const { data: session } = useSession()
@@ -13,6 +15,7 @@ export default function ModuleViewer({ params }: { params: { id: string } }) {
     const [module, setModule] = useState<any>(null)
     const [loading, setLoading] = useState(true)
     const [progress, setProgress] = useState<any>(null)
+    const [activeLessonIndex, setActiveLessonIndex] = useState(0)
     const [showMaterialForm, setShowMaterialForm] = useState(false)
     const [newMaterial, setNewMaterial] = useState({ title: '', type: 'TEXT', content: '', order: 0 })
 
@@ -87,11 +90,10 @@ export default function ModuleViewer({ params }: { params: { id: string } }) {
 
     const handleQuizAnswer = (materialId: string, qIndex: number, chosenIndex: number, correctIndex: number) => {
         const key = `${materialId}_${qIndex}`
-        if (quizAnswers[key] !== undefined) return // Prevents re-answering
+        if (quizAnswers[key] !== undefined) return 
 
         setQuizAnswers(prev => ({ ...prev, [key]: chosenIndex }))
 
-        // Update score if correct
         if (chosenIndex === correctIndex) {
             setQuizScores(prev => ({
                 ...prev,
@@ -100,220 +102,249 @@ export default function ModuleViewer({ params }: { params: { id: string } }) {
         }
     }
 
-    if (loading) return <div style={{ padding: '40px', textAlign: 'center', color: 'var(--muted)' }}>Loading module...</div>
-    if (!module) return <div style={{ padding: '40px', textAlign: 'center', color: 'var(--danger)' }}>Module not found.</div>
+    if (loading) return <div style={{ padding: '60px', textAlign: 'center', color: 'var(--muted)' }}>Preparing your training environment...</div>
+    if (!module) return <div style={{ padding: '60px', textAlign: 'center', color: 'var(--danger)' }}>Module not found.</div>
+
+    const activeMaterial = module.materials?.[activeLessonIndex]
+    const materialsCount = module.materials?.length || 0
 
     return (
-        <div style={{ padding: '20px', maxWidth: '1000px', margin: '0 auto' }}>
-            <div style={{ marginBottom: '24px' }}>
-                <Link href="/training" style={{ color: 'var(--gold)', fontSize: '14px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '12px' }}>
+        <div style={{ display: 'flex', minHeight: 'calc(100vh - 80px)', background: 'transparent' }}>
+            {/* Sidebar Navigation */}
+            <div style={{ width: '300px', borderRight: '1px solid var(--border)', padding: '24px', background: 'rgba(255, 255, 255, 0.02)', backdropFilter: 'blur(10px)', flexShrink: 0 }}>
+                <Link href="/training" style={{ color: 'var(--gold)', fontSize: '13px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px', fontWeight: 600 }}>
                     ← Back to Academy
                 </Link>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                        <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '1px' }}>{module.category}</span>
-                        <h1 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--text)', margin: '4px 0 8px 0' }}>{module.title}</h1>
-                        <p style={{ color: 'var(--muted)', fontSize: '15px', margin: 0 }}>{module.description}</p>
-                    </div>
-                    {progress?.completed ? (
-                        <div style={{ background: 'rgba(0, 207, 132, 0.1)', color: '#00CF84', padding: '8px 16px', borderRadius: '20px', fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span>✅</span> Completed
-                        </div>
-                    ) : (
-                        <button onClick={handleMarkComplete} className="btn btn-p">Mark as Completed</button>
+
+                <div style={{ marginBottom: '20px' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '4px' }}>{module.category}</div>
+                    <div style={{ fontSize: '16px', fontWeight: 700, color: '#fff' }}>Module Outline</div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {module.materials?.sort((a: any, b: any) => a.order - b.order).map((m: any, idx: number) => (
+                        <button
+                            key={m.id}
+                            onClick={() => { setActiveLessonIndex(idx); setShowMaterialForm(false); }}
+                            style={{
+                                display: 'flex', gap: '12px', alignItems: 'center', padding: '12px', borderRadius: '10px',
+                                background: activeLessonIndex === idx ? 'var(--gold-dim)' : 'transparent',
+                                border: '1px solid',
+                                borderColor: activeLessonIndex === idx ? 'var(--gold)' : 'transparent',
+                                color: activeLessonIndex === idx ? 'var(--gold)' : 'var(--muted)',
+                                textAlign: 'left', cursor: 'pointer', transition: 'all 0.2s', fontSize: '13px', width: '100%',
+                            }}
+                        >
+                            <span style={{ opacity: 0.6 }}>{idx + 1}</span>
+                            <span style={{ fontWeight: 600, flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.title}</span>
+                            {m.type === 'QUIZ' ? '📝' : '📖'}
+                        </button>
+                    ))}
+
+                    {userRole === 'ADMIN' && (
+                        <button 
+                            onClick={() => setShowMaterialForm(true)}
+                            style={{ marginTop: '12px', padding: '12px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px dashed var(--border)', color: 'var(--muted)', fontSize: '12px', cursor: 'pointer' }}
+                        >
+                            + Add New Section
+                        </button>
                     )}
+                </div>
+
+                <div style={{ marginTop: 'auto', paddingTop: '40px' }}>
+                    <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '8px' }}>OVERALL PROGRESS</div>
+                    <div style={{ height: '4px', background: 'var(--surface2)', borderRadius: '2px', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', background: 'var(--gold)', width: progress?.completed ? '100%' : `${((activeLessonIndex + 1) / materialsCount) * 100}%` }}></div>
+                    </div>
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }}>
-                {module.materials?.length === 0 ? (
-                    <div style={{ padding: '60px', textAlign: 'center', border: '1px dashed var(--border)', borderRadius: '16px', background: 'var(--surface)' }}>
-                        <div style={{ fontSize: '32px', marginBottom: '16px' }}>📚</div>
-                        <div style={{ color: 'var(--text)', fontWeight: 600, marginBottom: '4px' }}>No lessons yet</div>
-                        <div style={{ color: 'var(--muted)', fontSize: '14px' }}>
-                            {userRole === 'ADMIN' ? 'Start adding materials to this module.' : 'Content for this module is coming soon.'}
+            {/* Main Content Area */}
+            <div style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
+                {!showMaterialForm && activeMaterial ? (
+                    <div style={{ maxWidth: '850px', margin: '0 auto' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
+                            <div>
+                                <h1 style={{ fontSize: '32px', fontWeight: 800, color: '#fff', margin: 0 }}>{activeMaterial.title}</h1>
+                                <div style={{ fontSize: '14px', color: 'var(--muted)', marginTop: '8px' }}>
+                                    Section {activeLessonIndex + 1} of {materialsCount} • {activeMaterial.type === 'QUIZ' ? 'Assessment' : 'Lesson'}
+                                </div>
+                            </div>
+                            {progress?.completed ? (
+                                <div style={{ color: '#00CF84', background: 'rgba(0, 207, 132, 0.1)', padding: '8px 20px', borderRadius: '20px', fontSize: '14px', fontWeight: 700 }}>
+                                    ✓ Training Completed
+                                </div>
+                            ) : activeLessonIndex === (materialsCount - 1) && (
+                                <button onClick={handleMarkComplete} className="btn btn-p" style={{ padding: '10px 24px', borderRadius: '20px', fontSize: '14px', fontWeight: 700 }}>Finish Course</button>
+                            )}
+                        </div>
+
+                        <div className="card glass-premium" style={{ padding: '48px', borderRadius: '32px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                            {activeMaterial.type === 'TEXT' && (
+                                <div className="markdown-reader">
+                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                        {activeMaterial.content}
+                                    </ReactMarkdown>
+                                </div>
+                            )}
+
+                            {activeMaterial.type === 'LINK' && (
+                                <div style={{ textAlign: 'center', padding: '40px' }}>
+                                    <div style={{ fontSize: '64px', marginBottom: '24px' }}>📚</div>
+                                    <h2 style={{ fontSize: '24px', color: '#fff' }}>Reference Manual</h2>
+                                    <p style={{ color: 'var(--muted2)', marginBottom: '32px', fontSize: '16px' }}>This section contains external documentation or a practice workbook.</p>
+                                    <a href={activeMaterial.content} target="_blank" rel="noopener noreferrer" className="btn btn-p" style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', textDecoration: 'none', padding: '16px 32px', borderRadius: '16px' }}>
+                                        Open External Resource ↗
+                                    </a>
+                                </div>
+                            )}
+
+                            {activeMaterial.type === 'QUIZ' && (
+                                <div className="quiz-view">
+                                    {(() => {
+                                        let questions = [];
+                                        try { questions = JSON.parse(activeMaterial.content); } catch (e) { return <div>Error loading quiz content.</div> }
+                                        const score = quizScores[activeMaterial.id] || 0
+                                        const allAnswered = questions.every((_: any, qid: number) => quizAnswers[`${activeMaterial.id}_${qid}`] !== undefined)
+
+                                        return (
+                                            <div>
+                                                {questions.map((q: any, qIdx: number) => {
+                                                    const chosen = quizAnswers[`${activeMaterial.id}_${qIdx}`]
+                                                    const isCorrect = chosen === q.ans
+                                                    return (
+                                                        <div key={qIdx} style={{ marginBottom: '40px', padding: '24px', borderRadius: '20px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                                            <div style={{ fontSize: '18px', fontWeight: 700, marginBottom: '24px', display: 'flex', gap: '12px' }}>
+                                                                <span style={{ color: 'var(--gold)', opacity: 0.8 }}>Q{qIdx + 1}</span> {q.q}
+                                                            </div>
+                                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                                                {q.opts.map((opt: string, optIdx: number) => {
+                                                                    let borderS = '1px solid var(--border)'
+                                                                    let bgS = 'rgba(255,255,255,0.03)'
+                                                                    if (chosen === optIdx) {
+                                                                        borderS = isCorrect ? '2px solid #00CF84' : '2px solid #FF5757'
+                                                                        bgS = isCorrect ? 'rgba(0, 207, 132, 0.1)' : 'rgba(255, 87, 87, 0.1)'
+                                                                    } else if (chosen !== undefined && optIdx === q.ans) {
+                                                                        borderS = '2px solid #00CF84'
+                                                                        bgS = 'rgba(0, 207, 132, 0.05)'
+                                                                    }
+                                                                    return (
+                                                                        <button 
+                                                                            key={optIdx} 
+                                                                            disabled={chosen !== undefined}
+                                                                            onClick={() => handleQuizAnswer(activeMaterial.id, qIdx, optIdx, q.ans)}
+                                                                            style={{ padding: '16px', borderRadius: '12px', border: borderS, background: bgS, color: '#fff', textAlign: 'left', cursor: chosen === undefined ? 'pointer' : 'default', transition: 'all 0.2s', fontSize: '14px' }}
+                                                                        >
+                                                                            {opt}
+                                                                        </button>
+                                                                    )
+                                                                })}
+                                                            </div>
+                                                            {chosen !== undefined && (
+                                                                <div style={{ marginTop: '16px', fontSize: '13px', color: isCorrect ? '#00CF84' : '#FF5757', padding: '12px', background: isCorrect ? 'rgba(0,207,132,0.05)' : 'rgba(255,87,87,0.05)', borderRadius: '8px' }}>
+                                                                    <strong>{isCorrect ? '✅ Correct' : '❌ Incorrect'}:</strong> {q.expl}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )
+                                                })}
+
+                                                {allAnswered && (
+                                                    <div style={{ background: 'var(--gold-dim)', border: '1px solid var(--gold)', padding: '32px', borderRadius: '24px', textAlign: 'center', marginTop: '40px' }}>
+                                                        <div style={{ fontSize: '40px', marginBottom: '8px' }}>{score === questions.length ? '🌟' : '👏'}</div>
+                                                        <h3 style={{ color: 'var(--gold)', margin: 0, fontSize: '24px' }}>Result: {score}/{questions.length}</h3>
+                                                        <p style={{ color: 'var(--muted)', marginTop: '8px' }}>{score === questions.length ? 'Outstanding! You have mastered this module.' : 'Great effort! Review the explanations above to perfect your score.'}</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )
+                                    })()}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Pagination Footer */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '48px', alignItems: 'center' }}>
+                            <button 
+                                disabled={activeLessonIndex === 0}
+                                onClick={() => setActiveLessonIndex(prev => prev - 1)}
+                                style={{ background: 'none', border: 'none', color: activeLessonIndex === 0 ? 'transparent' : 'var(--muted)', cursor: activeLessonIndex === 0 ? 'default' : 'pointer', fontWeight: 600, fontSize: '14px' }}
+                            >
+                                ← Previous Lesson
+                            </button>
+                            
+                            <div style={{ color: 'var(--muted2)', fontSize: '13px' }}>
+                                Page {activeLessonIndex + 1} of {materialsCount}
+                            </div>
+
+                            {activeLessonIndex < (materialsCount - 1) ? (
+                                <button 
+                                    onClick={() => setActiveLessonIndex(prev => prev + 1)}
+                                    className="btn btn-p" 
+                                    style={{ borderRadius: '16px', padding: '12px 32px', fontSize: '15px', fontWeight: 700 }}
+                                >
+                                    Continue →
+                                </button>
+                            ) : (
+                                <div style={{ width: '120px' }} />
+                            )}
+                        </div>
+                    </div>
+                ) : showMaterialForm ? (
+                    <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+                        <div className="card glass-premium" style={{ padding: '40px', borderRadius: '24px' }}>
+                            <h2 style={{ marginTop: 0 }}>Add Module Resource</h2>
+                            <form onSubmit={handleAddMaterial}>
+                                <div className="form-group"><label>Title</label><input type="text" value={newMaterial.title} onChange={e => setNewMaterial({ ...newMaterial, title: e.target.value })} required /></div>
+                                <div className="form-group">
+                                    <label>Type</label>
+                                    <select value={newMaterial.type} onChange={e => setNewMaterial({ ...newMaterial, type: e.target.value })}>
+                                        <option value="TEXT">Text Explanation</option>
+                                        <option value="LINK">External Link</option>
+                                        <option value="VIDEO_EMBED">Video Embed Code</option>
+                                        <option value="QUIZ">Interactive Quiz (JSON)</option>
+                                    </select>
+                                </div>
+                                <div className="form-group"><label>Content Data</label><textarea value={newMaterial.content} onChange={e => setNewMaterial({ ...newMaterial, content: e.target.value })} required /></div>
+                                <div style={{ display: 'flex', gap: '10px', marginTop: '24px' }}>
+                                    <button type="button" onClick={() => setShowMaterialForm(false)} className="btn btn-g" style={{ flex: 1 }}>Cancel</button>
+                                    <button type="submit" className="btn btn-p" style={{ flex: 1 }}>Add to Course</button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 ) : (
-                    module.materials.map((material: any, index: number) => (
-                        <div key={material.id} className="card" style={{ padding: '24px' }}>
-                            <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--surface2)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700, flexShrink: 0 }}>
-                                    {index + 1}
-                                </div>
-                                <div style={{ flex: 1 }}>
-                                    <h3 style={{ fontSize: '18px', fontWeight: 600, margin: '0 0 16px 0' }}>{material.title}</h3>
-
-                                    {material.type === 'TEXT' && (
-                                        <div style={{ color: 'var(--text)', fontSize: '15px', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
-                                            {material.content}
-                                        </div>
-                                    )}
-
-                                    {material.type === 'LINK' && (
-                                        <div style={{ background: 'var(--surface2)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
-                                            <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '8px' }}>EXTERNAL RESOURCE</div>
-                                            <a href={material.content} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--gold)', fontSize: '15px', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                🔗 Click here to open Resource <span style={{ fontSize: '12px' }}>↗</span>
-                                            </a>
-                                        </div>
-                                    )}
-
-                                    {material.type === 'VIDEO_EMBED' && (
-                                        <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '12px', background: '#000' }} dangerouslySetInnerHTML={{ __html: material.content }} />
-                                    )}
-
-                                    {material.type === 'QUIZ' && (
-                                        <div className="quiz-section">
-                                            {(() => {
-                                                const questions = JSON.parse(material.content)
-                                                const score = quizScores[material.id] || 0
-                                                const totalQ = questions.length
-                                                const allAnswered = questions.every((_: any, idx: number) => quizAnswers[`${material.id}_${idx}`] !== undefined)
-
-                                                return (
-                                                    <div style={{ background: 'var(--surface2)', padding: '20px', borderRadius: '12px' }}>
-                                                        {questions.map((q: any, qIdx: number) => {
-                                                            const chosen = quizAnswers[`${material.id}_${qIdx}`]
-                                                            const isCorrect = chosen === q.ans
-
-                                                            return (
-                                                                <div key={qIdx} style={{ marginBottom: '24px' }}>
-                                                                    <p style={{ fontWeight: 600, marginBottom: '12px', fontSize: '15px' }}>{qIdx + 1}. {q.q}</p>
-                                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                                                        {q.opts.map((opt: string, optIdx: number) => {
-                                                                            let bg = 'var(--surface)'
-                                                                            let border = 'var(--border)'
-                                                                            let color = 'var(--text)'
-
-                                                                            if (chosen === optIdx) {
-                                                                                bg = isCorrect ? 'rgba(0, 207, 132, 0.1)' : 'rgba(255, 87, 87, 0.1)'
-                                                                                border = isCorrect ? '#00CF84' : '#FF5757'
-                                                                                color = isCorrect ? '#00CF84' : '#FF5757'
-                                                                            } else if (chosen !== undefined && optIdx === q.ans) {
-                                                                                bg = 'rgba(0, 207, 132, 0.05)'
-                                                                                border = 'rgba(0, 207, 132, 0.2)'
-                                                                                color = '#00CF84'
-                                                                            }
-
-                                                                            return (
-                                                                                <button
-                                                                                    key={optIdx}
-                                                                                    onClick={() => handleQuizAnswer(material.id, qIdx, optIdx, q.ans)}
-                                                                                    disabled={chosen !== undefined}
-                                                                                    style={{
-                                                                                        padding: '12px',
-                                                                                        borderRadius: '8px',
-                                                                                        border: `1px solid ${border}`,
-                                                                                        background: bg,
-                                                                                        color: color,
-                                                                                        textAlign: 'left',
-                                                                                        fontSize: '14px',
-                                                                                        cursor: chosen === undefined ? 'pointer' : 'default',
-                                                                                        transition: 'all 0.2s'
-                                                                                    }}
-                                                                                >
-                                                                                    {opt}
-                                                                                </button>
-                                                                            )
-                                                                        })}
-                                                                    </div>
-                                                                    {chosen !== undefined && (
-                                                                        <div style={{ marginTop: '10px', fontSize: '13px', color: isCorrect ? '#00CF84' : '#FF5757', fontWeight: 500 }}>
-                                                                            {isCorrect ? '✓ Correct!' : '✗ Wrong.'} <span style={{ color: 'var(--muted)' }}>{q.expl}</span>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            )
-                                                        })}
-                                                        {allAnswered && (
-                                                            <div style={{ marginTop: '20px', padding: '16px', borderRadius: '8px', background: 'var(--gold-dim)', textAlign: 'center' }}>
-                                                                <h4 style={{ margin: '0 0 8px 0', color: 'var(--gold)' }}>Quiz Result</h4>
-                                                                <div style={{ fontSize: '24px', fontWeight: 700 }}>{score} / {totalQ}</div>
-                                                                <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: 'var(--muted)' }}>
-                                                                    {score === totalQ ? 'Perfect! You are an expert.' : 'Good job! Review the explanations above.'}
-                                                                </p>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                )
-                                            })()}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    ))
-                )}
-
-                {userRole === 'ADMIN' && (
-                    <div style={{ marginTop: '24px' }}>
-                        {!showMaterialForm ? (
-                            <button onClick={() => setShowMaterialForm(true)} className="btn btn-g" style={{ width: '100%', padding: '16px', borderStyle: 'dashed' }}>
-                                + Add Lesson Material
-                            </button>
-                        ) : (
-                            <div className="card" style={{ padding: '24px' }}>
-                                <h3 style={{ marginTop: 0 }}>Add New Material</h3>
-                                <form onSubmit={handleAddMaterial}>
-                                    <div className="form-group">
-                                        <label>Material Title</label>
-                                        <input
-                                            type="text"
-                                            value={newMaterial.title}
-                                            onChange={e => setNewMaterial({ ...newMaterial, title: e.target.value })}
-                                            placeholder="e.g. Setting up Company in Tally"
-                                            required
-                                        />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Type</label>
-                                        <select
-                                            value={newMaterial.type}
-                                            onChange={e => setNewMaterial({ ...newMaterial, type: e.target.value })}
-                                        >
-                                            <option value="TEXT">Text Explanation</option>
-                                            <option value="LINK">External Link</option>
-                                            <option value="VIDEO_EMBED">Video Embed Code</option>
-                                            <option value="QUIZ">Interactive Quiz (JSON)</option>
-                                        </select>
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Content</label>
-                                        <textarea
-                                            value={newMaterial.content}
-                                            onChange={e => setNewMaterial({ ...newMaterial, content: e.target.value })}
-                                            placeholder={
-                                                newMaterial.type === 'TEXT' ? "Detailed step-by-step instructions..." :
-                                                    newMaterial.type === 'QUIZ' ? '[{"q":"Q1?","opts":["A","B"],"ans":0,"expl":"Why..."}]' :
-                                                        "Paste URL or Embed Code here..."
-                                            }
-                                            required
-                                        />
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '10px' }}>
-                                        <button type="button" onClick={() => setShowMaterialForm(false)} className="btn btn-g" style={{ flex: 1 }}>Cancel</button>
-                                        <button type="submit" className="btn btn-p" style={{ flex: 1 }}>Save Material</button>
-                                    </div>
-                                </form>
-                            </div>
-                        )}
+                    <div style={{ textAlign: 'center', padding: '100px 0' }}>
+                        <div style={{ fontSize: '48px', marginBottom: '20px' }}>⏳</div>
+                        <h2>Checking Course Integrity...</h2>
                     </div>
                 )}
             </div>
 
             <style jsx>{`
-                .form-group { margin-bottom: 16px; }
-                label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
-                input, select, textarea { 
-                    width: 100%; 
-                    padding: 10px; 
-                    border: 1px solid var(--border); 
-                    border-radius: 8px; 
-                    background: var(--surface); 
-                    color: var(--text);
+                .glass-premium { 
+                    background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%); 
+                    backdrop-filter: blur(20px); 
+                    box-shadow: 0 40px 100px rgba(0,0,0,0.5);
                 }
-                textarea { height: 120px; resize: vertical; }
+                .form-group { margin-bottom: 24px; }
+                label { display: block; font-size: 11px; font-weight: 800; color: var(--gold); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+                input, select, textarea { width: 100%; padding: 14px; border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; background: rgba(0,0,0,0.3); color: #fff; font-size: 14px; }
+                textarea { height: 250px; }
+                
+                .markdown-reader :global(h1) { color: var(--gold); font-size: 32px; margin-bottom: 24px; font-weight: 800; }
+                .markdown-reader :global(h2) { color: #fff; font-size: 22px; margin: 48px 0 20px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; font-weight: 700; }
+                .markdown-reader :global(h3) { color: var(--gold); font-size: 18px; margin: 32px 0 16px 0; font-weight: 600; }
+                .markdown-reader :global(p) { line-height: 1.9; margin-bottom: 24px; color: rgba(255,255,255,0.8); font-size: 17px; }
+                .markdown-reader :global(ul), .markdown-reader :global(ol) { margin-bottom: 24px; padding-left: 24px; }
+                .markdown-reader :global(li) { margin-bottom: 14px; line-height: 1.7; color: rgba(255,255,255,0.8); }
+                .markdown-reader :global(blockquote) { border-left: 5px solid var(--gold); background: rgba(212, 175, 55, 0.04); padding: 32px; margin: 40px 0; border-radius: 0 20px 20px 0; font-style: italic; }
+                .markdown-reader :global(strong) { color: #fff; font-weight: 700; }
+                .markdown-reader :global(code) { background: rgba(212, 175, 55, 0.1); color: var(--gold); padding: 4px 10px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.9em; }
+                .markdown-reader :global(hr) { border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 60px 0; }
+                .markdown-reader :global(table) { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+                .markdown-reader :global(th), .markdown-reader :global(td) { padding: 12px; border: 1px solid var(--border); text-align: left; }
+                .markdown-reader :global(th) { background: var(--surface2); color: var(--gold); font-size: 13px; text-transform: uppercase; }
             `}</style>
         </div>
     )
