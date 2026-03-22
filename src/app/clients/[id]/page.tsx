@@ -6,7 +6,7 @@ import CustomVaultSection from "./CustomVaultSection"
 import DocumentUploadSection from "./DocumentUploadSection"
 
 import { getServerSession } from "next-auth"
-import { authOptions } from "../../api/auth/[...nextauth]/route"
+import { authOptions } from "@/lib/auth-options";
 
 import AuditLogViewer from "./AuditLogViewer"
 

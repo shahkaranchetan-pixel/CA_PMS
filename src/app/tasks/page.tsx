@@ -5,7 +5,7 @@ import { redirect } from "next/navigation"
 export const dynamic = "force-dynamic"
 
 import { getServerSession } from "next-auth";
-import { authOptions } from "../api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth-options";
 import TaskFilters from "./TaskFilters";
 import TaskStatusSelect from "./TaskStatusSelect";
 import BoardView from "./BoardView";

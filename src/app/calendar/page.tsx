@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma"
 import Link from "next/link"
 
 import { getServerSession } from "next-auth"
-import { authOptions } from "../api/auth/[...nextauth]/route"
+import { authOptions } from "@/lib/auth-options";
 import { redirect } from "next/navigation"
 
 import ComplianceMatrix from "@/components/ComplianceMatrix"
