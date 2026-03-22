@@ -105,10 +105,10 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
                 </div>
 
                 <div className="card" style={{ padding: '16px', background: 'var(--surface)' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', background: 'var(--border)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: '1px', background: 'var(--border)', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
                     {/* Header */}
                     {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                        <div key={day} style={{ background: 'rgba(255,255,255,.02)', padding: '12px', textAlign: 'center', fontWeight: 600, fontSize: '13px', color: 'var(--muted)' }}>
+                        <div key={day} style={{ background: 'var(--surface2)', padding: '12px', textAlign: 'center', fontWeight: 600, fontSize: '13px', color: 'var(--muted)' }}>
                             {day}
                         </div>
                     ))}
@@ -146,21 +146,19 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
                                                 <Link href={`/tasks/${task.id}`} key={task.id} style={{
                                                     textDecoration: 'none',
                                                     padding: '4px 6px',
-                                                    background: task.status === 'COMPLETED' ? 'rgba(34, 197, 94, 0.1)' : 'var(--surface2)',
+                                                    background: task.status === 'COMPLETED' ? 'rgba(34, 197, 94, 0.05)' : 'var(--surface2)',
                                                     borderLeft: `2px solid ${task.status === 'COMPLETED' ? 'var(--success)' : (task.priority === 'high' ? 'var(--danger)' : 'var(--gold)')}`,
                                                     borderRadius: '4px',
                                                     fontSize: '10px',
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     gap: '4px',
-                                                    whiteSpace: 'nowrap',
-                                                    overflow: 'hidden',
-                                                    textOverflow: 'ellipsis'
+                                                    overflow: 'hidden'
                                                 }} title={`${task.client?.name} - ${task.title}`}>
-                                                    <span style={{ fontWeight: 600, color: task.status === 'COMPLETED' ? 'var(--success)' : 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                        {task.client?.name?.substring(0, 8)}
+                                                    <span style={{ fontWeight: 600, color: task.status === 'COMPLETED' ? 'var(--success)' : 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                        {task.client?.name?.substring(0, 3)}..
                                                     </span>
-                                                    <span style={{ color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis' }}> - {task.title}</span>
+                                                    <span style={{ color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}> {task.title}</span>
                                                 </Link>
                                             ))}
                                         </div>

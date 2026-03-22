@@ -1,10 +1,15 @@
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth-options"
 import EmployeeWorkloadCard from "./EmployeeWorkloadCard"
 
 export const dynamic = "force-dynamic"
 
 export default async function TeamPage() {
+    const session = await getServerSession(authOptions);
+    const isAdmin = (session?.user as any)?.role === 'ADMIN';
+
     const teamRaw = await prisma.user.findMany({
         orderBy: { name: 'asc' },
         include: {
@@ -80,6 +85,7 @@ export default async function TeamPage() {
                         member={member} 
                         allMembers={allMembers} 
                         now={now} 
+                        isAdmin={isAdmin}
                     />
                 ))}
             </div>

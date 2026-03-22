@@ -137,23 +137,31 @@ async function callGeminiAPI(topic: string, category: string) {
     }
 
     const prompt = `
-    You are an expert Indian Chartered Accountant and corporate trainer with 20+ years of experience.
-    Create a highly professional training module for the topic: "${topic}" in the category: "${category}".
+    You are an expert Indian Chartered Accountant and corporate trainer with 25+ years of experience.
+    Create a COMPREHENSIVE and EXHAUSTIVE training module for: "${topic}" (Category: "${category}").
     
-    The content must be specifically tailored for junior staff working in an Indian CA firm. 
-    It MUST include:
-    1. CURRENT Financial Year compliance rules (e.g. FY 2024-25).
-    2. SPECIFIC SECTION NUMBERS (e.g. Section 194R, Rule 42, etc.).
-    3. PRACTICAL EXAMPLES: Use realistic scenario names to illustrate a real-world scenario.
-    4. COMMON PITFALLS: What do staff usually get wrong?
+    The content must be specifically tailored for junior staff in an Indian CA firm, but it must be DEEP and THOROUGH. 
+    
+    EACH TEXT LESSON MUST:
+    1. Be at least 600-800 words long. 
+    2. Contain structured headings, sub-headings, and bullet points.
+    3. Include CURRENT Financial Year (FY 2024-25) compliance, data, and edge cases.
+    4. Reference exact SECTIONS and RULES of relevant acts (Income Tax, GST, Companies Act, etc.).
+    5. Provide real-world case studies or numeric examples (e.g. calculation of interest, late fees, or tax liability).
+    6. List "Pro-Tips" and "Common Audit Objections" related to this topic.
 
-    Return the response as a valid JSON object with the following structure:
+    The module MUST include exactly 3 distinct materials:
+    - Lesson 1 (Title: In-depth Theory & Compliance)
+    - Lesson 2 (Title: Practical Application & Filing Steps)
+    - Quiz (5 scenario-based tough questions)
+
+    Return the response as a valid JSON object:
     {
-      "description": "Short overview",
+      "description": "Deep dive overview of ${topic}",
       "materials": [
-        { "title": "Lesson 1", "type": "TEXT", "content": "..." },
-        { "title": "Lesson 2", "type": "TEXT", "content": "..." },
-        { "title": "Quiz", "type": "QUIZ", "content": "[...]" }
+        { "title": "...", "type": "TEXT", "content": "..." },
+        { "title": "...", "type": "TEXT", "content": "..." },
+        { "title": "...", "type": "QUIZ", "content": "[...]" }
       ]
     }
 

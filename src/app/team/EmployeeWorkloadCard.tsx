@@ -3,9 +3,11 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import ReassignButton from "./ReassignButton";
+import EditEmployeeModal from "./EditEmployeeModal";
 
-export default function EmployeeWorkloadCard({ member, allMembers, now }: any) {
+export default function EmployeeWorkloadCard({ member, allMembers, now, isAdmin }: any) {
     const [expanded, setExpanded] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
 
     const activeTasks = member.tasks.filter((t: any) => t.status !== 'COMPLETED');
     const completedTasks = member.tasks.filter((t: any) => t.status === 'COMPLETED');
@@ -24,7 +26,7 @@ export default function EmployeeWorkloadCard({ member, allMembers, now }: any) {
             style={{ cursor: 'pointer', transition: 'all 0.3s ease', transform: expanded ? 'scale(1.02)' : 'scale(1)', zIndex: expanded ? 10 : 1 }}
             onClick={() => setExpanded(!expanded)}
         >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px', position: 'relative' }}>
                 <div style={{
                     width: 42, height: 42, borderRadius: '12px',
                     background: member.color || 'var(--gold)',
@@ -42,13 +44,24 @@ export default function EmployeeWorkloadCard({ member, allMembers, now }: any) {
                         <span>{member.dept || 'General'}</span>
                     </div>
                 </div>
-                <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-                    <div style={{ fontSize: '9px', color: loadColor, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>
-                        {loadLabel}
+                <div style={{ marginLeft: 'auto', textAlign: 'right', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div>
+                        <div style={{ fontSize: '9px', color: loadColor, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                            {loadLabel}
+                        </div>
+                        <div style={{ fontSize: '15px', fontWeight: 700, fontFamily: 'Playfair Display,serif', color: loadColor }}>
+                            {Math.round(load)}%
+                        </div>
                     </div>
-                    <div style={{ fontSize: '15px', fontWeight: 700, fontFamily: 'Playfair Display,serif', color: loadColor }}>
-                        {Math.round(load)}%
-                    </div>
+                    {isAdmin && (
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
+                            style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: '8px', width: '30px', height: '30px', cursor: 'pointer', color: 'var(--muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            title="Edit Employee"
+                        >
+                            ⚙️
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -139,6 +152,10 @@ export default function EmployeeWorkloadCard({ member, allMembers, now }: any) {
                         <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '4px' }}>+{overdueTasks.length - 3} more overdue (Click to expand)</div>
                     )}
                 </div>
+            )}
+
+            {isEditing && (
+                <EditEmployeeModal member={member} onClose={() => setIsEditing(false)} />
             )}
             
             <style jsx>{`

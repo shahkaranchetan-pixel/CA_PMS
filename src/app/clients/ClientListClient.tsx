@@ -91,7 +91,6 @@ export default function ClientListClient({ initialClients, templates, employees 
                                 <input type="checkbox" checked={selectedClients.length === initialClients.length && initialClients.length > 0} onChange={toggleAll} />
                             </th>
                             <th>Entity Name</th>
-                            <th>Health</th>
                             <th>Identifiers</th>
                             <th>Last Activity</th>
                             <th>Vault</th>
@@ -112,20 +111,7 @@ export default function ClientListClient({ initialClients, templates, employees 
                                         {c.entityType || 'Proprietorship'}
                                     </div>
                                 </td>
-                                <td>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <div style={{ 
-                                            width: '32px', height: '32px', borderRadius: '50%', 
-                                            background: c.healthScore > 80 ? 'rgba(0,207,132,0.1)' : c.healthScore > 50 ? 'rgba(255,176,32,0.1)' : 'rgba(255,87,87,0.1)',
-                                            color: c.healthScore > 80 ? '#00CF84' : c.healthScore > 50 ? '#FFB020' : '#FF5757',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            fontSize: '11px', fontWeight: 700, border: `1px solid ${c.healthScore > 80 ? 'rgba(0,207,132,0.2)' : c.healthScore > 50 ? 'rgba(255,176,32,0.2)' : 'rgba(255,87,87,0.2)'}`
-                                        }}>
-                                            {c.healthScore}
-                                        </div>
-                                        {c.overdueCount > 0 && <span className="badge b-high" style={{ fontSize: '9px' }}>{c.overdueCount} Overdue</span>}
-                                    </div>
-                                </td>
+
                                 <td>
                                     <div style={{ fontSize: '11.5px', color: 'var(--muted)', marginBottom: '3px' }}>PAN: <span style={{ color: 'var(--text)', fontWeight: 500, fontFamily: 'monospace', letterSpacing: '1px' }}>{c.pan || '-'}</span></div>
                                     <div style={{ fontSize: '11.5px', color: 'var(--muted)' }}>GST: <span style={{ color: 'var(--text)', fontWeight: 500, fontFamily: 'monospace', letterSpacing: '1px' }}>{c.gstin || '-'}</span></div>

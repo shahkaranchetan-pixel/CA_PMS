@@ -21,7 +21,7 @@ export default function NotificationBell() {
 
     useEffect(() => {
         fetchNotifications()
-        const interval = setInterval(fetchNotifications, 60000) // Poll every 60s
+        const interval = setInterval(fetchNotifications, 15000) // Poll every 15s
         return () => clearInterval(interval)
     }, [])
 
@@ -68,10 +68,26 @@ export default function NotificationBell() {
 
     return (
         <div className="nb-wrap" ref={dropdownRef}>
-            <button className="nb-btn" onClick={() => setIsOpen(!isOpen)}>
-                <span>🔔</span>
-                {unreadCount > 0 && <span className="nb-badge">{unreadCount}</span>}
+            <button className="nb-btn" onClick={() => setIsOpen(!isOpen)} style={{ position: 'relative' }}>
+                <span style={{ fontSize: '20px' }}>🔔</span>
+                {unreadCount > 0 && (
+                    <span className="nb-badge pulse">
+                        {unreadCount}
+                    </span>
+                )}
             </button>
+
+            <style jsx global>{`
+                .nb-badge.pulse {
+                    animation: bell-pulse 2s infinite;
+                    box-shadow: 0 0 0 0 rgba(232, 160, 32, 0.7);
+                }
+                @keyframes bell-pulse {
+                    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(232, 160, 32, 0.7); }
+                    70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(232, 160, 32, 0); }
+                    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(232, 160, 32, 0); }
+                }
+            `}</style>
 
             {isOpen && (
                 <div className="nb-drop">
@@ -104,7 +120,9 @@ export default function NotificationBell() {
                                     <div className="nb-content">
                                         <div className="nb-title">{n.title}</div>
                                         <div className="nb-msg">{n.message}</div>
-                                        <div className="nb-time">{new Intl.RelativeTimeFormat('en', { numeric: 'auto' }).format(Math.round((new Date(n.createdAt).getTime() - Date.now()) / 60000), 'minute')}</div>
+                                        <div className="nb-time">
+                                            {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </div>
                                     </div>
                                 </div>
                             ))

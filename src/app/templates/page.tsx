@@ -22,49 +22,39 @@ export default async function TemplatesPage() {
 
             <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
                 <div className="table-wrapper">
-<table className="tbl">
-                    <thead style={{ background: 'rgba(255,255,255,.01)' }}>
-                        <tr>
-                            <th>Template Name</th>
-                            <th>Description</th>
-                            <th>Tasks Included</th>
-                            <th style={{ textAlign: 'right' }}>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {templates.length === 0 ? (
+                    <table className="tbl">
+                        <thead style={{ background: 'rgba(255,255,255,.01)' }}>
                             <tr>
-                                <td colSpan={4}>
-                                    <div className="empty">
-                                        <div className="empty-i">⚙️</div>
-                                        <div style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text)', marginBottom: '4px' }}>No templates configured</div>
-                                        <div style={{ fontSize: '12.5px' }}>Create templates to standardize your team's workflow.</div>
-                                    </div>
-                                </td>
+                                <th>Template Name</th>
+                                <th>Description</th>
+                                <th style={{ textAlign: 'right' }}>Actions</th>
                             </tr>
-                        ) : (
-                            templates.map(tmp => (
-                                <tr key={tmp.id}>
-                                    <td style={{ fontWeight: 600 }}>{tmp.name}</td>
-                                    <td style={{ color: 'var(--muted)', fontSize: '13px' }}>{tmp.description || '-'}</td>
-                                    <td>
-                                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                                            {tmp.items.map((item: any, idx) => (
-                                                <span key={item.id} style={{ background: 'var(--surface2)', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', whiteSpace: 'nowrap' }}>
-                                                    {idx + 1}. {item.title}
-                                                </span>
-                                            ))}
+                        </thead>
+                        <tbody>
+                            {templates.length === 0 ? (
+                                <tr>
+                                    <td colSpan={3}>
+                                        <div className="empty">
+                                            <div className="empty-i">⚙️</div>
+                                            <div style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text)', marginBottom: '4px' }}>No templates configured</div>
+                                            <div style={{ fontSize: '12.5px' }}>Create templates to standardize your team's workflow.</div>
                                         </div>
                                     </td>
-                                    <td style={{ textAlign: 'right' }}>
-                                        <Link href={`/templates/${tmp.id}/edit`} className="btn btn-g btn-sm">Edit</Link>
-                                    </td>
                                 </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
-</div>
+                            ) : (
+                                templates.map(tmp => (
+                                    <tr key={tmp.id}>
+                                        <td style={{ fontWeight: 600 }}>{tmp.name}</td>
+                                        <td style={{ color: 'var(--muted)', fontSize: '13px' }}>{tmp.description || '-'}</td>
+                                        <td style={{ textAlign: 'right' }}>
+                                            <Link href={`/templates/${tmp.id}/edit`} className="btn btn-g btn-sm">Edit</Link>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     )
