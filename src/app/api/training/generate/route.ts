@@ -143,8 +143,8 @@ async function callGeminiAPI(topic: string, category: string) {
     The content must be specifically tailored for junior staff in an Indian CA firm, but it must be DEEP and THOROUGH. 
     
     EACH TEXT LESSON MUST:
-    1. Be at least 500-600 words long. 
-    2. Contain structured headings, sub-headings, and bullet points.
+    1. Be concise but practical (approx 300-400 words). 
+    2. Focus on "High Impact" tips that save time in a CA office.
     3. Include CURRENT compliance data and edge cases (FY 2024-25).
     4. Reference exact SECTIONS and RULES of relevant acts.
     5. Provide real-world "Pro-Tips" and "Common Pitfalls".

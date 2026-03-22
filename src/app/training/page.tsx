@@ -116,14 +116,14 @@ export default function TrainingPage() {
     }
 
     const CATEGORY_SUGGESTIONS: Record<string, string[]> = {
-        'Excel': ['Pivot Tables', 'Basic Formulas', 'VLOOKUP Mastery'],
-        'GST': ['GSTR-1 Filing', 'GSTR-3B Filing', 'GST Rates & Slabs', 'E-Way Bill Process'],
-        'Tally': ['Company Creation', 'Voucher Entry', 'GST Configuration'],
-        'Income Tax': ['Residential Status', 'Due Dates', 'Salary Head Basics', 'TDS Basics'],
-        'Audit': ['Bank Reconciliation'],
-        'MCA': ['Company Incorporation', 'Annual Filings (MGT-7 & AOC-4)'],
-        'PF_ESI': ['Monthly ECR Filing'],
-        'Accounting': ['Golden Rules', 'Bank Reconciliation'],
+        'Excel': ['Navigation Shortcuts', 'Formatting Shortcuts', 'Basic SUM \u0026 AVERAGE', 'VLOOKUP Mastery'],
+        'GST': ['GSTR-1: Sales Entry', 'GSTR-3B: Payment \u0026 Offset', 'ITC Reversal Basics', 'E-Way Bill: Generation'],
+        'Tally': ['Company Creation \u0026 Features', 'Voucher Entry: Sales/Purchase', 'Bank Rec in Tally'],
+        'Income Tax': ['Residential Status: 182-Day Rule', 'Section 194C Contractor TDS', 'Salary Head Components'],
+        'Audit': ['Bank Statement Check', 'Cash Verification Steps'],
+        'MCA': ['Name Reservation Process', 'AOC-4 Filing Basics'],
+        'PF_ESI': ['Monthly ECR Generation'],
+        'Accounting': ['Three Golden Rules', 'Depreciation Basics'],
     }
 
     return (
