@@ -143,12 +143,13 @@ async function callGeminiAPI(topic: string, category: string) {
     The content must be specifically tailored for junior staff in an Indian CA firm, but it must be DEEP and THOROUGH. 
     
     EACH TEXT LESSON MUST:
-    1. Be at least 600-800 words long. 
+    1. Be at least 500-600 words long. 
     2. Contain structured headings, sub-headings, and bullet points.
-    3. Include CURRENT Financial Year (FY 2024-25) compliance, data, and edge cases.
-    4. Reference exact SECTIONS and RULES of relevant acts (Income Tax, GST, Companies Act, etc.).
-    5. Provide real-world case studies or numeric examples (e.g. calculation of interest, late fees, or tax liability).
-    6. List "Pro-Tips" and "Common Audit Objections" related to this topic.
+    3. Include CURRENT compliance data and edge cases (FY 2024-25).
+    4. Reference exact SECTIONS and RULES of relevant acts.
+    5. Provide real-world "Pro-Tips" and "Common Pitfalls".
+    
+    IMPORTANT: Be thorough but ensure the JSON is valid and closed. Do not exceed 4000 tokens per response.
 
     The module MUST include exactly 3 distinct materials:
     - Lesson 1 (Title: In-depth Theory & Compliance)
