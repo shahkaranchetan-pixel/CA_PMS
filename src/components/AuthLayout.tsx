@@ -89,16 +89,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
             <QuickTaskModal isOpen={isQuickTaskOpen} onClose={() => setIsQuickTaskOpen(false)} />
 
-            <button
-                className="fab"
-                onClick={() => setIsQuickTaskOpen(true)}
-                title="Quick Create Task"
-            >
-                +
-            </button>
+
 
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative' }}>
-                <Topbar onToggleSidebar={toggleSidebar} />
+                <Topbar onToggleSidebar={toggleSidebar} onQuickTask={() => setIsQuickTaskOpen(true)} />
                 <main className="main" style={{ marginTop: '60px' }}>
                     {children}
                 </main>

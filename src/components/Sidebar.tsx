@@ -41,9 +41,9 @@ export default function Sidebar({
     const role = user?.role === 'ADMIN' ? 'Admin' : 'Team Member'
 
     return (
-        <nav className={`sb ${isOpen ? 'open' : ''}`}>
+        <nav className={`sb ${isOpen ? 'open' : 'closed'} ${propIsCollapsed ? 'sb-collapsed' : ''}`}>
             <div className="sb-logo" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ opacity: propIsCollapsed ? 0 : 1, transition: 'opacity 0.2s', whiteSpace: 'nowrap' }}>
+                <div style={{ opacity: propIsCollapsed ? 0 : 1, transition: 'opacity 0.2s', whiteSpace: 'nowrap', width: propIsCollapsed ? 0 : 'auto', overflow: 'hidden' }}>
                     <div className="sb-brand">KCS TaskPro</div>
                     <div className="sb-sub">Practice Management Suite</div>
                 </div>
@@ -51,7 +51,7 @@ export default function Sidebar({
                     <button 
                         onClick={onToggleCollapse}
                         className="mobile-hide"
-                        style={{ background: 'none', border: 'none', color: 'var(--gold)', cursor: 'pointer', fontSize: '16px' }}
+                        style={{ background: 'none', border: 'none', color: 'var(--gold)', cursor: 'pointer', fontSize: '16px', padding: '4px' }}
                         title={propIsCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
                     >
                         {propIsCollapsed ? "»" : "«"}
@@ -67,7 +67,7 @@ export default function Sidebar({
             </div>
 
             {!propIsCollapsed && (
-                <div className="sb-user" style={{ overflow: 'hidden' }}>
+                <div className="sb-user" style={{ overflow: 'hidden', transition: 'all 0.3s ease' }}>
                     <div className="sb-av" style={{ background: "#E8A020" }}>{initials}</div>
                     <div style={{ overflow: 'hidden' }}>
                         <div className="sb-uname" style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{user?.name || 'User'}</div>
@@ -76,34 +76,47 @@ export default function Sidebar({
                 </div>
             )}
 
+            {propIsCollapsed && (
+                <div style={{ padding: '20px 0', display: 'flex', justifyContent: 'center' }}>
+                    <div className="sb-av" style={{ background: "#E8A020", width: '32px', height: '32px', fontSize: '12px' }}>{initials}</div>
+                </div>
+            )}
+
             <div className="sb-sec">Navigation</div>
 
-            {NAV.filter(n => (n.id !== "/team" && n.id !== "/settings") || role === "Admin").map((n) => {
-                const isActive = pathname === n.id || (n.id !== "/" && pathname.startsWith(n.id))
-                return (
-                    <Link key={n.id} href={n.id} title={propIsCollapsed ? n.label : undefined} className={`sb-item ${isActive ? "active" : ""}`}>
-                        <span style={{ fontSize: "16px", width: "20px", textAlign: "center", flexShrink: 0 }}>{n.icon}</span>
-                        {!propIsCollapsed && <span>{n.label}</span>}
-                    </Link>
-                )
-            })}
+            <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+                {NAV.filter(n => (n.id !== "/team" && n.id !== "/settings") || role === "Admin").map((n) => {
+                    const isActive = pathname === n.id || (n.id !== "/" && pathname.startsWith(n.id))
+                    return (
+                        <Link key={n.id} href={n.id} title={propIsCollapsed ? n.label : undefined} className={`sb-item ${isActive ? "active" : ""}`}>
+                            <span style={{ fontSize: "16px", width: "24px", textAlign: "center", flexShrink: 0 }}>{n.icon}</span>
+                            {!propIsCollapsed && <span style={{ marginLeft: '10px' }}>{n.label}</span>}
+                        </Link>
+                    )
+                })}
+            </div>
 
             <div className="sb-bot">
-                <div style={{ fontSize: "11px", color: "var(--muted)", textAlign: "center", marginBottom: "9px" }}>
-                    {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} · {new Date().getFullYear()}
+                <div style={{ fontSize: "10px", color: "var(--muted)", textAlign: "center", marginBottom: "9px" }}>
+                    {!propIsCollapsed && `${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} · ${new Date().getFullYear()}`}
                 </div>
                 <Link
                     href="/profile"
                     className="logout-btn"
-                    style={{ background: 'var(--surface)', color: 'var(--text)', border: '1px solid var(--border)', marginBottom: '8px', display: 'block', textAlign: 'center', textDecoration: 'none' }}
+                    title="My Profile"
+                    style={{ background: 'var(--surface2)', color: 'var(--text)', border: '1px solid var(--border)', marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none' }}
                 >
-                    👤 My Profile
+                    <span style={{ marginRight: propIsCollapsed ? 0 : '8px' }}>👤</span>
+                    {!propIsCollapsed && <span>My Profile</span>}
                 </Link>
                 <button
                     className="logout-btn"
+                    title="Sign Out"
                     onClick={() => signOut({ callbackUrl: '/login' })}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}
                 >
-                    ⎋ Sign Out
+                    <span style={{ marginRight: propIsCollapsed ? 0 : '8px' }}>⎋</span>
+                    {!propIsCollapsed && <span>Sign Out</span>}
                 </button>
             </div>
         </nav>

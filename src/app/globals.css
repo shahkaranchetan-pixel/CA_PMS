@@ -189,6 +189,21 @@ body {
   left: 70px !important;
 }
 
+.sb-collapsed .sb-sec,
+.sb-collapsed .sb-urole,
+.sb-collapsed .sb-uname,
+.sb-collapsed .sb-sub,
+.sb-collapsed .logout-btn span,
+.sb-collapsed .sb-bot div {
+  display: none !important;
+}
+
+.sb-collapsed .logout-btn {
+  padding: 8px 0;
+  width: 36px;
+  margin: 0 auto;
+}
+
 .sb-logo {
   padding: 20px 18px 14px;
   border-bottom: 1px solid var(--border)
@@ -338,7 +353,7 @@ body {
 
 .stats-dashboard {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
   margin-bottom: 20px
 }
@@ -362,18 +377,18 @@ body {
   position: absolute;
   top: 0;
   right: 0;
-  width: 70px;
-  height: 70px;
-  border-radius: 0 var(--r) 0 70px;
-  opacity: .1
+  width: 50px;
+  height: 50px;
+  border-radius: 0 var(--r) 0 50px;
+  opacity: .08
 }
 
 .scard-val {
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 700;
   font-family: 'Playfair Display', serif;
-  line-height: 1;
-  margin-top: 10px
+  line-height: 1.2;
+  margin-top: 8px
 }
 
 .scard-lbl {
@@ -412,7 +427,7 @@ body {
 }
 
 .dlbar {
-  height: 3px;
+  height: 2px;
   background: rgba(255, 255, 255, .06);
   border-radius: 99px;
   margin-top: 7px;
@@ -922,11 +937,11 @@ option {
 }
 
 .wl-bar-track {
-  height: 8px;
+  height: 4px;
   background: rgba(255, 255, 255, .06);
   border-radius: 99px;
   overflow: hidden;
-  margin: 8px 0
+  margin: 12px 0 8px
 }
 
 .wl-bar-fill {

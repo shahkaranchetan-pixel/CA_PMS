@@ -39,7 +39,7 @@ export default async function TeamPage() {
             </div>
 
             {/* Summary Stats */}
-            <div className="stats">
+            <div className="stats-dashboard">
                 <div className="scard">
                     <div className="scard-accent" style={{ background: '#4FACFE' }} />
                     <div style={{ fontSize: '18px' }}>👥</div>

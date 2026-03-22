@@ -43,10 +43,10 @@ export default function EmployeeWorkloadCard({ member, allMembers, now }: any) {
                     </div>
                 </div>
                 <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-                    <div style={{ fontSize: '10px', color: loadColor, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.5px' }}>
+                    <div style={{ fontSize: '9px', color: loadColor, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>
                         {loadLabel}
                     </div>
-                    <div style={{ fontSize: '18px', fontWeight: 700, fontFamily: 'Playfair Display,serif', color: loadColor }}>
+                    <div style={{ fontSize: '15px', fontWeight: 700, fontFamily: 'Playfair Display,serif', color: loadColor }}>
                         {Math.round(load)}%
                     </div>
                 </div>
@@ -58,26 +58,26 @@ export default function EmployeeWorkloadCard({ member, allMembers, now }: any) {
             </div>
 
             {/* Metrics */}
-            <div className="wl-meta">
+            <div className="wl-meta" style={{ gap: '12px' }}>
                 <div className="wl-meta-item">
                     <span className="label">Active</span>
-                    <span className="val" style={{ color: '#4FACFE' }}>{activeTasks.length}</span>
+                    <span className="val" style={{ color: '#4FACFE', fontSize: '14px' }}>{activeTasks.length}</span>
                 </div>
                 <div className="wl-meta-item">
                     <span className="label">Done</span>
-                    <span className="val" style={{ color: '#00CF84' }}>{completedTasks.length}</span>
+                    <span className="val" style={{ color: '#00CF84', fontSize: '14px' }}>{completedTasks.length}</span>
                 </div>
                 <div className="wl-meta-item">
                     <span className="label">Overdue</span>
-                    <span className="val" style={{ color: overdueTasks.length > 0 ? '#FF5757' : 'var(--muted)' }}>{overdueTasks.length}</span>
+                    <span className="val" style={{ color: overdueTasks.length > 0 ? '#FF5757' : 'var(--muted)', fontSize: '14px' }}>{overdueTasks.length}</span>
                 </div>
                 <div className="wl-meta-item">
                     <span className="label">Blocked</span>
-                    <span className="val" style={{ color: blockedTasks.length > 0 ? '#FF5757' : 'var(--muted)' }}>{blockedTasks.length}</span>
+                    <span className="val" style={{ color: blockedTasks.length > 0 ? '#FF5757' : 'var(--muted)', fontSize: '14px' }}>{blockedTasks.length}</span>
                 </div>
                 <div className="wl-meta-item">
-                    <span className="label">🔥</span>
-                    <span className="val" style={{ color: highPriority.length > 0 ? '#FF5757' : 'var(--muted)' }}>{highPriority.length}</span>
+                    <span className="label">Hot</span>
+                    <span className="val" style={{ color: highPriority.length > 0 ? '#FF5757' : 'var(--muted)', fontSize: '14px' }}>{highPriority.length}</span>
                 </div>
             </div>
 
