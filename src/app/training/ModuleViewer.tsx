@@ -109,15 +109,15 @@ export default function ModuleViewer({ params }: { params: { id: string } }) {
     const materialsCount = module.materials?.length || 0
 
     return (
-        <div style={{ display: 'flex', minHeight: 'calc(100vh - 80px)', background: 'transparent' }}>
+        <div style={{ display: 'flex', minHeight: 'calc(100vh - 80px)', background: '#0B0D11', color: '#fff' }}>
             {/* Sidebar Navigation */}
-            <div style={{ width: '300px', borderRight: '1px solid var(--border)', padding: '24px', background: 'rgba(255, 255, 255, 0.02)', backdropFilter: 'blur(10px)', flexShrink: 0 }}>
+            <div style={{ width: '300px', borderRight: '1px solid rgba(255,255,255,0.1)', padding: '24px', background: 'rgba(255, 255, 255, 0.02)', backdropFilter: 'blur(10px)', flexShrink: 0 }}>
                 <Link href="/training" style={{ color: 'var(--gold)', fontSize: '13px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px', fontWeight: 600 }}>
                     ← Back to Academy
                 </Link>
 
                 <div style={{ marginBottom: '20px' }}>
-                    <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '4px' }}>{module.category}</div>
+                    <div style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '4px' }}>{module.category}</div>
                     <div style={{ fontSize: '16px', fontWeight: 700, color: '#fff' }}>Module Outline</div>
                 </div>
 
@@ -128,10 +128,10 @@ export default function ModuleViewer({ params }: { params: { id: string } }) {
                             onClick={() => { setActiveLessonIndex(idx); setShowMaterialForm(false); }}
                             style={{
                                 display: 'flex', gap: '12px', alignItems: 'center', padding: '12px', borderRadius: '10px',
-                                background: activeLessonIndex === idx ? 'var(--gold-dim)' : 'transparent',
+                                background: activeLessonIndex === idx ? 'rgba(212, 175, 55, 0.15)' : 'transparent',
                                 border: '1px solid',
                                 borderColor: activeLessonIndex === idx ? 'var(--gold)' : 'transparent',
-                                color: activeLessonIndex === idx ? 'var(--gold)' : 'var(--muted)',
+                                color: activeLessonIndex === idx ? 'var(--gold)' : 'rgba(255,255,255,0.5)',
                                 textAlign: 'left', cursor: 'pointer', transition: 'all 0.2s', fontSize: '13px', width: '100%',
                             }}
                         >
@@ -144,7 +144,7 @@ export default function ModuleViewer({ params }: { params: { id: string } }) {
                     {userRole === 'ADMIN' && (
                         <button 
                             onClick={() => setShowMaterialForm(true)}
-                            style={{ marginTop: '12px', padding: '12px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px dashed var(--border)', color: 'var(--muted)', fontSize: '12px', cursor: 'pointer' }}
+                            style={{ marginTop: '12px', padding: '12px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px dashed rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.3)', fontSize: '12px', cursor: 'pointer' }}
                         >
                             + Add New Section
                         </button>
@@ -152,21 +152,21 @@ export default function ModuleViewer({ params }: { params: { id: string } }) {
                 </div>
 
                 <div style={{ marginTop: 'auto', paddingTop: '40px' }}>
-                    <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '8px' }}>OVERALL PROGRESS</div>
-                    <div style={{ height: '4px', background: 'var(--surface2)', borderRadius: '2px', overflow: 'hidden' }}>
+                    <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginBottom: '8px' }}>OVERALL PROGRESS</div>
+                    <div style={{ height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
                         <div style={{ height: '100%', background: 'var(--gold)', width: progress?.completed ? '100%' : `${((activeLessonIndex + 1) / materialsCount) * 100}%` }}></div>
                     </div>
                 </div>
             </div>
 
             {/* Main Content Area */}
-            <div style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
+            <div style={{ flex: 1, padding: '40px', overflowY: 'auto', background: '#0B0D11' }}>
                 {!showMaterialForm && activeMaterial ? (
                     <div style={{ maxWidth: '850px', margin: '0 auto' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
                             <div>
                                 <h1 style={{ fontSize: '32px', fontWeight: 800, color: '#fff', margin: 0 }}>{activeMaterial.title}</h1>
-                                <div style={{ fontSize: '14px', color: 'var(--muted)', marginTop: '8px' }}>
+                                <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', marginTop: '8px' }}>
                                     Section {activeLessonIndex + 1} of {materialsCount} • {activeMaterial.type === 'QUIZ' ? 'Assessment' : 'Lesson'}
                                 </div>
                             </div>
