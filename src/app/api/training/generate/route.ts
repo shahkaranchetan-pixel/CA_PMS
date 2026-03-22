@@ -219,7 +219,7 @@ async function callClaudeAPI(topic: string, category: string) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
-            model: "claude-3-5-sonnet-latest",
+            model: "claude-3-5-sonnet-20241022",
             max_tokens: 8000,
             messages: [{ role: "user", content: prompt }]
         })
@@ -227,7 +227,47 @@ async function callClaudeAPI(topic: string, category: string) {
 
     if (!response.ok) {
         const error = await response.json();
-        throw new Error(error?.error?.message || "Claude API call failed");
+        // Fallback to older sonnet if latest isn't yet available on this key
+        const fallbackRes = await fetch("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: {
+                "x-api-key": apiKey,
+                "anthropic-version": "2023-06-01",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                model: "claude-3-5-sonnet-20240620",
+                max_tokens: 8000,
+                messages: [{ role: "user", content: prompt }]
+            })
+        });
+
+        if (fallbackRes.ok) {
+            const data = await fallbackRes.json();
+            return JSON.parse(data.content[0].text.replace(/```json/g, "").replace(/```/g, "").trim());
+        }
+
+        // Final Claude fallback to Haiku (Always works)
+        const haikuRes = await fetch("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: {
+                "x-api-key": apiKey,
+                "anthropic-version": "2023-06-01",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                model: "claude-3-haiku-20240307",
+                max_tokens: 8000,
+                messages: [{ role: "user", content: prompt }]
+            })
+        });
+
+        if (haikuRes.ok) {
+            const data = await haikuRes.json();
+            return JSON.parse(data.content[0].text.replace(/```json/g, "").replace(/```/g, "").trim());
+        }
+
+        throw new Error(error?.error?.message || "All Claude models failed.");
     }
 
     const data = await response.json();
