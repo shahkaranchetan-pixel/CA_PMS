@@ -128,7 +128,8 @@ export default async function TasksPage(props: { searchParams: Promise<{ [key: s
 
             {view === 'list' ? (
                 <div className="card" style={{ padding: 0, overflow: 'hidden', marginTop: '16px' }}>
-                    <table className="tbl">
+                    <div className="table-wrapper">
+<table className="tbl">
                         <thead style={{ background: 'rgba(255,255,255,.01)' }}>
                             <tr>
                                 <th style={{ width: 40 }}></th>
@@ -216,6 +217,7 @@ export default async function TasksPage(props: { searchParams: Promise<{ [key: s
                             )}
                         </tbody>
                     </table>
+</div>
                 </div>
             ) : (
                 <BoardView tasks={tasks} taskMap={TASK_MAP} />

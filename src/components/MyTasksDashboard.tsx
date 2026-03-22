@@ -86,7 +86,7 @@ export default function MyTasksDashboard({ tasks }: MyTasksDashboardProps) {
             {/* Tabs */}
             <div style={{ 
                 display: 'flex', gap: '24px', padding: '0 20px', borderBottom: '1px solid var(--border)',
-                background: 'rgba(255,255,255,0.01)', overflowX: 'auto'
+                background: 'var(--surface2)', overflowX: 'auto'
             }}>
                 {tabs.map(tab => (
                     <button
@@ -112,7 +112,7 @@ export default function MyTasksDashboard({ tasks }: MyTasksDashboardProps) {
             {/* Table Header */}
             <div style={{ overflowX: 'auto' }}>
                 <table className="tbl" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead style={{ background: 'rgba(255,255,255,0.02)' }}>
+                    <thead style={{ background: 'var(--surface2)' }}>
                         <tr>
                             <th style={{ textAlign: 'left', padding: '12px 20px', fontSize: '11px', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--border)' }}>Task Name</th>
                             <th style={{ textAlign: 'left', padding: '12px 20px', fontSize: '11px', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--border)' }}>Reviewer</th>

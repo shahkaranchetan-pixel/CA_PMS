@@ -118,7 +118,7 @@ export default function ProfilePage() {
                                 <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '12px' }}>Recent Tasks</div>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                     {tasks.slice(0, 5).map(task => (
-                                        <div key={task.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                                        <div key={task.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'var(--surface2)', borderRadius: '8px', border: '1px solid var(--border)' }}>
                                             <div style={{ fontSize: '12px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '160px' }}>{task.title}</div>
                                             <span className={`badge b-${task.status.toLowerCase()}`} style={{ fontSize: '8px' }}>{task.status}</span>
                                         </div>

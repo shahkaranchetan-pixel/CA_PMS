@@ -15,7 +15,7 @@ function getStatusIcon(status: string) {
         'IN_PROGRESS': { color: '#4FACFE', glow: 'rgba(79, 172, 254, 0.4)', label: 'In Progress' },
         'BLOCKED': { color: '#FF5757', glow: 'rgba(255, 87, 87, 0.4)', label: 'Blocked' },
         'UNDER_REVIEW': { color: '#B89AFF', glow: 'rgba(184, 154, 255, 0.4)', label: 'Under Review' },
-        'PENDING': { color: 'rgba(255, 255, 255, 0.15)', glow: 'transparent', label: 'Pending' }
+        'PENDING': { color: 'var(--surface2)', glow: 'transparent', label: 'Pending' }
     };
 
     const s = config[status] || config['PENDING'];
@@ -30,7 +30,7 @@ function getStatusIcon(status: string) {
                 background: s.color,
                 margin: '0 auto',
                 boxShadow: status !== 'PENDING' ? `0 0 8px ${s.glow}` : 'none',
-                border: status === 'PENDING' ? '1px solid rgba(255, 255, 255, 0.1)' : 'none'
+                border: status === 'PENDING' ? '1px solid var(--surface2)' : 'none'
             }} 
         />
     );
@@ -65,7 +65,7 @@ export default function ComplianceMatrix({ clients, tasks, currentPeriod }: Comp
 
     return (
         <div className="card" style={{ padding: 0, overflow: 'hidden', border: '1px solid var(--border)' }}>
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)' }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface2)' }}>
                 <div style={{ fontSize: '12px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px', letterSpacing: '1px', textTransform: 'uppercase' }}>
                     STATUTORY COMPLIANCE MATRIX
                 </div>
@@ -113,7 +113,7 @@ export default function ComplianceMatrix({ clients, tasks, currentPeriod }: Comp
                                                     {getStatusIcon(task.status)}
                                                 </Link>
                                             ) : (
-                                                <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', margin: '0 auto' }} />
+                                                <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'var(--surface2)', margin: '0 auto' }} />
                                             )}
                                         </td>
                                     );
@@ -123,10 +123,10 @@ export default function ComplianceMatrix({ clients, tasks, currentPeriod }: Comp
                     </tbody>
                 </table>
             </div>
-            <div style={{ padding: '10px 16px', borderTop: '1px solid var(--border)', display: 'flex', flexWrap: 'wrap', gap: '15px', fontSize: '10px', fontWeight: 600, background: 'rgba(255,255,255,0.01)', color: 'var(--muted)' }}>
+            <div style={{ padding: '10px 16px', borderTop: '1px solid var(--border)', display: 'flex', flexWrap: 'wrap', gap: '15px', fontSize: '10px', fontWeight: 600, background: 'var(--surface2)', color: 'var(--muted)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#00CF84' }} /> Done</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4FACFE' }} /> Doing</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: 8, height: 8, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.2)' }} /> Todo</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: 8, height: 8, borderRadius: '50%', border: '1px solid var(--surface2)' }} /> Todo</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#FF5757' }} /> Stuck</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#B89AFF' }} /> Check</div>
             </div>

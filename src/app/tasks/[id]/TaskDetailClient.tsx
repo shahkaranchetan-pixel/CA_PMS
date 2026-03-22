@@ -408,7 +408,7 @@ export default function TaskDetailClient({ task, isAdmin }: { task: any, isAdmin
                                     target="_blank" 
                                     rel="noreferrer" 
                                     className="btn btn-g" 
-                                    style={{ width: '100%', justifyContent: 'center', background: '#25D366', color: '#fff', borderColor: '#25D366' }}
+                                    style={{ width: '100%', justifyContent: 'center', background: '#25D366', color: 'var(--text)', borderColor: '#25D366' }}
                                 >
                                     💬 WhatsApp Reminder
                                 </a>
@@ -507,7 +507,7 @@ function AIReminderDraft({ taskId, client, taskTitle, period }: { taskId: string
                             href={`https://wa.me/${client.contactPhone.replace(/\D/g, '')}?text=${encodeURIComponent(draft)}`} 
                             target="_blank" 
                             className="btn btn-g" 
-                            style={{ width: '100%', marginTop: '8px', background: '#25D366', color: '#fff', fontSize: '11px', justifyContent: 'center' }}
+                            style={{ width: '100%', marginTop: '8px', background: '#25D366', color: 'var(--text)', fontSize: '11px', justifyContent: 'center' }}
                         >
                             Open in WhatsApp
                         </a>

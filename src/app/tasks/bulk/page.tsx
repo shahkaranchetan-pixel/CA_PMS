@@ -275,7 +275,7 @@ export default function BulkTaskCreationPage() {
                             {assigneeDropdownOpen && (
                                 <div style={{
                                     position: 'absolute', zIndex: 9999, left: 0, right: 0, top: '100%',
-                                    background: '#0e1c33', border: '1px solid rgba(255,255,255,0.15)',
+                                    background: '#0e1c33', border: '1px solid var(--surface2)',
                                     borderRadius: '8px', marginTop: '4px', maxHeight: '220px',
                                     overflowY: 'auto', boxShadow: '0 12px 32px rgba(0,0,0,.6)'
                                 }}>
@@ -284,7 +284,7 @@ export default function BulkTaskCreationPage() {
                                             display: 'flex', alignItems: 'center', gap: '10px',
                                             padding: '8px 12px', cursor: 'pointer',
                                             background: selectedAssignees.includes(u.id) ? 'rgba(232,160,32,0.15)' : '#0e1c33',
-                                            borderBottom: '1px solid rgba(255,255,255,0.06)',
+                                            borderBottom: '1px solid var(--surface2)',
                                             fontSize: '13px'
                                         }}>
                                             <input

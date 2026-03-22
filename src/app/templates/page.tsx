@@ -21,7 +21,8 @@ export default async function TemplatesPage() {
             </div>
 
             <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                <table className="tbl">
+                <div className="table-wrapper">
+<table className="tbl">
                     <thead style={{ background: 'rgba(255,255,255,.01)' }}>
                         <tr>
                             <th>Template Name</th>
@@ -63,6 +64,7 @@ export default async function TemplatesPage() {
                         )}
                     </tbody>
                 </table>
+</div>
             </div>
         </div>
     )

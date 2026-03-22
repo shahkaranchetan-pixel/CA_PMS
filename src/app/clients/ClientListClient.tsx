@@ -83,7 +83,8 @@ export default function ClientListClient({ initialClients, templates, employees 
             </div>
 
             <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                <table className="tbl">
+                <div className="table-wrapper">
+<table className="tbl">
                     <thead style={{ background: 'rgba(255,255,255,.01)' }}>
                         <tr>
                             <th style={{ width: '40px' }}>
@@ -147,6 +148,7 @@ export default function ClientListClient({ initialClients, templates, employees 
                         ))}
                     </tbody>
                 </table>
+</div>
             </div>
 
             {showBatchModal && (

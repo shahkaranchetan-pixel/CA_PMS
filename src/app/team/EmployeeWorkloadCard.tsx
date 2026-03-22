@@ -102,7 +102,7 @@ export default function EmployeeWorkloadCard({ member, allMembers, now }: any) {
                                             <Link href={`/tasks/${t.id}`} style={{ fontSize: '12px', color: 'var(--text)', fontWeight: 500, flex: 1, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', textDecoration: 'none' }}>
                                                 {t.title}
                                             </Link>
-                                            <span style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '4px', background: isOverdue ? 'rgba(255,87,87,0.1)' : 'rgba(255,255,255,0.05)', color: isOverdue ? '#FF5757' : 'var(--muted)' }}>
+                                            <span style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '4px', background: isOverdue ? 'rgba(255,87,87,0.1)' : 'var(--surface2)', color: isOverdue ? '#FF5757' : 'var(--muted)' }}>
                                                 {t.status}
                                             </span>
                                         </div>
@@ -127,7 +127,7 @@ export default function EmployeeWorkloadCard({ member, allMembers, now }: any) {
                         ⚠️ Overdue Tasks
                     </div>
                     {overdueTasks.slice(0, 3).map((t: any) => (
-                        <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid var(--surface2)' }}>
                             <Link href={`/tasks/${t.id}`} style={{ fontSize: '11.5px', color: 'var(--text)', fontWeight: 500, flex: 1, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                                 • {t.title}
                             </Link>

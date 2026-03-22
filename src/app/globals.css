@@ -443,9 +443,15 @@ body {
   justify-content: space-between
 }
 
+.table-wrapper {
+  overflow-x: auto;
+  width: 100%;
+}
+
 .tbl {
   width: 100%;
-  border-collapse: collapse
+  border-collapse: collapse;
+  white-space: nowrap;
 }
 
 .tbl th {

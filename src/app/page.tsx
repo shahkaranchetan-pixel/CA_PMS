@@ -115,7 +115,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ m
                             <div style={{ fontSize: '13px', color: 'var(--muted)' }}>It looks like you haven't populated statutory tasks for {currentPeriod} yet.</div>
                         </div>
                     </div>
-                    <Link href="/tasks" className="btn btn-p" style={{ background: '#4FACFE', color: '#fff' }}>Populate Now</Link>
+                    <Link href="/tasks" className="btn btn-p" style={{ background: '#4FACFE', color: 'var(--text)' }}>Populate Now</Link>
                 </div>
             )}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
@@ -259,7 +259,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ m
                         <span>🔔 Upcoming Deadlines</span>
                     </div>
                     {upcomingDeadlines.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--muted)', fontSize: '12px' }}>No upcoming deadlines</div>
+                        <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--muted)', fontSize: '13px', fontStyle: 'italic' }}>No upcoming deadlines</div>
                     ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             {upcomingDeadlines.map(task => {
@@ -301,7 +301,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ m
                         <span>📝 Recent Activity</span>
                     </div>
                     {recentLogs.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--muted)', fontSize: '12px' }}>No recent activity</div>
+                        <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--muted)', fontSize: '13px', fontStyle: 'italic' }}>No recent activity</div>
                     ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '320px', overflowY: 'auto' }}>
                             {recentLogs.map(log => (
@@ -340,7 +340,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ m
                         <Link href="/team" style={{ fontSize: '11px', color: 'var(--gold)' }}>View All →</Link>
                     </div>
                     {team.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--muted)', fontSize: '12px' }}>No team members</div>
+                        <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--muted)', fontSize: '13px', fontStyle: 'italic' }}>No team members</div>
                     ) : (
                         team.slice(0, 6).map(m => {
                             const taskCount = m.taskAssignees.length;

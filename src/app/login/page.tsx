@@ -240,7 +240,7 @@ export default function LoginPage() {
                     style={{
                         width: '100%',
                         padding: '12px',
-                        background: 'rgba(255,255,255,0.05)',
+                        background: 'var(--surface2)',
                         color: 'var(--text)',
                         border: '1px solid var(--border)',
                         borderRadius: '10px',
@@ -254,8 +254,8 @@ export default function LoginPage() {
                         gap: '12px',
                         transition: 'all .2s'
                     }}
-                    onMouseEnter={e => { (e.target as HTMLElement).style.background = 'rgba(255,255,255,0.08)'; (e.target as HTMLElement).style.borderColor = 'var(--gold)' }}
-                    onMouseLeave={e => { (e.target as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; (e.target as HTMLElement).style.borderColor = 'var(--border)' }}
+                    onMouseEnter={e => { (e.target as HTMLElement).style.background = 'var(--surface2)'; (e.target as HTMLElement).style.borderColor = 'var(--gold)' }}
+                    onMouseLeave={e => { (e.target as HTMLElement).style.background = 'var(--surface2)'; (e.target as HTMLElement).style.borderColor = 'var(--border)' }}
                 >
                     <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="18" height="18" />
                     Sign in with Google
