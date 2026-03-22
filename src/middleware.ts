@@ -1,22 +1,30 @@
 import { withAuth } from "next-auth/middleware"
+import { NextResponse } from "next/server"
 
-export default withAuth({
-    pages: {
-        signIn: "/login",
+export default withAuth(
+    function middleware(req) {
+        // If there's no token, redirect to login
+        const token = req.nextauth.token
+        if (!token) {
+            const loginUrl = new URL("/login", req.url)
+            loginUrl.searchParams.set("callbackUrl", req.url)
+            return NextResponse.redirect(loginUrl)
+        }
+        return NextResponse.next()
     },
-})
+    {
+        callbacks: {
+            // Only allow through if token exists
+            authorized: ({ token }) => !!token,
+        },
+        pages: {
+            signIn: "/login",
+        },
+    }
+)
 
 export const config = {
-    // Protect all routes except login, api/auth, and public files
     matcher: [
-        /*
-         * Match all request paths except for the ones starting with:
-         * - api/auth (NextAuth endpoints)
-         * - _next/static (static files)
-         * - _next/image (image optimization files)
-         * - favicon.ico (favicon file)
-         * - login (login page itself)
-         */
-        "/((?!api/auth|_next/static|_next/image|favicon.ico|login).*)",
+        "/((?!api/auth|_next/static|_next/image|favicon\\.ico|login).*)",
     ],
 }
