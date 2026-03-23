@@ -90,8 +90,15 @@ export async function POST(req: Request) {
             }
         }
 
+        // Fetch firm name from settings
+        const settings = await prisma.systemSetting.findMany({
+            where: { key: { in: ['FIRM_NAME', 'FIRM_ADDRESS'] } }
+        });
+        const config = settings.reduce((acc: any, s: any) => { acc[s.key] = s.value; return acc; }, {});
+        const firmName = config.FIRM_NAME || "KCS Practice Management";
+
         const prompt = `
-        You are a professional assistant for KCS Practice Management, an Indian CA firm.
+        You are a professional assistant for ${firmName}, an Indian CA firm.
         Draft a ${urgency || 'professional'} reminder message to be sent via ${channel || 'WhatsApp'}.
         
         CONTEXT:

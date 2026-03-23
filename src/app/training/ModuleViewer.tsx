@@ -109,7 +109,7 @@ export default function ModuleViewer({ params }: { params: { id: string } }) {
     const materialsCount = module.materials?.length || 0
 
     return (
-        <div style={{ display: 'flex', minHeight: 'calc(100vh - 80px)', background: '#0B0D11', color: '#fff' }}>
+        <div className="training-viewer-mode" style={{ display: 'flex', minHeight: 'calc(100vh - 80px)', background: '#0B0D11', color: '#fff' }}>
             {/* Sidebar Navigation */}
             <div style={{ width: '300px', borderRight: '1px solid rgba(255,255,255,0.1)', padding: '24px', background: 'rgba(255, 255, 255, 0.02)', backdropFilter: 'blur(10px)', flexShrink: 0 }}>
                 <Link href="/training" style={{ color: 'var(--gold)', fontSize: '13px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px', fontWeight: 600 }}>
@@ -345,6 +345,16 @@ export default function ModuleViewer({ params }: { params: { id: string } }) {
                 .markdown-reader :global(table) { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
                 .markdown-reader :global(th), .markdown-reader :global(td) { padding: 12px; border: 1px solid var(--border); text-align: left; }
                 .markdown-reader :global(th) { background: var(--surface2); color: var(--gold); font-size: 13px; text-transform: uppercase; }
+                .training-viewer-mode :global(.card) {
+                    background: rgba(255, 255, 255, 0.03) !important;
+                    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+                    color: #fff !important;
+                }
+                .training-viewer-mode :global(.card.glass-premium) {
+                    background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%) !important;
+                    backdrop-filter: blur(20px) !important;
+                    box-shadow: 0 40px 100px rgba(0,0,0,0.5) !important;
+                }
             `}</style>
         </div>
     )

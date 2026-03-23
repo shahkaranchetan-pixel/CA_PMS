@@ -251,7 +251,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ m
             </div>
 
             {/* Bottom Row: Upcoming Deadlines + Activity Feed + Team Load */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 2fr 1fr', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
 
                 {/* Upcoming Deadlines */}
                 <div className="card">

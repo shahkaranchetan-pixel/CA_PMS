@@ -182,11 +182,11 @@ body {
 }
 
 .sb-collapsed .main {
-  margin-left: 70px !important;
+  margin-left: 0 !important;
 }
 
 .sb-collapsed .topbar-main {
-  left: 70px !important;
+  left: 0 !important;
 }
 
 .sb-collapsed .sb-sec,
@@ -332,10 +332,11 @@ body {
 }
 
 .main {
-  margin-left: var(--sidebar);
   flex: 1;
   padding: 24px 28px;
-  min-height: 100vh
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .ptitle {
@@ -1131,7 +1132,7 @@ option {
   border-bottom: 1px solid var(--border);
   position: absolute;
   top: 0;
-  left: var(--sidebar);
+  left: 0;
   right: 0;
   z-index: 100;
   background: rgba(7, 16, 31, 0.8);
