@@ -1,44 +1,58 @@
 import { NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth-options";
+import { requireAuth } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma"
 
 export const dynamic = "force-dynamic"
 
 export async function GET() {
     try {
-        const session = await getServerSession(authOptions)
-        const user = session?.user as any
-        if (!user || user.role !== "ADMIN") return new NextResponse("Unauthorized", { status: 401 })
+        const { user, error } = await requireAuth("ADMIN");
+        if (error) return error;
 
         const clients = await prisma.client.findMany({
+            where: { deletedAt: null },
+            select: {
+                id: true,
+                name: true,
+                entityType: true,
+                gstin: true,
+                pan: true,
+                tan: true,
+                contactPerson: true,
+                contactEmail: true,
+                contactPhone: true,
+                active: true,
+                gstCategory: true,
+                createdAt: true,
+            },
             orderBy: { name: 'asc' }
-        })
+        });
 
-        // Generate CSV
-        const headers = ["ID", "Name", "Entity Type", "Status", "GSTIN", "PAN", "TAN", "Contact", "Created At"]
+        const headers = ["Name", "Entity Type", "GST Category", "GSTIN", "PAN", "TAN", "Contact Person", "Email", "Phone", "Active", "Created"];
         const rows = clients.map(c => [
-            c.id,
-            `"${c.name.replace(/"/g, '""')}"`,
+            `"${(c.name || '').replace(/"/g, '""')}"`,
             c.entityType,
-            c.active ? "Active" : "Inactive",
-            c.gstin || 'N/A',
-            c.pan || 'N/A',
-            c.tan || 'N/A',
-            `"${c.contactEmail?.replace(/"/g, '""') || 'N/A'}"`,
-            new Date(c.createdAt).toLocaleDateString()
-        ])
+            c.gstCategory,
+            c.gstin || '',
+            c.pan || '',
+            c.tan || '',
+            `"${(c.contactPerson || '').replace(/"/g, '""')}"`,
+            c.contactEmail || '',
+            c.contactPhone || '',
+            c.active ? 'Yes' : 'No',
+            c.createdAt ? new Date(c.createdAt).toLocaleDateString() : ''
+        ]);
 
-        const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n")
+        const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
 
         return new NextResponse(csvContent, {
             headers: {
                 "Content-Type": "text/csv",
                 "Content-Disposition": `attachment; filename=clients-export-${new Date().toISOString().split('T')[0]}.csv`
             }
-        })
+        });
     } catch (error) {
-        console.error("[EXPORT_CLIENTS_ERROR]", error)
-        return new NextResponse("Internal Error", { status: 500 })
+        console.error("[EXPORT_CLIENTS_ERROR]", error);
+        return new NextResponse("Internal Error", { status: 500 });
     }
 }

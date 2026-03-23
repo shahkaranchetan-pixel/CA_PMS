@@ -1,18 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { encrypt, decrypt } from "@/lib/encryption";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth-options";
+import { requireAuth } from "@/lib/auth-helpers";
 
 export const dynamic = "force-dynamic";
 
 // GET all vault entries for a client
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session || (session.user as any).role !== "ADMIN") {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+        const { user, error } = await requireAuth("ADMIN");
+        if (error) return error;
         const { id } = await params;
         const entries = await prisma.clientVaultEntry.findMany({
             where: { clientId: id },
@@ -34,10 +31,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 // POST a new custom vault entry
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session || (session.user as any).role !== "ADMIN") {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+        const { user, error } = await requireAuth("ADMIN");
+        if (error) return error;
         const { id } = await params;
         const data = await request.json();
 
@@ -61,10 +56,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 // DELETE a custom vault entry
 export async function DELETE(request: Request) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session || (session.user as any).role !== "ADMIN") {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+        const { user, error } = await requireAuth("ADMIN");
+        if (error) return error;
         const { entryId } = await request.json();
 
         await prisma.clientVaultEntry.delete({

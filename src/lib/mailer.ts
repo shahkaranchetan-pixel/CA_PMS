@@ -1,14 +1,32 @@
 import nodemailer from "nodemailer"
 import { prisma } from "./prisma"
 
+// Cache SMTP settings for 5 minutes to avoid querying DB on every email
+let smtpCache: { config: Record<string, string>; expiresAt: number } | null = null;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+async function getSmtpConfig(): Promise<Record<string, string>> {
+    if (smtpCache && Date.now() < smtpCache.expiresAt) {
+        return smtpCache.config;
+    }
+
+    const settings = await prisma.systemSetting.findMany();
+    const config = settings.reduce((acc: Record<string, string>, s: any) => {
+        acc[s.key] = s.value;
+        return acc;
+    }, {});
+
+    smtpCache = { config, expiresAt: Date.now() + CACHE_TTL_MS };
+    return config;
+}
+
+export function invalidateSmtpCache() {
+    smtpCache = null;
+}
+
 export async function sendEmail({ to, subject, html }: { to: string, subject: string, html: string }) {
     try {
-        // Fetch all system settings and convert to a config object
-        const settings = await prisma.systemSetting.findMany()
-        const config = settings.reduce((acc: any, s: any) => {
-            acc[s.key] = s.value
-            return acc
-        }, {})
+        const config = await getSmtpConfig();
 
         // If SMTP settings are fully configured, use real nodemailer
         if (config.SMTP_HOST && config.SMTP_PORT && config.SMTP_USER && config.SMTP_PASS && config.EMAIL_FROM) {

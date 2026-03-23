@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth-options";
 import { NextResponse } from "next/server"
+import { checkRateLimit } from "@/lib/rate-limit"
 
 // --- AI GENERATION TEMPLATES ---
 // These serve as high-quality fallbacks for common CA topics.
@@ -265,6 +266,13 @@ export async function POST(req: Request) {
 
         if (userRole !== 'ADMIN') {
             return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
+        }
+
+        // Rate limit: 3 training generations per minute per user
+        const userId = (session?.user as any)?.id || 'anonymous';
+        const { allowed } = checkRateLimit(`training-gen-${userId}`, 3, 60000);
+        if (!allowed) {
+            return NextResponse.json({ error: "Rate limit exceeded. Please wait before generating more modules." }, { status: 429 });
         }
 
         const body = await req.json()

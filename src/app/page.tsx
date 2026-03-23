@@ -63,10 +63,13 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ m
         })
     ]);
 
-    const overdueTasksCount = dashboardTasks.filter(t => t.status !== 'COMPLETED' && t.dueDate && new Date(t.dueDate) < now).length;
-    const completedThisMonth = dashboardTasks.filter(t => t.status === 'COMPLETED' && t.updatedAt >= new Date(displayYear, displayMonth, 1)).length;
-    const blockedTasksCount = dashboardTasks.filter(t => t.status === 'BLOCKED').length;
-    const underReviewTasksCount = dashboardTasks.filter(t => t.status === 'UNDER_REVIEW').length;
+    // Optimized: use Prisma count instead of filtering full arrays in memory
+    const [overdueTasksCount, completedThisMonth, blockedTasksCount, underReviewTasksCount] = await Promise.all([
+        prisma.task.count({ where: { ...baseTaskWhere, deletedAt: null, status: { not: 'COMPLETED' }, dueDate: { lt: now } } }),
+        prisma.task.count({ where: { ...baseTaskWhere, deletedAt: null, status: 'COMPLETED', updatedAt: { gte: new Date(displayYear, displayMonth, 1) } } }),
+        prisma.task.count({ where: { ...baseTaskWhere, deletedAt: null, status: 'BLOCKED' } }),
+        prisma.task.count({ where: { ...baseTaskWhere, deletedAt: null, status: 'UNDER_REVIEW' } }),
+    ]);
 
     // Upcoming deadlines (next 7 tasks due)
     const upcomingDeadlines = dashboardTasks

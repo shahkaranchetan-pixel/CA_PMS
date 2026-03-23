@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth-options";
 import { NextResponse } from "next/server"
+import { checkRateLimit } from "@/lib/rate-limit"
 
 export const dynamic = "force-dynamic"
 
@@ -57,6 +58,13 @@ export async function POST(req: Request) {
         const session = await getServerSession(authOptions)
         if (!session) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+        }
+
+        // Rate limit: 5 requests per minute per user
+        const userId = (session.user as any)?.id || 'anonymous';
+        const { allowed, remaining } = checkRateLimit(`ai-reminder-${userId}`, 5, 60000);
+        if (!allowed) {
+            return NextResponse.json({ error: "Rate limit exceeded. Please wait before trying again." }, { status: 429 });
         }
 
         const body = await req.json()
