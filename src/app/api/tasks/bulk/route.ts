@@ -24,7 +24,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Title and Due Date are required" }, { status: 400 })
         }
 
-        let totalCreated = 0;
+        // Count results atomically instead of using a mutable counter
         let template = null;
         if (templateId) {
             template = await prisma.taskTemplate.findUnique({
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
                         : undefined,
                 }
             });
-            totalCreated++;
+            
 
             // If template is selected, generate subtasks
             if (template && template.items.length > 0) {
@@ -89,7 +89,7 @@ export async function POST(request: Request) {
             }
         }));
 
-        return NextResponse.json({ success: true, count: totalCreated })
+        return NextResponse.json({ success: true, count: clientIds.length })
     } catch (error) {
         console.error("[TASKS_BULK_GENERATE_ERROR]", error)
         return NextResponse.json({ error: "Internal Error" }, { status: 500 })

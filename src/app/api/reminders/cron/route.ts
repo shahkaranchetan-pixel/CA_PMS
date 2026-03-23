@@ -6,11 +6,17 @@ export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
     try {
-        // Simple security check: expect a CRON_SECRET or similar if triggering from external
+        // Security: Accept either Vercel's CRON_SECRET header or query param
+        const authHeader = req.headers.get('authorization');
         const { searchParams } = new URL(req.url);
         const secret = searchParams.get('secret');
-        if (!process.env.CRON_SECRET || secret !== process.env.CRON_SECRET) {
-            return new NextResponse("Unauthorized", { status: 401 });
+        const cronSecret = process.env.CRON_SECRET;
+        
+        if (cronSecret) {
+            const isAuthorized = authHeader === `Bearer ${cronSecret}` || secret === cronSecret;
+            if (!isAuthorized) {
+                return new NextResponse("Unauthorized", { status: 401 });
+            }
         }
 
         // 1. Fetch SMTP settings

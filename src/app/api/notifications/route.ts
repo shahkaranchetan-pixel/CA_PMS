@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth-options";
+import { requireAuth } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma"
 
 export const dynamic = "force-dynamic"
 
 export async function GET() {
     try {
-        const session = await getServerSession(authOptions)
-        const user = session?.user as any
-        if (!user) return new NextResponse("Unauthorized", { status: 401 })
+        const { user, error } = await requireAuth();
+        if (error) return error;
 
         const notifications = await prisma.notification.findMany({
             where: { userId: user.id },
@@ -26,9 +24,8 @@ export async function GET() {
 
 export async function PATCH(request: Request) {
     try {
-        const session = await getServerSession(authOptions)
-        const user = session?.user as any
-        if (!user) return new NextResponse("Unauthorized", { status: 401 })
+        const { user, error } = await requireAuth();
+        if (error) return error;
 
         const body = await request.json()
         const { notificationId } = body

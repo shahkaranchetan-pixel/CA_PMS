@@ -48,6 +48,11 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Employee with this email already exists" }, { status: 400 });
         }
 
+        // Validate password strength
+        if (!data.password || data.password.length < 8) {
+            return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
+        }
+
         // Hash password
         const hashedPassword = await bcrypt.hash(data.password, 10);
 

@@ -63,21 +63,14 @@ export default async function TasksPage(props: { searchParams: Promise<{ [key: s
 
     const q = searchParams.q as string;
     if (q) {
-        if (!filterConditions.OR) filterConditions.OR = [];
-        filterConditions.OR.push(
-            { title: { contains: q, mode: 'insensitive' } },
-            { client: { name: { contains: q, mode: 'insensitive' } } }
-        );
-        // If there was an existing OR from employee filtering, Prisma handles nested ORs via AND, but we can just use AND for the search term
-        // To be safe and compliant with Prisma structure when dealing with multiple conditions:
-        filterConditions.AND = [
-            {
-                OR: [
-                    { title: { contains: q, mode: 'insensitive' } },
-                    { client: { name: { contains: q, mode: 'insensitive' } } }
-                ]
-            }
-        ];
+        // Use AND to layer search on top of existing filters (including employee OR clause)
+        if (!filterConditions.AND) filterConditions.AND = [];
+        filterConditions.AND.push({
+            OR: [
+                { title: { contains: q, mode: 'insensitive' } },
+                { client: { name: { contains: q, mode: 'insensitive' } } }
+            ]
+        });
     }
 
     const tasks = await prisma.task.findMany({
@@ -132,7 +125,7 @@ export default async function TasksPage(props: { searchParams: Promise<{ [key: s
 <table className="tbl">
                         <thead style={{ background: 'rgba(255,255,255,.01)' }}>
                             <tr>
-                                <th style={{ width: 40 }}></th>
+                                <th style={{ width: 40, padding: '12px' }}>#</th>
                                 <th>Task Overview</th>
                                 <th>Entity</th>
                                 <th>Priority</th>
@@ -161,7 +154,7 @@ export default async function TasksPage(props: { searchParams: Promise<{ [key: s
                                     return (
                                         <tr key={task.id}>
                                             <td style={{ textAlign: 'center' }}>
-                                                <input type="checkbox" style={{ accentColor: 'var(--gold)', cursor: 'pointer' }} />
+                                                <span style={{ color: 'var(--muted)', fontSize: '11px' }}>{tasks.indexOf(task) + 1}</span>
                                             </td>
                                             <td>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

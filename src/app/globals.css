@@ -185,6 +185,22 @@ body {
   margin-left: 0 !important;
 }
 
+.sb-collapsed .content-area {
+  margin-left: 70px !important;
+  width: calc(100% - 70px) !important;
+}
+
+.content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  margin-left: var(--sidebar);
+  width: calc(100% - var(--sidebar));
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
 .sb-collapsed .topbar-main {
   left: 0 !important;
 }
@@ -1141,6 +1157,11 @@ option {
 
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
+    .content-area {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+
   :root {
     --sidebar: 0 !important;
   }

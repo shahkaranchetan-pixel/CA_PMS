@@ -65,6 +65,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
             data: {
                 name: data.name,
                 entityType: data.entityType,
+                gstCategory: data.gstCategory || undefined,
                 gstin: data.gstin || null,
                 pan: data.pan || null,
                 tan: data.tan || null,
@@ -91,5 +92,26 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     } catch (error) {
         console.error("[CLIENT_PUT_ERROR]", error);
         return NextResponse.json({ error: "Failed to update client" }, { status: 500 });
+    }
+}
+
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+    try {
+        const session = await getServerSession(authOptions);
+        const user = session?.user as any;
+        if (!session || user?.role !== 'ADMIN') {
+            return NextResponse.json({ error: "Unauthorized. Admin access required." }, { status: 403 });
+        }
+
+        const { id } = await params;
+        const client = await prisma.client.update({
+            where: { id },
+            data: { deletedAt: new Date() }
+        });
+
+        return NextResponse.json({ success: true, client });
+    } catch (error) {
+        console.error("[CLIENT_DELETE_ERROR]", error);
+        return NextResponse.json({ error: "Failed to delete client" }, { status: 500 });
     }
 }

@@ -91,7 +91,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
 
 
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', marginLeft: 'var(--sidebar)', width: 'calc(100% - var(--sidebar))', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}>
+            <div className="content-area">
                 <Topbar onToggleSidebar={toggleSidebar} onQuickTask={() => setIsQuickTaskOpen(true)} />
                 <main className="main" style={{ marginTop: '60px' }}>
                     {children}

@@ -61,6 +61,16 @@ export async function DELETE(
             }
         }
 
+        // Check if user has active task assignments
+        const activeAssignments = await prisma.taskAssignee.count({
+            where: { userId: id }
+        });
+        if (activeAssignments > 0) {
+            return NextResponse.json({ 
+                error: `Cannot delete user with ${activeAssignments} active task assignment(s). Reassign them first.` 
+            }, { status: 400 });
+        }
+
         await prisma.user.delete({ where: { id } });
         return NextResponse.json({ message: "User deleted successfully" });
     } catch (error: any) {

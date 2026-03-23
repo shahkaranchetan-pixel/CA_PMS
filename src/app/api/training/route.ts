@@ -5,6 +5,11 @@ import { NextResponse } from "next/server"
 
 export async function GET(req: Request) {
     try {
+        const session = await getServerSession(authOptions)
+        if (!session) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+        }
+
         const { searchParams } = new URL(req.url)
         const category = searchParams.get('category')
 
@@ -14,8 +19,10 @@ export async function GET(req: Request) {
             where,
             orderBy: { order: 'asc' },
             include: {
+                _count: { select: { materials: true } },
                 materials: {
-                    orderBy: { order: 'asc' }
+                    orderBy: { order: 'asc' },
+                    select: { id: true, title: true, type: true, order: true }
                 }
             }
         })

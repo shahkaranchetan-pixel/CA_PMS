@@ -17,7 +17,8 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "To and Content are required" }, { status: 400 })
         }
 
-        const cleanHtml = content.replace(/\n/g, '<br/>')
+        // Sanitize: strip all HTML tags to prevent XSS, then convert newlines to <br/>
+        const cleanHtml = content.replace(/<[^>]*>/g, '').replace(/\n/g, '<br/>')
         
         const success = await sendEmail({
             to,
