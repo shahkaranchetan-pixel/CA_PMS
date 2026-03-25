@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import PeriodSelector from "@/components/PeriodSelector"
+import { toast } from "react-hot-toast"
 
 export default function NewTaskPage() {
     const today = new Date();
@@ -141,10 +142,12 @@ export default function NewTaskPage() {
                 throw new Error(errData.error || "Failed to create task")
             }
 
+            toast.success("Task created successfully and mail sent!")
             router.push("/tasks")
             router.refresh()
         } catch (err: any) {
             setError(err.message)
+            toast.error(err.message)
         } finally {
             setLoading(false)
         }

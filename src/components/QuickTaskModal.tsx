@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import PeriodSelector from "./PeriodSelector"
+import { toast } from "react-hot-toast"
 
 interface QuickTaskModalProps {
     isOpen: boolean
@@ -47,7 +48,7 @@ export default function QuickTaskModal({ isOpen, onClose }: QuickTaskModalProps)
 
     const startListening = () => {
         if (!('webkitSpeechRecognition' in window) && !('speechRecognition' in window)) {
-            alert("Voice recognition is not supported in this browser.")
+            toast.error("Voice recognition is not supported in this browser.")
             return
         }
 
@@ -94,11 +95,13 @@ export default function QuickTaskModal({ isOpen, onClose }: QuickTaskModalProps)
                 throw new Error(errData.error || "Failed to create task")
             }
 
+            toast.success("Task created successfully and mail sent!")
             onClose()
             router.refresh()
             setTitle("")
         } catch (err: any) {
             setError(err.message)
+            toast.error(err.message)
         } finally {
             setLoading(false)
         }

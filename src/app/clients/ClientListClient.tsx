@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { toast } from "react-hot-toast"
 
 export default function ClientListClient({ initialClients, templates, employees }: { initialClients: any[], templates: any[], employees: any[] }) {
     const router = useRouter()
@@ -49,17 +50,17 @@ export default function ClientListClient({ initialClients, templates, employees 
             })
 
             if (res.ok) {
-                alert(`Successfully created tasks for ${selectedClients.length} clients!`)
+                toast.success(`Successfully created tasks for ${selectedClients.length} clients!`)
                 setShowBatchModal(false)
                 setSelectedClients([])
                 router.refresh()
             } else {
                 const err = await res.json()
-                alert(err.error || "Failed to create batch tasks")
+                toast.error(err.error || "Failed to create batch tasks")
             }
         } catch (err) {
             console.error("Batch error", err)
-            alert("Something went wrong")
+            toast.error("Something went wrong")
         } finally {
             setLoading(false)
         }

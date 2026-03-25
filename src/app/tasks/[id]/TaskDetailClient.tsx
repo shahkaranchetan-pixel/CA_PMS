@@ -1,8 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { toast } from "react-hot-toast"
 
 const STATUS_MAP: Record<string, { label: string, color: string }> = {
     PENDING: { label: 'Pending', color: '#FFB020' },
@@ -31,9 +32,10 @@ export default function TaskDetailClient({ task, isAdmin }: { task: any, isAdmin
             if (!res.ok) throw new Error("Failed to update status")
             setStatus(newStatus)
             router.refresh()
+            toast.success(`Task status updated to ${STATUS_MAP[newStatus]?.label || newStatus}`)
         } catch (error) {
             console.error(error)
-            alert("Failed to update task status")
+            toast.error("Failed to update task status")
         } finally {
             setLoading(false)
         }
@@ -45,13 +47,14 @@ export default function TaskDetailClient({ task, isAdmin }: { task: any, isAdmin
         try {
             const res = await fetch(`/api/tasks/${task.id}`, { method: "DELETE" });
             if (res.ok) {
+                toast.success("Task deleted successfully")
                 router.push("/tasks");
                 router.refresh();
             } else {
                 throw new Error("Failed to delete task");
             }
         } catch (err) {
-            alert("Error deleting task");
+            toast.error("Error deleting task");
         } finally {
             setLoading(false);
         }
@@ -77,10 +80,11 @@ export default function TaskDetailClient({ task, isAdmin }: { task: any, isAdmin
             });
             if (res.ok) {
                 const newTask = await res.json();
+                toast.success("Task cloned successfully")
                 router.push(`/tasks/${newTask.id}/edit`);
                 router.refresh();
             }
-        } catch (err) { alert("Error cloning task"); }
+        } catch (err) { toast.error("Error cloning task"); }
         finally { setLoading(false); }
     };
 
@@ -109,10 +113,12 @@ export default function TaskDetailClient({ task, isAdmin }: { task: any, isAdmin
             });
             if (res.ok) {
                 setComment("");
+                toast.success("Comment added")
                 router.refresh();
             }
         } catch (err) {
             console.error(err);
+            toast.error("Failed to add comment")
         } finally {
             setSubmittingComment(false);
         }
@@ -459,12 +465,12 @@ function AIReminderDraft({ taskId, client, taskTitle, period }: { taskId: string
             });
             const data = await res.json();
             if (data.success) {
-                alert("Email sent successfully!");
+                toast.success("Email sent successfully!");
             } else {
                 throw new Error(data.error || "Failed to send email");
             }
         } catch (err: any) {
-            alert(err.message);
+            toast.error(err.message);
         } finally {
             setSendingEmail(false);
         }
@@ -479,10 +485,12 @@ function AIReminderDraft({ taskId, client, taskTitle, period }: { taskId: string
                 body: JSON.stringify({ taskId, channel, urgency }),
             });
             const data = await res.json();
-            if (data.draft) setDraft(data.draft);
-            else throw new Error(data.error || "Failed to draft");
+            if (data.draft) {
+                setDraft(data.draft);
+                toast.success("Draft generated!");
+            } else throw new Error(data.error || "Failed to draft");
         } catch (err: any) {
-            alert(err.message);
+            toast.error(err.message);
         } finally {
             setLoading(false);
         }
@@ -490,7 +498,7 @@ function AIReminderDraft({ taskId, client, taskTitle, period }: { taskId: string
 
     const handleCopy = () => {
         navigator.clipboard.writeText(draft);
-        alert("Draft copied to clipboard!");
+        toast.success("Draft copied to clipboard!");
     };
 
     return (

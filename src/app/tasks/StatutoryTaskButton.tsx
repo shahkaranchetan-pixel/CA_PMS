@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { toast } from "react-hot-toast"
 
 export default function StatutoryTaskButton() {
     const [loading, setLoading] = useState(false)
@@ -21,14 +22,14 @@ export default function StatutoryTaskButton() {
 
             const data = await res.json()
             if (res.ok) {
-                alert(`Successfully generated ${data.count} statutory tasks!`)
+                toast.success(`Successfully generated ${data.count} statutory tasks!`)
                 router.refresh()
             } else {
-                alert("Error: " + (data.error || "Failed to generate tasks"))
+                toast.error("Error: " + (data.error || "Failed to generate tasks"))
             }
         } catch (error) {
             console.error(error)
-            alert("Something went wrong while generating tasks.")
+            toast.error("Something went wrong while generating tasks.")
         } finally {
             setLoading(false)
         }
