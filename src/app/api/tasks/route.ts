@@ -14,7 +14,7 @@ export async function POST(request: Request) {
         }
 
         const body = await request.json();
-        const { title, description, dueDate, period, clientId, taskType, frequency, assigneeIds, templateId, priority, estimatedMinutes, blockedById } = body;
+        const { title, description, dueDate, period, clientId, taskType, frequency, assigneeIds, templateId, priority, estimatedMinutes, blockedById, notifyClient } = body;
 
         if (!title || !clientId || !taskType || !dueDate) {
             return NextResponse.json(
@@ -79,6 +79,29 @@ export async function POST(request: Request) {
                     });
                 }
             }
+        }
+
+        // Trigger Client Notification if requested
+        if (notifyClient && task.client && task.client.contactEmail) {
+            await sendEmail({
+                to: task.client.contactEmail,
+                subject: `KCS Team: Started work on your ${task.taskType?.replace(/_/g, ' ') || 'Task'}: ${task.title}`,
+                html: `
+                    <div style="font-family: sans-serif; padding: 20px; color: #333;">
+                        <h2 style="color: #E8A020;">Task Initiated</h2>
+                        <p>Dear ${task.client.name},</p>
+                        <p>We've started work on your compliance task at KCS Practice Management Software:</p>
+                        <div style="background: #f4f4f5; padding: 16px; border-left: 4px solid #E8A020; margin: 16px 0;">
+                            <strong>Task:</strong> ${task.title}<br/>
+                            <strong>Type:</strong> ${task.taskType?.replace(/_/g, ' ')}<br/>
+                            <strong>Period:</strong> ${task.period || 'N/A'}<br/>
+                            <strong>Est. Completion:</strong> ${task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'TBD'}
+                        </div>
+                        <p>We will keep you updated as we progress. Feel free to reach out if you have any questions.</p>
+                        <p>Warm Regards,<br/><strong>KCS Practice Team</strong></p>
+                    </div>
+                `
+            });
         }
 
         // If a template was selected, auto-generate the subtasks

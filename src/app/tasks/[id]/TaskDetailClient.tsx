@@ -17,6 +17,7 @@ export default function TaskDetailClient({ task, isAdmin }: { task: any, isAdmin
     const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [status, setStatus] = useState(task.status)
+    const [notifyOnComplete, setNotifyOnComplete] = useState(true)
     const [comment, setComment] = useState("")
     const [submittingComment, setSubmittingComment] = useState(false)
     const [activities, setActivities] = useState(task.activities || [])
@@ -27,7 +28,10 @@ export default function TaskDetailClient({ task, isAdmin }: { task: any, isAdmin
             const res = await fetch(`/api/tasks/${task.id}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ status: newStatus }),
+                body: JSON.stringify({ 
+                    status: newStatus,
+                    notifyClient: newStatus === 'COMPLETED' ? notifyOnComplete : false
+                }),
             })
             if (!res.ok) throw new Error("Failed to update status")
             setStatus(newStatus)
@@ -149,7 +153,18 @@ export default function TaskDetailClient({ task, isAdmin }: { task: any, isAdmin
                         </span>
                     </div>
                 </div>
-                <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                 <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                    {status !== 'COMPLETED' && (
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginRight: '8px', padding: '0 12px', background: 'var(--surface2)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                            <input 
+                                type="checkbox" 
+                                checked={notifyOnComplete} 
+                                onChange={e => setNotifyOnComplete(e.target.checked)}
+                                style={{ width: '16px', height: '16px' }}
+                            />
+                            <span style={{ fontSize: '11px', fontWeight: 600 }}>📧 Notify Client?</span>
+                        </label>
+                    )}
                     {status === 'PENDING' && (
                         <button onClick={() => handleStatusChange('IN_PROGRESS')} disabled={loading} className="btn btn-g">
                             {loading ? "..." : "▶ Start Working"}

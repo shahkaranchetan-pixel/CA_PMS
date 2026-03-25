@@ -22,6 +22,7 @@ export default function QuickTaskModal({ isOpen, onClose }: QuickTaskModalProps)
     const [clients, setClients] = useState<any[]>([])
     const [title, setTitle] = useState("")
     const [period, setPeriod] = useState(`${MONTH_ABBRS[prevMonthIdx]}-${prevYear}`)
+    const [notifyClient, setNotifyClient] = useState(false)
     const [isListening, setIsListening] = useState(false)
     const modalRef = useRef<HTMLDivElement>(null)
 
@@ -80,7 +81,8 @@ export default function QuickTaskModal({ isOpen, onClose }: QuickTaskModalProps)
             dueDate: formData.get("dueDate") || null,
             period: period,
             priority: "medium",
-            frequency: "ONCE"
+            frequency: "ONCE",
+            notifyClient: notifyClient
         }
 
         try {
@@ -185,6 +187,18 @@ export default function QuickTaskModal({ isOpen, onClose }: QuickTaskModalProps)
                     </div>
 
                     <PeriodSelector value={period} onChange={setPeriod} />
+
+                    <div className="field" style={{ gridColumn: '1 / -1', marginTop: '6px' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: '10px', background: 'rgba(232,160,32,0.05)', borderRadius: '8px', border: '1px solid rgba(232,160,32,0.15)' }}>
+                            <input 
+                                type="checkbox" 
+                                checked={notifyClient} 
+                                onChange={e => setNotifyClient(e.target.checked)}
+                                style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                            />
+                            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gold)' }}>📧 Notify Client via Email?</span>
+                        </label>
+                    </div>
 
                     <div style={{ gridColumn: '1 / -1', marginTop: '12px', display: 'flex', gap: '8px' }}>
                         <button type="submit" disabled={loading} className="btn btn-p" style={{ flex: 1, justifyContent: 'center' }}>

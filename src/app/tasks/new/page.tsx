@@ -33,7 +33,8 @@ export default function NewTaskPage() {
         frequency: "ONCE",
         templateId: "",
         priority: "medium",
-        estimatedMinutes: ""
+        estimatedMinutes: "",
+        notifyClient: false
     })
 
     useEffect(() => {
@@ -364,10 +365,22 @@ export default function NewTaskPage() {
                         <input type="date" id="dueDate" name="dueDate" required style={{ colorScheme: 'dark' }} value={formValues.dueDate} onChange={e => setFieldValue("dueDate", e.target.value)} />
                     </div>
 
-                    <PeriodSelector 
+                        <PeriodSelector 
                         value={formValues.period} 
                         onChange={(val) => setFieldValue("period", val)} 
                     />
+
+                    <div className="field" style={{ gridColumn: '1 / -1', marginTop: '10px' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: '12px', background: 'rgba(232,160,32,0.05)', borderRadius: '8px', border: '1px solid rgba(232,160,32,0.15)' }}>
+                            <input 
+                                type="checkbox" 
+                                checked={formValues.notifyClient} 
+                                onChange={e => setFieldValue("notifyClient", e.target.checked)}
+                                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                            />
+                            <span style={{ fontSize: '13.5px', fontWeight: 600, color: 'var(--gold)' }}>📧 Notify Client via Email immediately?</span>
+                        </label>
+                    </div>
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
