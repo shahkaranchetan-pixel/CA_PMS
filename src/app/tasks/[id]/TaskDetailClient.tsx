@@ -36,7 +36,10 @@ export default function TaskDetailClient({ task, isAdmin }: { task: any, isAdmin
             if (!res.ok) throw new Error("Failed to update status")
             setStatus(newStatus)
             router.refresh()
-            toast.success(`Task status updated to ${STATUS_MAP[newStatus]?.label || newStatus}`)
+            const msg = (newStatus === 'COMPLETED' && notifyOnComplete) 
+                ? `Task completed and client notified! 📧` 
+                : `Task status updated to ${STATUS_MAP[newStatus]?.label || newStatus}`;
+            toast.success(msg)
         } catch (error) {
             console.error(error)
             toast.error("Failed to update task status")
