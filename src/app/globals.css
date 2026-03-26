@@ -477,7 +477,9 @@ body {
 
 .table-wrapper {
   overflow-x: auto;
+  overflow-y: auto;
   width: 100%;
+  max-height: 70vh;
 }
 
 .tbl {
@@ -494,7 +496,15 @@ body {
   text-transform: uppercase;
   padding: 7px 11px;
   text-align: left;
-  border-bottom: 1px solid var(--border)
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #07101f;
+}
+
+[data-theme="light"] .tbl th {
+  background: #F4F6FA;
 }
 
 .tbl td {

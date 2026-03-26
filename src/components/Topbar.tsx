@@ -18,6 +18,21 @@ export default function Topbar({
         document.documentElement.setAttribute("data-theme", saved)
     }, [])
 
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName) || (e.target as HTMLElement).isContentEditable) {
+                return;
+            }
+            if (e.key === 'c' || e.key === 'C') {
+                e.preventDefault();
+                if (onQuickTask) onQuickTask();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [onQuickTask]);
+
     const toggleTheme = () => {
         const next = theme === "dark" ? "light" : "dark"
         setTheme(next)
@@ -34,7 +49,7 @@ export default function Topbar({
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                 <button
                     onClick={onQuickTask}
-                    title="Quick Create Task"
+                    title="Quick Create Task (Shortcut: C)"
                     style={{
                         background: 'var(--gold)',
                         color: '#07101f',

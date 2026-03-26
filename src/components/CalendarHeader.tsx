@@ -1,6 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 
 interface CalendarHeaderProps {
     currentPeriod: string
@@ -23,7 +24,7 @@ export default function CalendarHeader({ currentPeriod, monthName, year }: Calen
 
     const handlePeriodChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const val = e.target.value;
-        router.push(`/calendar?period=${val}`);
+        router.push(`/calendar?period=${val}`, { scroll: false });
     };
 
     return (
@@ -54,8 +55,8 @@ export default function CalendarHeader({ currentPeriod, monthName, year }: Calen
                 </div>
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
-                <a href="/tasks/new" className="btn btn-p" style={{ textDecoration: 'none' }}>+ New Task</a>
-                <a href="/calendar" className="btn btn-ic" style={{ padding: '6px 12px' }} title="Reset to today">Today</a>
+                <Link href="/tasks/new" className="btn btn-p" style={{ textDecoration: 'none' }}>+ New Task</Link>
+                <Link href="/calendar" scroll={false} className="btn btn-ic" style={{ padding: '6px 12px' }} title="Reset to today">Today</Link>
             </div>
         </div>
     )

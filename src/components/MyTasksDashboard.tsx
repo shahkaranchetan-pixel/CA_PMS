@@ -49,7 +49,22 @@ export default function MyTasksDashboard({ tasks }: MyTasksDashboardProps) {
         }
     }
 
-    const displayedTasks = filterTasks()
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 20;
+
+    const displayedTasks = filterTasks();
+    const totalPages = Math.ceil(displayedTasks.length / ITEMS_PER_PAGE);
+    const paginatedTasks = displayedTasks.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+    const handleTabChange = (tab: string) => {
+        setActiveTab(tab);
+        setCurrentPage(1);
+    };
+
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearch(e.target.value);
+        setCurrentPage(1);
+    };
 
     return (
         <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
@@ -61,7 +76,7 @@ export default function MyTasksDashboard({ tasks }: MyTasksDashboardProps) {
                             type="text" 
                             placeholder="Search Tasks" 
                             value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            onChange={handleSearchChange}
                             style={{
                                 background: 'var(--surface2)',
                                 border: '1px solid var(--border)',
@@ -91,7 +106,7 @@ export default function MyTasksDashboard({ tasks }: MyTasksDashboardProps) {
                 {tabs.map(tab => (
                     <button
                         key={tab}
-                        onClick={() => setActiveTab(tab)}
+                        onClick={() => handleTabChange(tab)}
                         style={{
                             padding: '14px 0',
                             background: 'none',
@@ -121,7 +136,7 @@ export default function MyTasksDashboard({ tasks }: MyTasksDashboardProps) {
                         </tr>
                     </thead>
                     <tbody>
-                        {displayedTasks.length === 0 ? (
+                        {paginatedTasks.length === 0 ? (
                             <tr>
                                 <td colSpan={4} style={{ padding: '60px', textAlign: 'center' }}>
                                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', opacity: 0.3 }}>
@@ -131,7 +146,7 @@ export default function MyTasksDashboard({ tasks }: MyTasksDashboardProps) {
                                 </td>
                             </tr>
                         ) : (
-                            displayedTasks.map(task => (
+                            paginatedTasks.map(task => (
                                 <tr key={task.id} style={{ borderBottom: '1px solid var(--border)' }}>
                                     <td style={{ padding: '14px 20px' }}>
                                         <Link href={`/tasks/${task.id}`} style={{ textDecoration: 'none', fontWeight: 600, color: 'var(--text)', fontSize: '13px' }}>
@@ -172,6 +187,37 @@ export default function MyTasksDashboard({ tasks }: MyTasksDashboardProps) {
                     </tbody>
                 </table>
             </div>
+            
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+                <div style={{ padding: '12px 20px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface2)' }}>
+                    <div style={{ fontSize: '12px', color: 'var(--muted)' }}>
+                        Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, displayedTasks.length)} of {displayedTasks.length} tasks
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <button 
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                            style={{ 
+                                padding: '6px 12px', fontSize: '12px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '6px', 
+                                color: currentPage === 1 ? 'var(--muted)' : 'var(--text)', cursor: currentPage === 1 ? 'not-allowed' : 'pointer'
+                            }}
+                        >
+                            Previous
+                        </button>
+                        <button 
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages}
+                            style={{ 
+                                padding: '6px 12px', fontSize: '12px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '6px', 
+                                color: currentPage === totalPages ? 'var(--muted)' : 'var(--text)', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer'
+                            }}
+                        >
+                            Next
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

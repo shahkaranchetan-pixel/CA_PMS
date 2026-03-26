@@ -176,8 +176,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ m
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                             <div className="ctitle" style={{ margin: 0 }}>📅 {monthNames[displayMonth]} {displayYear}</div>
                             <div style={{ display: 'flex', gap: '4px' }}>
-                                <Link href={`/?month=${prevMonth}&year=${prevYear}`} className="btn-ic" style={{ padding: '2px 8px', fontSize: '14px' }}>‹</Link>
-                                <Link href={`/?month=${nextMonth}&year=${nextYear}`} className="btn-ic" style={{ padding: '2px 8px', fontSize: '14px' }}>›</Link>
+                                <Link href={`/?month=${prevMonth}&year=${prevYear}`} scroll={false} className="btn-ic" style={{ padding: '2px 8px', fontSize: '14px' }}>‹</Link>
+                                <Link href={`/?month=${nextMonth}&year=${nextYear}`} scroll={false} className="btn-ic" style={{ padding: '2px 8px', fontSize: '14px' }}>›</Link>
                             </div>
                         </div>
                         <Link href="/calendar" style={{ fontSize: '11px', color: 'var(--gold)' }}>Full View →</Link>
