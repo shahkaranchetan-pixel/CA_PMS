@@ -95,10 +95,10 @@ export default function EditEmployeeModal({ member, onClose }: { member: any, on
             <div
                 style={{
                     width: '100%', maxWidth: '520px',
-                    background: 'linear-gradient(145deg, #0c1829 0%, #0a1524 100%)',
-                    border: '1px solid rgba(255,255,255,0.1)',
+                    background: 'var(--modal-bg, linear-gradient(145deg, #0c1829 0%, #0a1524 100%))',
+                    border: '1px solid var(--border2)',
                     borderRadius: '20px',
-                    boxShadow: '0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset',
+                    boxShadow: '0 30px 80px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.04) inset',
                     overflow: 'hidden',
                     animation: 'eem-in 0.25s cubic-bezier(0.34,1.56,0.64,1)',
                 }}
@@ -341,6 +341,7 @@ export default function EditEmployeeModal({ member, onClose }: { member: any, on
                 @keyframes eem-bg { from { opacity: 0 } to { opacity: 1 } }
                 @keyframes eem-in { from { opacity: 0; transform: scale(0.92) translateY(12px) } to { opacity: 1; transform: scale(1) translateY(0) } }
                 @keyframes spin { to { transform: rotate(360deg) } }
+                [data-theme="light"] { --modal-bg: linear-gradient(145deg, #ffffff 0%, #f8f9fc 100%); }
             `}</style>
         </div>
     );
