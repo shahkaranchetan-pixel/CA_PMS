@@ -14,16 +14,21 @@ export async function PATCH(
         const body = await req.json();
         const { name, email, role, dept, phone, color } = body;
 
+        // Build update object with only provided fields
+        const updateData: Record<string, any> = {};
+        if (name !== undefined) updateData.name = name;
+        if (email !== undefined) updateData.email = email;
+        if (dept !== undefined) updateData.dept = dept;
+        if (phone !== undefined) updateData.phone = phone;
+        if (color !== undefined) updateData.color = color;
+        // Only set role if it's a valid value
+        if (role === 'ADMIN' || role === 'EMPLOYEE') {
+            updateData.role = role;
+        }
+
         const updatedUser = await prisma.user.update({
             where: { id },
-            data: {
-                name,
-                email,
-                role,
-                dept,
-                phone,
-                color
-            }
+            data: updateData
         });
 
         return NextResponse.json(updatedUser);

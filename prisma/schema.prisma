@@ -34,10 +34,7 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-enum Role {
-  ADMIN
-  EMPLOYEE
-}
+// Role is stored as plain String in DB (ADMIN | EMPLOYEE) to avoid PostgreSQL enum migration issues
 
 model User {
   id            String    @id @default(cuid())
@@ -46,7 +43,7 @@ model User {
   emailVerified DateTime?
   image         String?
   password      String?
-  role          Role      @default(EMPLOYEE)
+  role          String    @default("EMPLOYEE")
   dept          String    @default("GST")
   color         String    @default("#4FACFE")
   phone         String?
