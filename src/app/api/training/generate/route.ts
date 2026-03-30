@@ -6,7 +6,6 @@ import { checkRateLimit } from "@/lib/rate-limit"
 
 // --- AI GENERATION TEMPLATES ---
 // These serve as high-quality fallbacks for common CA topics.
-// In a production app, you would swap this logic for a call to Gemini or OpenAI API.
 const SMART_TEMPLATES: Record<string, any> = {
     'Excel': {
         'Pivot Tables': {
@@ -130,88 +129,156 @@ const SMART_TEMPLATES: Record<string, any> = {
     }
 }
 
+// --- Robust JSON parser that handles truncated AI responses ---
+function safeParseJSON(text: string): any {
+    // Clean up markdown fences
+    text = text.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+    
+    // Try direct parse first
+    try {
+        return JSON.parse(text);
+    } catch (e) {
+        // Truncated response — try to repair
+    }
+
+    // Try to close unterminated strings and brackets
+    let repaired = text;
+    
+    // Count open/close brackets
+    const openBraces = (repaired.match(/{/g) || []).length;
+    const closeBraces = (repaired.match(/}/g) || []).length;
+    const openBrackets = (repaired.match(/\[/g) || []).length;
+    const closeBrackets = (repaired.match(/\]/g) || []).length;
+
+    // Check if we're inside an unterminated string
+    let inString = false;
+    let escaped = false;
+    for (let i = 0; i < repaired.length; i++) {
+        const c = repaired[i];
+        if (escaped) { escaped = false; continue; }
+        if (c === '\\') { escaped = true; continue; }
+        if (c === '"') { inString = !inString; }
+    }
+    
+    // Close unterminated string
+    if (inString) {
+        repaired += '"';
+    }
+
+    // Close arrays and objects
+    for (let i = 0; i < openBrackets - closeBrackets; i++) repaired += ']';
+    for (let i = 0; i < openBraces - closeBraces; i++) repaired += '}';
+
+    try {
+        return JSON.parse(repaired);
+    } catch (e) {
+        // Still failed — try to extract just the materials we can get
+    }
+
+    // Last resort: try to find the description and at least some materials
+    try {
+        const descMatch = text.match(/"description"\s*:\s*"([^"]+)"/);
+        const description = descMatch ? descMatch[1] : "AI-generated training module";
+
+        // Extract complete material objects using a greedy approach
+        const materials: any[] = [];
+        const matRegex = /\{\s*"title"\s*:\s*"([^"]+)"\s*,\s*"type"\s*:\s*"(TEXT|LINK|QUIZ)"\s*,\s*"content"\s*:\s*"((?:[^"\\]|\\.)*)"\s*\}/g;
+        let match;
+        while ((match = matRegex.exec(text)) !== null) {
+            materials.push({
+                title: match[1],
+                type: match[2],
+                content: match[3].replace(/\\"/g, '"').replace(/\\n/g, '\n')
+            });
+        }
+
+        if (materials.length > 0) {
+            return { description, materials };
+        }
+    } catch (e) {
+        // Completely failed
+    }
+
+    throw new Error("Could not parse AI response as valid JSON");
+}
+
 // --- GEMINI AI INTEGRATION ---
 async function callGeminiAPI(topic: string, category: string) {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey || apiKey === "PASTE_YOUR_GEMINI_API_KEY_HERE") {
-        throw new Error("Missing Gemini API Key");
+        throw new Error("Missing Gemini API Key. Add GEMINI_API_KEY to Vercel Environment Variables.");
     }
 
-    const prompt = `
-    You are an expert Indian Chartered Accountant and corporate trainer with 25+ years of experience.
-    Create a COMPREHENSIVE and EXHAUSTIVE training module for: "${topic}" (Category: "${category}").
-    
-    The content must be specifically tailored for junior staff in an Indian CA firm, but it must be DEEP and THOROUGH. 
-    
-    EACH TEXT LESSON MUST:
-    1. Be concise but practical (approx 300-400 words). 
-    2. Focus on "High Impact" tips that save time in a CA office.
-    3. Include CURRENT compliance data and edge cases (FY 2024-25).
-    4. Reference exact SECTIONS and RULES of relevant acts.
-    5. Provide real-world "Pro-Tips" and "Common Pitfalls".
-    
-    IMPORTANT: Be thorough but ensure the JSON is valid and closed. Do not exceed 4000 tokens per response.
+    const prompt = `You are an expert Indian Chartered Accountant trainer.
+Create a training module for CA staff on: "${topic}" (Category: "${category}").
 
-    The module MUST include exactly 3 distinct materials:
-    - Lesson 1 (Title: In-depth Theory & Compliance)
-    - Lesson 2 (Title: Practical Application & Filing Steps)
-    - Quiz (5 scenario-based tough questions)
+RULES:
+- Keep each lesson under 250 words. Be concise.
+- Reference Indian tax laws (FY 2024-25) with section numbers.
+- Include exactly 3 materials: 2 TEXT lessons + 1 QUIZ with 3 questions.
 
-    Return the response as a valid JSON object:
-    {
-      "description": "Deep dive overview of ${topic}",
-      "materials": [
-        { "title": "...", "type": "TEXT", "content": "..." },
-        { "title": "...", "type": "TEXT", "content": "..." },
-        { "title": "...", "type": "QUIZ", "content": "[...]" }
-      ]
-    }
+Return ONLY this JSON (no markdown, no explanation):
+{
+  "description": "One line description",
+  "materials": [
+    { "title": "Lesson title", "type": "TEXT", "content": "Lesson body" },
+    { "title": "Lesson title", "type": "TEXT", "content": "Lesson body" },
+    { "title": "Quiz", "type": "QUIZ", "content": "[{\\"q\\":\\"Question?\\",\\"opts\\":[\\"A\\",\\"B\\",\\"C\\",\\"D\\"],\\"ans\\":0,\\"expl\\":\\"Why\\"}]" }
+  ]
+}`;
 
-    Return ONLY the JSON. No markdown blocks.
-    `;
-
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }]
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+                maxOutputTokens: 4096,
+                temperature: 0.7,
+            }
         })
     });
 
     if (!response.ok) {
-        throw new Error("Gemini API call failed");
+        const errBody = await response.text();
+        console.error("[Gemini] API Error:", response.status, errBody);
+        throw new Error(`Gemini API returned ${response.status}`);
     }
 
     const data = await response.json();
-    let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
-    return JSON.parse(text);
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) {
+        throw new Error("Gemini returned empty response");
+    }
+    return safeParseJSON(text);
 }
 
 // --- CLAUDE AI INTEGRATION ---
 async function callClaudeAPI(topic: string, category: string) {
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
-        throw new Error("Missing Anthropic API Key");
+        throw new Error("Missing Anthropic API Key. Add ANTHROPIC_API_KEY to Vercel Environment Variables.");
     }
 
-    const prompt = `
-    You are an elite Indian Chartered Accountant and corporate trainer.
-    Generate a comprehensive training module for junior CA staff on: "${topic}" (Category: "${category}").
-    
-    REQUIREMENTS:
-    - Use latest Indian Tax/Corporate laws (FY 2024-25).
-    - Include specific Section numbers (e.g., Sec 194Q).
-    - Provide 2 detailed TEXT lessons with structured markdown.
-    - Provide 1 QUIZ with 5 high-quality, scenario-based multiple-choice questions.
+    const prompt = `You are an expert Indian Chartered Accountant trainer.
+Create a training module for CA staff on: "${topic}" (Category: "${category}").
 
-    FORMAT:
-    Return a valid JSON object with this exact keys: "description", "materials". 
-    Each material needs "title", "type" (TEXT, LINK, or QUIZ), and "content".
-    For QUIZ type, "content" should be a JSON-stringified array of {q, opts, ans, expl}.
-    
-    IMPORTANT: Provide ONLY the raw JSON object. No preamble, no explanation.
-    `;
+RULES:
+- Keep each TEXT lesson CONCISE — under 250 words. Focus on practical tips.
+- Reference Indian tax laws (FY 2024-25) with specific section numbers.
+- Include exactly 3 materials: 2 TEXT lessons + 1 QUIZ.
+- The QUIZ must have exactly 3 multiple-choice questions.
+- For QUIZ type, "content" must be a JSON string of an array.
+
+Return ONLY this JSON object (no markdown fences, no explanation, no preamble):
+{
+  "description": "Brief one-line description of the module",
+  "materials": [
+    { "title": "Theory & Compliance", "type": "TEXT", "content": "Lesson content here..." },
+    { "title": "Practical Steps", "type": "TEXT", "content": "Step-by-step guide here..." },
+    { "title": "Assessment Quiz", "type": "QUIZ", "content": "[{\\"q\\":\\"Question text\\",\\"opts\\":[\\"A\\",\\"B\\",\\"C\\",\\"D\\"],\\"ans\\":0,\\"expl\\":\\"Explanation\\"}]" }
+  ]
+}`;
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
@@ -221,42 +288,31 @@ async function callClaudeAPI(topic: string, category: string) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
-            model: "claude-sonnet-4-6",
-            max_tokens: 8000,
+            model: "claude-haiku-4-5",
+            max_tokens: 4096,
             messages: [{ role: "user", content: prompt }]
         })
     });
 
     if (!response.ok) {
-        const error = await response.json();
-        
-        // Final Claude fallback to Haiku 4.5 (Fastest & most compatible)
-        const haikuRes = await fetch("https://api.anthropic.com/v1/messages", {
-            method: "POST",
-            headers: {
-                "x-api-key": apiKey,
-                "anthropic-version": "2023-06-01",
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                model: "claude-haiku-4-5",
-                max_tokens: 8000,
-                messages: [{ role: "user", content: prompt }]
-            })
-        });
-
-        if (haikuRes.ok) {
-            const data = await haikuRes.json();
-            return JSON.parse(data.content[0].text.replace(/```json/g, "").replace(/```/g, "").trim());
-        }
-
-        throw new Error(error?.error?.message || "All Claude models failed.");
+        const error = await response.json().catch(() => ({}));
+        console.error("[Claude] API Error:", response.status, error);
+        throw new Error(error?.error?.message || `Claude API returned ${response.status}`);
     }
 
     const data = await response.json();
-    let text = data.content[0].text;
-    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
-    return JSON.parse(text);
+    const text = data.content?.[0]?.text;
+
+    if (!text) {
+        throw new Error("Claude returned empty response");
+    }
+
+    // Check if the response was truncated (stop_reason !== "end_turn")
+    if (data.stop_reason && data.stop_reason !== "end_turn") {
+        console.warn("[Claude] Response truncated, stop_reason:", data.stop_reason);
+    }
+
+    return safeParseJSON(text);
 }
 
 export async function POST(req: Request) {
@@ -284,30 +340,55 @@ export async function POST(req: Request) {
 
         let moduleData;
 
-        // TIERED LOADING LOGIC: Claude (Best) -> Gemini (Fast)
-        try {
-            console.log(`[AI] Attempting Claude generation: ${topic}`);
-            moduleData = await callClaudeAPI(topic, category);
-        } catch (claudeError: any) {
-            console.warn("[AI] Claude failed, falling back to Gemini:", claudeError.message);
+        // STRATEGY: Try smart templates first, then Claude (fast Haiku), then Gemini
+        // 1. Check if we have a pre-built template
+        const templateMatch = SMART_TEMPLATES[category]?.[topic];
+        if (templateMatch) {
+            console.log(`[AI] Using smart template for: ${category}/${topic}`);
+            moduleData = templateMatch;
+        } else {
+            // 2. Try Claude Haiku (fastest, cheapest, least likely to truncate)
+            let claudeError = "";
+            let geminiError = "";
+
             try {
-                moduleData = await callGeminiAPI(topic, category);
-            } catch (geminiError: any) {
-                console.error("[AI] Both AI providers failed:", geminiError.message);
-                return NextResponse.json({ 
-                    error: `AI Generation Failed.\nClaude Error: ${claudeError.message}\nGemini Error: ${geminiError.message}.\nPlease check your Vercel Environment Variables.` 
-                }, { status: 500 });
+                console.log(`[AI] Attempting Claude Haiku for: ${topic}`);
+                moduleData = await callClaudeAPI(topic, category);
+            } catch (err: any) {
+                claudeError = err.message;
+                console.warn("[AI] Claude failed:", claudeError);
+
+                // 3. Fallback to Gemini
+                try {
+                    console.log(`[AI] Attempting Gemini for: ${topic}`);
+                    moduleData = await callGeminiAPI(topic, category);
+                } catch (gErr: any) {
+                    geminiError = gErr.message;
+                    console.error("[AI] Both AI providers failed.");
+                    return NextResponse.json({
+                        error: `AI Generation Failed.\nClaude: ${claudeError}\nGemini: ${geminiError}\n\nPlease check your API keys in Vercel Environment Variables.`
+                    }, { status: 500 });
+                }
             }
+        }
+
+        // Validate moduleData structure before saving
+        if (!moduleData || !moduleData.materials || !Array.isArray(moduleData.materials) || moduleData.materials.length === 0) {
+            return NextResponse.json({
+                error: "AI generated an invalid module structure. Please try again."
+            }, { status: 500 });
         }
 
         const newModule = await prisma.trainingModule.create({
             data: {
                 title: topic,
-                description: moduleData.description,
+                description: moduleData.description || `Training module on ${topic}`,
                 category: category,
                 materials: {
                     create: moduleData.materials.map((m: any, i: number) => ({
-                        ...m,
+                        title: m.title || `Material ${i + 1}`,
+                        type: m.type || 'TEXT',
+                        content: m.content || '',
                         order: i
                     }))
                 }
@@ -318,6 +399,6 @@ export async function POST(req: Request) {
         return NextResponse.json(newModule)
     } catch (error) {
         console.error("[CRITICAL] Generation Error:", error)
-        return NextResponse.json({ error: "Generation failed" }, { status: 500 })
+        return NextResponse.json({ error: "Generation failed. Please try again." }, { status: 500 })
     }
 }
