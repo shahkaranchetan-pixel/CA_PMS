@@ -44,12 +44,35 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json()
-        const { title, description, category, order } = body
+        const { title, description, category, order, materials } = body
 
         if (!title || !category) {
             return NextResponse.json({ error: "Title and Category are required" }, { status: 400 })
         }
 
+        // If materials are provided, create the module with materials in one transaction
+        if (materials && Array.isArray(materials) && materials.length > 0) {
+            const newModule = await prisma.trainingModule.create({
+                data: {
+                    title,
+                    description: description || `Training module on ${title}`,
+                    category,
+                    order: order || 0,
+                    materials: {
+                        create: materials.map((m: any, i: number) => ({
+                            title: m.title || `Material ${i + 1}`,
+                            type: m.type || 'TEXT',
+                            content: m.content || '',
+                            order: i
+                        }))
+                    }
+                },
+                include: { materials: true }
+            })
+            return NextResponse.json(newModule)
+        }
+
+        // Otherwise create just the module shell
         const newModule = await prisma.trainingModule.create({
             data: {
                 title,
