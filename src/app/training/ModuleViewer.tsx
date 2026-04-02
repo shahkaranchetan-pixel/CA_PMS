@@ -108,6 +108,14 @@ export default function ModuleViewer({ params }: { params: { id: string } }) {
     const activeMaterial = module.materials?.[activeLessonIndex]
     const materialsCount = module.materials?.length || 0
 
+    const getHeroImage = (category: string) => {
+        if (category === 'Tally') return '/images/tally_hero.png';
+        if (category === 'Accounting') return '/images/accounting_hero.png';
+        if (category === 'GST' || category === 'Income Tax') return '/images/voucher_hero.png';
+        return null;
+    }
+    const heroImage = getHeroImage(module?.category);
+
     return (
         <div className="training-viewer-mode" style={{ display: 'flex', minHeight: 'calc(100vh - 80px)', background: '#0B0D11', color: '#fff' }}>
             {/* Sidebar Navigation */}
@@ -163,6 +171,12 @@ export default function ModuleViewer({ params }: { params: { id: string } }) {
             <div style={{ flex: 1, padding: '40px', overflowY: 'auto', background: '#0B0D11' }}>
                 {!showMaterialForm && activeMaterial ? (
                     <div style={{ maxWidth: '850px', margin: '0 auto' }}>
+                        {heroImage && (
+                            <div style={{ marginBottom: '32px', borderRadius: '32px', overflow: 'hidden', height: '240px', position: 'relative', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                                <img src={heroImage} alt={module.category} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #0B0D11 0%, transparent 100%)' }} />
+                            </div>
+                        )}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
                             <div>
                                 <h1 style={{ fontSize: '32px', fontWeight: 800, color: '#fff', margin: 0 }}>{activeMaterial.title}</h1>
@@ -342,9 +356,14 @@ export default function ModuleViewer({ params }: { params: { id: string } }) {
                 .markdown-reader :global(strong) { color: #fff; font-weight: 700; }
                 .markdown-reader :global(code) { background: rgba(212, 175, 55, 0.1); color: var(--gold); padding: 4px 10px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.9em; }
                 .markdown-reader :global(hr) { border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 60px 0; }
-                .markdown-reader :global(table) { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
-                .markdown-reader :global(th), .markdown-reader :global(td) { padding: 12px; border: 1px solid var(--border); text-align: left; }
-                .markdown-reader :global(th) { background: var(--surface2); color: var(--gold); font-size: 13px; text-transform: uppercase; }
+                .markdown-reader :global(table) { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 32px; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
+                .markdown-reader :global(th), .markdown-reader :global(td) { padding: 16px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
+                .markdown-reader :global(th) { background: rgba(212, 175, 55, 0.1); color: var(--gold); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
+                .markdown-reader :global(tr:last-child td) { border-bottom: none; }
+                .markdown-reader :global(tr:nth-child(even)) { background: rgba(255,255,255,0.02); }
+                
+                .markdown-reader :global(details) { background: rgba(255,255,255,0.03); padding: 16px; border-radius: 12px; margin-bottom: 24px; cursor: pointer; border: 1px solid rgba(255,255,255,0.08); }
+                .markdown-reader :global(summary) { font-weight: 700; color: var(--gold); outline: none; }
                 .training-viewer-mode :global(.card) {
                     background: rgba(255, 255, 255, 0.03) !important;
                     border: 1px solid rgba(255, 255, 255, 0.08) !important;

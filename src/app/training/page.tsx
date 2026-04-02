@@ -263,17 +263,21 @@ export default function TrainingPage() {
 Create a training module for CA staff on: "${topic}" (Category: "${cat}").
 
 RULES:
-- Create 2–4 text lessons, each under 300 words. Be practical and concise.
-- Reference Indian tax laws (FY 2024-25) with section numbers where applicable.
-- Include 1 quiz with 3 multiple-choice questions at the end.
+- Do NOT write boring walls of text. Be intensely practical and relatable.
+- Include a specific, realistic "Client Case Study" (e.g. Client X bought Y, how to enter?).
+- Provide an accounting entry example formatted as a Markdown table (Debit/Credit).
+- Highlight common mistakes using GitHub alerts (e.g., '> [!WARNING] Penalty risk...').
+- Include exactly 4 materials: 3 TEXT lessons + 1 QUIZ with 3 questions.
+- Keep each lesson under 250 words but dense with practical value.
 
 Return ONLY this JSON (no markdown fences, no explanation):
 {
   "title": "${topic}",
-  "description": "One line description of the module",
+  "description": "Brief practical outcome of this module",
   "materials": [
-    { "title": "Lesson 1 Title", "type": "TEXT", "content": "Lesson body here..." },
-    { "title": "Lesson 2 Title", "type": "TEXT", "content": "Lesson body here..." },
+    { "title": "Theory & Compliance", "type": "TEXT", "content": "Rules with section numbers..." },
+    { "title": "Practical Case Study", "type": "TEXT", "content": "Scenario with a markdown table..." },
+    { "title": "Common Pitfalls", "type": "TEXT", "content": "> [!WARNING] ...\\\\n> [!NOTE] ..." },
     { "title": "Assessment Quiz", "type": "QUIZ", "content": "[{\\"q\\":\\"Question?\\",\\"opts\\":[\\"A\\",\\"B\\",\\"C\\",\\"D\\"],\\"ans\\":0,\\"expl\\":\\"Explanation\\"}]" }
   ]
 }`

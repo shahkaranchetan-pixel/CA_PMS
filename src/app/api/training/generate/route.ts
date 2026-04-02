@@ -213,16 +213,20 @@ async function callGeminiAPI(topic: string, category: string) {
 Create a training module for CA staff on: "${topic}" (Category: "${category}").
 
 RULES:
-- Keep each lesson under 250 words. Be concise.
-- Reference Indian tax laws (FY 2024-25) with section numbers.
-- Include exactly 3 materials: 2 TEXT lessons + 1 QUIZ with 3 questions.
+- Do NOT write boring walls of text. Be intensely practical and relatable.
+- Include a specific, realistic "Client Case Study" (e.g. Client X bought Y, how to enter?).
+- Provide an accounting entry example formatted as a Markdown table (Debit/Credit).
+- Highlight common mistakes using GitHub alerts (e.g., '> [!WARNING] Penalty risk...').
+- Include exactly 4 materials: 3 TEXT lessons + 1 QUIZ with 3 questions.
+- Keep each lesson under 250 words but dense with practical value.
 
-Return ONLY this JSON (no markdown, no explanation):
+Return ONLY this JSON (no markdown fences, no explanation):
 {
-  "description": "One line description",
+  "description": "Brief practical outcome of this module",
   "materials": [
-    { "title": "Lesson title", "type": "TEXT", "content": "Lesson body" },
-    { "title": "Lesson title", "type": "TEXT", "content": "Lesson body" },
+    { "title": "Theory & Compliance", "type": "TEXT", "content": "Rules with section numbers..." },
+    { "title": "Practical Case Study", "type": "TEXT", "content": "Scenario with a markdown table..." },
+    { "title": "Common Pitfalls", "type": "TEXT", "content": "> [!WARNING] ...\\\\n> [!NOTE] ..." },
     { "title": "Quiz", "type": "QUIZ", "content": "[{\\"q\\":\\"Question?\\",\\"opts\\":[\\"A\\",\\"B\\",\\"C\\",\\"D\\"],\\"ans\\":0,\\"expl\\":\\"Why\\"}]" }
   ]
 }`;
@@ -264,18 +268,21 @@ async function callClaudeAPI(topic: string, category: string) {
 Create a training module for CA staff on: "${topic}" (Category: "${category}").
 
 RULES:
-- Keep each TEXT lesson CONCISE — under 250 words. Focus on practical tips.
-- Reference Indian tax laws (FY 2024-25) with specific section numbers.
-- Include exactly 3 materials: 2 TEXT lessons + 1 QUIZ.
+- Do NOT write boring walls of text. Be intensely practical and relatable.
+- Include a specific, realistic "Client Case Study" (e.g. Client X bought Y, how to enter?).
+- Provide an accounting entry example formatted as a Markdown table (Debit/Credit).
+- Highlight common mistakes using GitHub alerts (e.g., '> [!WARNING] Penalty risk...').
+- Include exactly 4 materials: 3 TEXT lessons + 1 QUIZ.
 - The QUIZ must have exactly 3 multiple-choice questions.
 - For QUIZ type, "content" must be a JSON string of an array.
 
 Return ONLY this JSON object (no markdown fences, no explanation, no preamble):
 {
-  "description": "Brief one-line description of the module",
+  "description": "Brief practical outcome of this module",
   "materials": [
-    { "title": "Theory & Compliance", "type": "TEXT", "content": "Lesson content here..." },
-    { "title": "Practical Steps", "type": "TEXT", "content": "Step-by-step guide here..." },
+    { "title": "Theory & Compliance", "type": "TEXT", "content": "Rules with section numbers..." },
+    { "title": "Practical Case Study", "type": "TEXT", "content": "Scenario with a markdown table..." },
+    { "title": "Common Pitfalls", "type": "TEXT", "content": "> [!WARNING] ...\\\\n> [!NOTE] ..." },
     { "title": "Assessment Quiz", "type": "QUIZ", "content": "[{\\"q\\":\\"Question text\\",\\"opts\\":[\\"A\\",\\"B\\",\\"C\\",\\"D\\"],\\"ans\\":0,\\"expl\\":\\"Explanation\\"}]" }
   ]
 }`;
