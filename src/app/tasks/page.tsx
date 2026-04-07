@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 
-export const dynamic = "force-dynamic"
+export const revalidate = 30
 
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
@@ -76,15 +76,16 @@ export default async function TasksPage(props: { searchParams: Promise<{ [key: s
     const tasks = await prisma.task.findMany({
         where: filterConditions,
         include: {
-            client: true,
-            taskAssignees: { include: { user: true } },
+            client: { select: { id: true, name: true } },
+            taskAssignees: { include: { user: { select: { id: true, name: true, color: true } } } },
             subtasks: {
-                include: { taskAssignees: { include: { user: true } } }
+                select: { id: true, status: true }
             }
         },
         orderBy: {
             createdAt: 'desc'
-        }
+        },
+        take: 100
     }) as any[]
 
     return (
@@ -146,7 +147,7 @@ export default async function TasksPage(props: { searchParams: Promise<{ [key: s
                                     </td>
                                 </tr>
                             ) : (
-                                tasks.map(task => {
+                                tasks.map((task, index) => {
                                     const tm = TASK_MAP[task.taskType] || { label: task.taskType.replace(/_/g, ' '), color: 'var(--muted)', icon: '📝' };
                                     const s = task.status.toLowerCase();
                                     const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && s !== 'completed';
@@ -154,7 +155,7 @@ export default async function TasksPage(props: { searchParams: Promise<{ [key: s
                                     return (
                                         <tr key={task.id}>
                                             <td style={{ textAlign: 'center' }}>
-                                                <span style={{ color: 'var(--muted)', fontSize: '11px' }}>{tasks.indexOf(task) + 1}</span>
+                                                <span style={{ color: 'var(--muted)', fontSize: '11px' }}>{index + 1}</span>
                                             </td>
                                             <td>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

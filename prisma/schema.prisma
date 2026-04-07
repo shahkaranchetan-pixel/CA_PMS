@@ -32,6 +32,8 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 // Role is stored as plain String in DB (ADMIN | EMPLOYEE) to avoid PostgreSQL enum migration issues
@@ -71,6 +73,8 @@ model TrainingModule {
   progress    UserTrainingProgress[]
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
+
+  @@index([category])
 }
 
 model TrainingMaterial {
@@ -83,6 +87,8 @@ model TrainingMaterial {
   order       Int            @default(0)
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
+
+  @@index([moduleId])
 }
 
 model UserTrainingProgress {
@@ -147,6 +153,9 @@ model Client {
   deletedAt    DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+
+  @@index([deletedAt])
+  @@index([active, deletedAt])
 }
 
 model ClientVaultEntry {
@@ -159,6 +168,8 @@ model ClientVaultEntry {
   notes       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([clientId])
 }
 
 model ClientDocument {
@@ -172,6 +183,8 @@ model ClientDocument {
   mimeType    String?
   notes       String?
   uploadedAt  DateTime @default(now())
+
+  @@index([clientId])
 }
 
 model Task {
@@ -213,6 +226,17 @@ model Task {
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([deletedAt])
+  @@index([status])
+  @@index([dueDate])
+  @@index([clientId])
+  @@index([period])
+  @@index([parentId])
+  @@index([taskType])
+  @@index([status, deletedAt])
+  @@index([clientId, period, taskType])
+  @@index([createdAt])
 }
 
 model Activity {
@@ -225,6 +249,8 @@ model Activity {
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([taskId])
 }
 
 model TaskLog {
@@ -238,6 +264,9 @@ model TaskLog {
   oldStatus   String?
   newStatus   String?
   createdAt   DateTime @default(now())
+
+  @@index([taskId])
+  @@index([createdAt])
 }
 
 
@@ -253,6 +282,8 @@ model ClientNote {
   
   authorId    String
   author      User     @relation(fields: [authorId], references: [id])
+
+  @@index([clientId])
 }
 
 model Reminder {
@@ -283,6 +314,8 @@ model TaskTemplateItem {
   
   templateId     String
   template       TaskTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([templateId])
 }
 
 model SystemSetting {
@@ -301,6 +334,9 @@ model Notification {
   isRead    Boolean  @default(false)
   link      String?  
   createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
 }
 
 model TaskAssignee {
@@ -312,6 +348,8 @@ model TaskAssignee {
   createdAt DateTime @default(now())
 
   @@unique([taskId, userId])
+  @@index([userId])
+  @@index([taskId])
 }
 
 model VaultAuditLog {
@@ -323,5 +361,7 @@ model VaultAuditLog {
   portalName  String   // e.g. 'Income Tax Portal', 'PF (EPFO)', or custom portal name
   action      String   // VIEW, COPY
   createdAt   DateTime @default(now())
-}
 
+  @@index([clientId])
+  @@index([userId])
+}

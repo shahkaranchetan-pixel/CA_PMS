@@ -6,7 +6,7 @@ import { redirect } from "next/navigation"
 import ComplianceMatrix from "@/components/ComplianceMatrix"
 import MyTasksDashboard from "@/components/MyTasksDashboard"
 
-export const dynamic = "force-dynamic"
+export const revalidate = 30
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ month?: string, year?: string }> }) {
     const session = await getServerSession(authOptions)
@@ -28,30 +28,70 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ m
     const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     const currentPeriod = `${monthNames[displayMonth].substring(0, 3)}-${displayYear}`;
 
-    const [totalClients, activeClients, dashboardTasks, recentLogs, team, statutoryTasksCount] = await Promise.all([
+    // Calendar date range for current display month
+    const monthStart = new Date(displayYear, displayMonth, 1);
+    const monthEnd = new Date(displayYear, displayMonth + 1, 0, 23, 59, 59);
+
+    const [
+        totalClients,
+        activeClients,
+        calendarTasks,
+        myTasks,
+        recentLogs,
+        team,
+        statutoryTasksCount,
+        overdueTasksCount,
+        completedThisMonth,
+        blockedTasksCount,
+        underReviewTasksCount,
+        upcomingDeadlines
+    ] = await Promise.all([
         prisma.client.count({ where: { deletedAt: null } }),
         prisma.client.findMany({ 
             where: { active: true, deletedAt: null }, 
             select: { name: true, id: true } 
         }),
+        // Only fetch tasks for the displayed calendar month (not ALL tasks)
+        prisma.task.findMany({
+            where: { 
+                ...baseTaskWhere, 
+                deletedAt: null,
+                dueDate: { gte: monthStart, lte: monthEnd }
+            },
+            select: { id: true, title: true, status: true, dueDate: true, client: { select: { name: true } } },
+            orderBy: { dueDate: 'asc' }
+        }),
+        // Fetch tasks for MyTasksDashboard - only non-deleted, limited fields
         prisma.task.findMany({
             where: { 
                 ...baseTaskWhere, 
                 deletedAt: null 
             },
-            include: { client: true, taskAssignees: { include: { user: true } } },
-            orderBy: { dueDate: 'asc' }
+            select: {
+                id: true, title: true, status: true, dueDate: true, priority: true, taskType: true,
+                client: { select: { id: true, name: true } },
+                taskAssignees: { select: { id: true, user: { select: { id: true, name: true, color: true } } } }
+            },
+            orderBy: { dueDate: 'asc' },
+            take: 200 // Cap at 200 for dashboard performance
         }),
         prisma.taskLog.findMany({
             take: 8,
             orderBy: { createdAt: 'desc' },
-            include: {
+            select: {
+                id: true, type: true, oldStatus: true, newStatus: true, createdAt: true, taskId: true,
                 user: { select: { name: true, color: true } },
                 task: { select: { title: true, id: true } }
             }
         }),
         prisma.user.findMany({
-            include: { taskAssignees: { where: { task: { status: { not: 'COMPLETED' } } }, include: { task: { select: { id: true, priority: true } } } } }
+            select: {
+                id: true, name: true, color: true,
+                taskAssignees: { 
+                    where: { task: { status: { not: 'COMPLETED' }, deletedAt: null } },
+                    select: { task: { select: { id: true, priority: true } } }
+                }
+            }
         }),
         prisma.task.count({
             where: { 
@@ -60,21 +100,25 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ m
                 frequency: 'MONTHLY',
                 deletedAt: null
             }
-        })
-    ]);
-
-    // Optimized: use Prisma count instead of filtering full arrays in memory
-    const [overdueTasksCount, completedThisMonth, blockedTasksCount, underReviewTasksCount] = await Promise.all([
+        }),
+        // Counts - these are fast with indexes
         prisma.task.count({ where: { ...baseTaskWhere, deletedAt: null, status: { not: 'COMPLETED' }, dueDate: { lt: now } } }),
         prisma.task.count({ where: { ...baseTaskWhere, deletedAt: null, status: 'COMPLETED', updatedAt: { gte: new Date(displayYear, displayMonth, 1) } } }),
         prisma.task.count({ where: { ...baseTaskWhere, deletedAt: null, status: 'BLOCKED' } }),
         prisma.task.count({ where: { ...baseTaskWhere, deletedAt: null, status: 'UNDER_REVIEW' } }),
+        // Upcoming deadlines - fetch only top 7 non-completed future tasks
+        prisma.task.findMany({
+            where: {
+                ...baseTaskWhere,
+                deletedAt: null,
+                status: { not: 'COMPLETED' },
+                dueDate: { gte: now }
+            },
+            select: { id: true, title: true, status: true, dueDate: true, priority: true, client: { select: { name: true } } },
+            orderBy: { dueDate: 'asc' },
+            take: 7
+        })
     ]);
-
-    // Upcoming deadlines (next 7 tasks due)
-    const upcomingDeadlines = dashboardTasks
-        .filter(t => t.status !== 'COMPLETED' && t.dueDate && new Date(t.dueDate) >= now)
-        .slice(0, 7);
 
     // Calendar logic
     const firstDay = new Date(displayYear, displayMonth, 1).getDay();
@@ -85,8 +129,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ m
     for (let i = 1; i <= daysInMonth; i++) calDays.push(i);
 
     const tasksByDay: Record<number, any[]> = {};
-    dashboardTasks.forEach(task => {
-        if (task.dueDate && task.dueDate.getMonth() === displayMonth && task.dueDate.getFullYear() === displayYear) {
+    calendarTasks.forEach(task => {
+        if (task.dueDate) {
             const d = task.dueDate.getDate();
             if (!tasksByDay[d]) tasksByDay[d] = [];
             tasksByDay[d].push(task);
@@ -164,7 +208,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ m
 
             {/* My Tasks Section */}
             <div style={{ marginBottom: '24px' }}>
-                <MyTasksDashboard tasks={dashboardTasks} />
+                <MyTasksDashboard tasks={myTasks} />
             </div>
 
             {/* Main Grid: Calendar Section */}
@@ -191,9 +235,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ m
                         ))}
                         {/* Days */}
                         {calDays.map((dayNum, i) => {
-                            const isToday = dayNum === now.getDate();
+                            const isToday = dayNum === now.getDate() && displayMonth === now.getMonth() && displayYear === now.getFullYear();
                             const dayTasks = dayNum ? (tasksByDay[dayNum] || []) : [];
-                            const hasOverdue = dayTasks.some(t => t.status !== 'COMPLETED' && dayNum! < now.getDate());
+                            const hasOverdue = dayTasks.some(t => t.status !== 'COMPLETED' && dayNum! < now.getDate() && displayMonth === now.getMonth() && displayYear === now.getFullYear());
                             const hasTasks = dayTasks.length > 0;
 
                             return (
@@ -238,7 +282,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ m
                     </div>
 
                     {/* Today's Tasks */}
-                    {tasksByDay[now.getDate()] && tasksByDay[now.getDate()].length > 0 && (
+                    {tasksByDay[now.getDate()] && tasksByDay[now.getDate()].length > 0 && displayMonth === now.getMonth() && displayYear === now.getFullYear() && (
                         <div style={{ marginTop: '12px', padding: '10px', background: 'rgba(232,160,32,.05)', borderRadius: '8px', border: '1px solid rgba(232,160,32,.15)' }}>
                             <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>
                                 📌 Due Today

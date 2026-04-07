@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth-options"
 import EmployeeWorkloadCard from "./EmployeeWorkloadCard"
 
-export const dynamic = "force-dynamic"
+export const revalidate = 30
 
 export default async function TeamPage() {
     const session = await getServerSession(authOptions);
@@ -14,6 +14,7 @@ export default async function TeamPage() {
         orderBy: { name: 'asc' },
         include: {
             taskAssignees: {
+                where: { task: { deletedAt: null } },
                 include: {
                     task: {
                         select: { id: true, status: true, priority: true, dueDate: true, title: true }

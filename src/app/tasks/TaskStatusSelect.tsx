@@ -1,28 +1,36 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { toast } from "react-hot-toast"
 
 export default function TaskStatusSelect({ taskId, initialStatus }: { taskId: string, initialStatus: string }) {
-    const router = useRouter()
     const [status, setStatus] = useState(initialStatus.toUpperCase())
+    const [updating, setUpdating] = useState(false)
 
     const handleChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
         const newStatus = e.target.value
-        setStatus(newStatus)
+        const oldStatus = status
+        setStatus(newStatus) // Optimistic update — instant UI
 
+        setUpdating(true)
         try {
             const res = await fetch(`/api/tasks/${taskId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: newStatus })
             })
-            if (res.ok) {
-                router.refresh()
+            if (!res.ok) {
+                setStatus(oldStatus) // Revert on failure
+                toast.error('Failed to update status')
+            } else {
+                toast.success(`Status → ${newStatus.replace('_', ' ')}`)
             }
         } catch (err) {
             console.error(err)
-            setStatus(initialStatus.toUpperCase())
+            setStatus(oldStatus)
+            toast.error('Failed to update status')
+        } finally {
+            setUpdating(false)
         }
     }
 
@@ -39,9 +47,11 @@ export default function TaskStatusSelect({ taskId, initialStatus }: { taskId: st
             className="sel-status"
             value={status}
             onChange={handleChange}
+            disabled={updating}
             style={{
                 color: statusColors[status] || 'var(--text)',
-                borderColor: (statusColors[status] || 'var(--border)') + '40'
+                borderColor: (statusColors[status] || 'var(--border)') + '40',
+                opacity: updating ? 0.6 : 1
             }}
         >
             <option value="PENDING">Pending</option>

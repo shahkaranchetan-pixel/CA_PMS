@@ -2,10 +2,10 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
 
-export default function BoardView({ tasks, taskMap }: { tasks: any[], taskMap: any }) {
-    const router = useRouter();
+export default function BoardView({ tasks: initialTasks, taskMap }: { tasks: any[], taskMap: any }) {
+    const [tasks, setTasks] = useState(initialTasks);
     const [draggingId, setDraggingId] = useState<string | null>(null);
 
     const columns = [
@@ -26,23 +26,33 @@ export default function BoardView({ tasks, taskMap }: { tasks: any[], taskMap: a
         e.dataTransfer.dropEffect = "move";
     };
 
-    const handleDrop = async (e: React.DragEvent, status: string) => {
+    const handleDrop = async (e: React.DragEvent, newStatus: string) => {
         e.preventDefault();
         if (!draggingId) return;
 
         const task = tasks.find(t => t.id === draggingId);
-        if (task && task.status !== status) {
+        if (task && task.status !== newStatus) {
+            const oldStatus = task.status;
+            // Optimistic update — move card instantly
+            setTasks(prev => prev.map(t => t.id === draggingId ? { ...t, status: newStatus } : t));
+
             try {
                 const res = await fetch(`/api/tasks/${draggingId}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status })
+                    body: JSON.stringify({ status: newStatus })
                 });
                 if (res.ok) {
-                    router.refresh();
+                    toast.success(`Moved to ${columns.find(c => c.id === newStatus)?.title}`);
+                } else {
+                    // Revert on failure
+                    setTasks(prev => prev.map(t => t.id === draggingId ? { ...t, status: oldStatus } : t));
+                    toast.error('Failed to update status');
                 }
             } catch (err) {
                 console.error(err);
+                setTasks(prev => prev.map(t => t.id === draggingId ? { ...t, status: oldStatus } : t));
+                toast.error('Failed to update status');
             }
         }
         setDraggingId(null);

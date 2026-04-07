@@ -217,15 +217,16 @@ RULES:
 - Include a specific, realistic "Client Case Study" (e.g. Client X bought Y, how to enter?).
 - Provide an accounting entry example formatted as a Markdown table (Debit/Credit).
 - Highlight common mistakes using GitHub alerts (e.g., '> [!WARNING] Penalty risk...').
-- Include exactly 4 materials: 3 TEXT lessons + 1 QUIZ with 3 questions.
+- Break down the content into 6 smaller "bitesize" materials: 5 TEXT lessons + 1 QUIZ.
 - Keep each lesson under 250 words but dense with practical value.
+- Include interactive "Reveal" sections using HTML <details> and <summary> tags for "Try it yourself" before showing the answer.
 
 Return ONLY this JSON (no markdown fences, no explanation):
 {
   "description": "Brief practical outcome of this module",
   "materials": [
     { "title": "Theory & Compliance", "type": "TEXT", "content": "Rules with section numbers..." },
-    { "title": "Practical Case Study", "type": "TEXT", "content": "Scenario with a markdown table..." },
+    { "title": "Practical Case Study", "type": "TEXT", "content": "Scenario with a markdown table... <details><summary>Try it</summary>Answer</details>" },
     { "title": "Common Pitfalls", "type": "TEXT", "content": "> [!WARNING] ...\\\\n> [!NOTE] ..." },
     { "title": "Quiz", "type": "QUIZ", "content": "[{\\"q\\":\\"Question?\\",\\"opts\\":[\\"A\\",\\"B\\",\\"C\\",\\"D\\"],\\"ans\\":0,\\"expl\\":\\"Why\\"}]" }
   ]
@@ -272,16 +273,17 @@ RULES:
 - Include a specific, realistic "Client Case Study" (e.g. Client X bought Y, how to enter?).
 - Provide an accounting entry example formatted as a Markdown table (Debit/Credit).
 - Highlight common mistakes using GitHub alerts (e.g., '> [!WARNING] Penalty risk...').
-- Include exactly 4 materials: 3 TEXT lessons + 1 QUIZ.
+- Break down the content into 6 smaller "bitesize" materials: 5 TEXT lessons + 1 QUIZ.
 - The QUIZ must have exactly 3 multiple-choice questions.
 - For QUIZ type, "content" must be a JSON string of an array.
+- Include interactive "Reveal" sections using HTML <details> and <summary> tags.
 
 Return ONLY this JSON object (no markdown fences, no explanation, no preamble):
 {
   "description": "Brief practical outcome of this module",
   "materials": [
     { "title": "Theory & Compliance", "type": "TEXT", "content": "Rules with section numbers..." },
-    { "title": "Practical Case Study", "type": "TEXT", "content": "Scenario with a markdown table..." },
+    { "title": "Practical Case Study", "type": "TEXT", "content": "Scenario with a markdown table... <details><summary>Try it</summary>Answer</details>" },
     { "title": "Common Pitfalls", "type": "TEXT", "content": "> [!WARNING] ...\\\\n> [!NOTE] ..." },
     { "title": "Assessment Quiz", "type": "QUIZ", "content": "[{\\"q\\":\\"Question text\\",\\"opts\\":[\\"A\\",\\"B\\",\\"C\\",\\"D\\"],\\"ans\\":0,\\"expl\\":\\"Explanation\\"}]" }
   ]

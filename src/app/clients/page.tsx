@@ -4,7 +4,7 @@ import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import ClientListClient from "./ClientListClient"
 
-export const dynamic = "force-dynamic"
+export const revalidate = 30
 
 export default async function ClientsPage() {
     const session = await getServerSession(authOptions)
@@ -12,19 +12,26 @@ export default async function ClientsPage() {
         redirect("/login")
     }
 
-    const clientsRaw = await prisma.client.findMany({
-        where: { deletedAt: null },
-        include: {
-            tasks: {
-                select: {
-                    status: true,
-                    dueDate: true,
-                    updatedAt: true
+    // Parallelize client and template queries
+    const [clientsRaw, templates] = await Promise.all([
+        prisma.client.findMany({
+            where: { deletedAt: null },
+            include: {
+                tasks: {
+                    where: { deletedAt: null },
+                    select: {
+                        status: true,
+                        dueDate: true,
+                        updatedAt: true
+                    }
                 }
-            }
-        },
-        orderBy: { name: 'asc' }
-    })
+            },
+            orderBy: { name: 'asc' }
+        }),
+        prisma.taskTemplate.findMany({
+            orderBy: { name: 'asc' }
+        })
+    ]);
 
     const now = new Date();
     const clients = clientsRaw.map(c => {
@@ -53,10 +60,6 @@ export default async function ClientsPage() {
             activeCount: active
         };
     });
-
-    const templates = await prisma.taskTemplate.findMany({
-        orderBy: { name: 'asc' }
-    })
 
     return (
         <ClientListClient initialClients={clients} templates={templates} employees={[]} />

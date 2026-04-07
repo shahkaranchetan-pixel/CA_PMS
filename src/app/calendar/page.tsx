@@ -8,7 +8,7 @@ import { redirect } from "next/navigation"
 import ComplianceMatrix from "@/components/ComplianceMatrix"
 import CalendarHeader from "@/components/CalendarHeader"
 
-export const dynamic = "force-dynamic"
+export const revalidate = 30
 
 export default async function CalendarPage({ searchParams }: { searchParams: Promise<any> }) {
     const sParams = await searchParams;
@@ -34,21 +34,6 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
 
     const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-    // Compliance Matrix Data
-    const clientsForMatrix = await prisma.client.findMany({ 
-        where: { deletedAt: null },
-        select: { id: true, name: true } 
-    });
-    const tasksForMatrix = await prisma.task.findMany({
-        where: { period: currentPeriod, deletedAt: null },
-        select: { id: true, clientId: true, taskType: true, status: true }
-    });
-
-    const statutoryTypeKeys = ['GST_1', 'GSTR_3B', 'TDS_PAYMENT', 'PF_ESI_PT', 'ACCOUNTING'];
-    const applicableClients = clientsForMatrix.filter(c => 
-        tasksForMatrix.some(t => t.clientId === c.id && statutoryTypeKeys.includes(t.taskType))
-    );
-
     // Grid logic (Calendar)
     const firstDay = new Date(currentYear, currentMonth, 1).getDay();
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
@@ -57,21 +42,38 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
         ? {}
         : { taskAssignees: { some: { userId } } };
 
-    const tasks = await prisma.task.findMany({
-        where: {
-            ...baseTaskWhere,
-            deletedAt: null,
-            dueDate: {
-                gte: new Date(currentYear, currentMonth, 1),
-                lte: new Date(currentYear, currentMonth, daysInMonth, 23, 59, 59)
-            }
-        },
-        include: {
-            client: true,
-            taskAssignees: { include: { user: true } }
-        },
-        orderBy: { dueDate: 'asc' }
-    });
+    // Parallelize ALL queries in a single Promise.all
+    const [clientsForMatrix, tasksForMatrix, tasks] = await Promise.all([
+        prisma.client.findMany({ 
+            where: { deletedAt: null },
+            select: { id: true, name: true } 
+        }),
+        prisma.task.findMany({
+            where: { period: currentPeriod, deletedAt: null },
+            select: { id: true, clientId: true, taskType: true, status: true }
+        }),
+        prisma.task.findMany({
+            where: {
+                ...baseTaskWhere,
+                deletedAt: null,
+                dueDate: {
+                    gte: new Date(currentYear, currentMonth, 1),
+                    lte: new Date(currentYear, currentMonth, daysInMonth, 23, 59, 59)
+                }
+            },
+            select: {
+                id: true, title: true, status: true, priority: true, dueDate: true,
+                client: { select: { name: true } },
+                taskAssignees: { select: { user: { select: { name: true } } } }
+            },
+            orderBy: { dueDate: 'asc' }
+        })
+    ]);
+
+    const statutoryTypeKeys = ['GST_1', 'GSTR_3B', 'TDS_PAYMENT', 'PF_ESI_PT', 'ACCOUNTING'];
+    const applicableClients = clientsForMatrix.filter(c => 
+        tasksForMatrix.some(t => t.clientId === c.id && statutoryTypeKeys.includes(t.taskType))
+    );
 
     const days = [];
     for (let i = 0; i < firstDay; i++) days.push(null);

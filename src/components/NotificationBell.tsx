@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import Link from "next/link"
 
 interface Notification {
@@ -16,14 +16,47 @@ export default function NotificationBell() {
     const [notifications, setNotifications] = useState<Notification[]>([])
     const [isOpen, setIsOpen] = useState(false)
     const dropdownRef = useRef<HTMLDivElement>(null)
+    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
     const unreadCount = notifications.filter(n => !n.isRead).length
 
+    const fetchNotifications = useCallback(async () => {
+        try {
+            const res = await fetch('/api/notifications')
+            if (res.ok) {
+                const data = await res.json()
+                setNotifications(data)
+            }
+        } catch (err) {
+            // Silent fail for background polling
+        }
+    }, [])
+
     useEffect(() => {
         fetchNotifications()
-        const interval = setInterval(fetchNotifications, 15000) // Poll every 15s
-        return () => clearInterval(interval)
-    }, [])
+        
+        // Poll every 60s instead of 15s to reduce API load
+        const startPolling = () => {
+            intervalRef.current = setInterval(fetchNotifications, 60000)
+        }
+        startPolling()
+
+        // Stop polling when tab is hidden, restart when visible
+        const handleVisibility = () => {
+            if (document.hidden) {
+                if (intervalRef.current) clearInterval(intervalRef.current)
+            } else {
+                fetchNotifications() // Fetch immediately on return
+                startPolling()
+            }
+        }
+        document.addEventListener('visibilitychange', handleVisibility)
+
+        return () => {
+            if (intervalRef.current) clearInterval(intervalRef.current)
+            document.removeEventListener('visibilitychange', handleVisibility)
+        }
+    }, [fetchNotifications])
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -35,32 +68,20 @@ export default function NotificationBell() {
         return () => document.removeEventListener("mousedown", handleClickOutside)
     }, [])
 
-    const fetchNotifications = async () => {
-        try {
-            const res = await fetch('/api/notifications')
-            if (res.ok) {
-                const data = await res.json()
-                setNotifications(data)
-            } else {
-                console.error("Notifications API error:", await res.text())
-            }
-        } catch (err) {
-            console.error("Failed to fetch notifications", err)
-        }
-    }
-
     const markAsRead = async (id?: string) => {
+        // Optimistic update
+        if (id) {
+            setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n))
+        } else {
+            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })))
+        }
+
         try {
             await fetch('/api/notifications', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ notificationId: id })
             })
-            if (id) {
-                setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n))
-            } else {
-                setNotifications(prev => prev.map(n => ({ ...n, isRead: true })))
-            }
         } catch (err) {
             console.error("Failed to mark notifications as read", err)
         }
@@ -68,7 +89,7 @@ export default function NotificationBell() {
 
     return (
         <div className="nb-wrap" ref={dropdownRef}>
-            <button className="nb-btn" onClick={() => setIsOpen(!isOpen)} style={{ position: 'relative' }}>
+            <button className="nb-btn" onClick={() => { setIsOpen(!isOpen); if (!isOpen) fetchNotifications(); }} style={{ position: 'relative' }}>
                 <span style={{ fontSize: '20px' }}>🔔</span>
                 {unreadCount > 0 && (
                     <span className="nb-badge pulse">

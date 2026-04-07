@@ -4,7 +4,7 @@ import TaskDetailClient from "./TaskDetailClient"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth-options";
 
-export const dynamic = "force-dynamic"
+export const revalidate = 10
 
 export default async function TaskDetailPage(props: { params: Promise<{ id: string }> }) {
     const session = await getServerSession(authOptions);
@@ -15,15 +15,16 @@ export default async function TaskDetailPage(props: { params: Promise<{ id: stri
         where: { id: params.id },
         include: {
             client: true,
-            taskAssignees: { include: { user: true } },
+            taskAssignees: { include: { user: { select: { id: true, name: true, email: true, color: true, image: true } } } },
             activities: true,
-            blockedBy: true,
+            blockedBy: { select: { id: true, title: true } },
             subtasks: {
-                include: { taskAssignees: { include: { user: true } } }
+                include: { taskAssignees: { include: { user: { select: { id: true, name: true, color: true } } } } }
             },
             logs: {
                 include: { user: { select: { name: true, image: true, email: true } } },
-                orderBy: { createdAt: "desc" }
+                orderBy: { createdAt: "desc" },
+                take: 50
             }
         }
     })

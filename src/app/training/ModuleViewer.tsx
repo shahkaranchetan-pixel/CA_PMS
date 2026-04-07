@@ -6,6 +6,17 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import rehypeRaw from 'rehype-raw'
+
+const processContent = (content: string) => {
+    if (!content) return '';
+    return content
+        .replace(/> \[!WARNING\]/gi, '> **⚠️ WARNING**\n>')
+        .replace(/> \[!IMPORTANT\]/gi, '> **❗ IMPORTANT**\n>')
+        .replace(/> \[!NOTE\]/gi, '> **📝 NOTE**\n>')
+        .replace(/> \[!TIP\]/gi, '> **✨ TIP**\n>')
+        .replace(/> \[!CAUTION\]/gi, '> **🛑 CAUTION**\n>');
+}
 
 export default function ModuleViewer({ params }: { params: { id: string } }) {
     const { data: session } = useSession()
@@ -196,8 +207,8 @@ export default function ModuleViewer({ params }: { params: { id: string } }) {
                         <div className="card glass-premium" style={{ padding: '48px', borderRadius: '32px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
                             {activeMaterial.type === 'TEXT' && (
                                 <div className="markdown-reader">
-                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                        {activeMaterial.content}
+                                    <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                                        {processContent(activeMaterial.content)}
                                     </ReactMarkdown>
                                 </div>
                             )}
@@ -362,8 +373,9 @@ export default function ModuleViewer({ params }: { params: { id: string } }) {
                 .markdown-reader :global(tr:last-child td) { border-bottom: none; }
                 .markdown-reader :global(tr:nth-child(even)) { background: rgba(255,255,255,0.02); }
                 
-                .markdown-reader :global(details) { background: rgba(255,255,255,0.03); padding: 16px; border-radius: 12px; margin-bottom: 24px; cursor: pointer; border: 1px solid rgba(255,255,255,0.08); }
-                .markdown-reader :global(summary) { font-weight: 700; color: var(--gold); outline: none; }
+                .markdown-reader :global(details) { background: rgba(255,255,255,0.03); padding: 16px; border-radius: 12px; margin-bottom: 24px; cursor: pointer; border: 1px solid rgba(255,255,255,0.08); transition: all 0.2s; }
+                .markdown-reader :global(details[open]) { background: rgba(212, 175, 55, 0.05); border-color: rgba(212, 175, 55, 0.2); }
+                .markdown-reader :global(summary) { font-weight: 700; color: var(--gold); outline: none; margin-bottom: 8px; font-size: 15px; }
                 .training-viewer-mode :global(.card) {
                     background: rgba(255, 255, 255, 0.03) !important;
                     border: 1px solid rgba(255, 255, 255, 0.08) !important;
