@@ -21,6 +21,7 @@ export default function TaskDetailClient({ task, isAdmin }: { task: any, isAdmin
     const [comment, setComment] = useState("")
     const [submittingComment, setSubmittingComment] = useState(false)
     const [activities, setActivities] = useState(task.activities || [])
+    const canNotifyClient = Boolean(task.client?.contactEmail)
 
     const handleStatusChange = async (newStatus: string) => {
         setLoading(true)
@@ -30,13 +31,13 @@ export default function TaskDetailClient({ task, isAdmin }: { task: any, isAdmin
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ 
                     status: newStatus,
-                    notifyClient: newStatus === 'COMPLETED' ? notifyOnComplete : false
+                    notifyClient: newStatus === 'COMPLETED' && canNotifyClient ? notifyOnComplete : false
                 }),
             })
             if (!res.ok) throw new Error("Failed to update status")
             setStatus(newStatus)
             router.refresh()
-            const msg = (newStatus === 'COMPLETED' && notifyOnComplete) 
+            const msg = (newStatus === 'COMPLETED' && notifyOnComplete && canNotifyClient) 
                 ? `Task completed and client notified! 📧` 
                 : `Task status updated to ${STATUS_MAP[newStatus]?.label || newStatus}`;
             toast.success(msg)
@@ -157,7 +158,7 @@ export default function TaskDetailClient({ task, isAdmin }: { task: any, isAdmin
                     </div>
                 </div>
                  <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-                    {status !== 'COMPLETED' && (
+                    {status !== 'COMPLETED' && canNotifyClient && (
                         <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginRight: '8px', padding: '0 12px', background: 'var(--surface2)', borderRadius: '8px', border: '1px solid var(--border)' }}>
                             <input 
                                 type="checkbox" 
@@ -449,6 +450,25 @@ export default function TaskDetailClient({ task, isAdmin }: { task: any, isAdmin
                             )}
                         </div>
                     </div>
+
+                    {task.emailMessages && task.emailMessages.length > 0 && (
+                        <div className="card">
+                            <div className="ctitle">Recent Client Mail</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                {task.emailMessages.map((mail: any) => (
+                                    <div key={mail.id} style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: '8px', padding: '10px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', alignItems: 'center' }}>
+                                            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{mail.subject}</div>
+                                            <span className={`badge b-${mail.status?.toLowerCase() === 'sent' ? 'completed' : mail.status?.toLowerCase() === 'failed' ? 'blocked' : 'pending'}`} style={{ fontSize: '9px' }}>{mail.status}</span>
+                                        </div>
+                                        <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '6px' }}>
+                                            {mail.recipients?.map((r: any) => r.email).join(', ')} · {new Date(mail.createdAt).toLocaleString('en-IN')}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* AI Quick Draft */}
                     <AIReminderDraft taskId={task.id} client={task.client} taskTitle={task.title} period={task.period} />

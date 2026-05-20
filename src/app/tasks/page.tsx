@@ -13,6 +13,13 @@ import StatutoryTaskButton from "./StatutoryTaskButton";
 import SearchInput from "@/components/SearchInput";
 
 const TASK_MAP: Record<string, { label: string, color: string, icon: string }> = {
+    TDS_PAYMENT: { label: 'TDS Payment', color: '#FF6B6B', icon: 'TDS' },
+    TDS_RETURN: { label: 'TDS Return', color: '#FF6B6B', icon: 'TDS' },
+    GSTR_1: { label: 'GSTR-1 Filing', color: '#FFB020', icon: 'G1' },
+    GST_1: { label: 'GSTR-1 Filing', color: '#FFB020', icon: 'G1' },
+    PF_ESI_PT: { label: 'PF / ESI / PT', color: '#4FACFE', icon: 'PF' },
+    GSTR_3B: { label: 'GSTR-3B Filing', color: '#00D4AA', icon: '3B' },
+    GSTR3B: { label: 'GSTR-3B Filing', color: '#00D4AA', icon: '3B' },
     tds: { label: 'TDS Payment', color: '#FF6B6B', icon: '🏦' },
     gstr1: { label: 'GSTR-1 Filing', color: '#FFB020', icon: '📋' },
     pf_esi_pt: { label: 'PF / ESI / PT', color: '#4FACFE', icon: '👥' },
@@ -46,9 +53,10 @@ export default async function TasksPage(props: { searchParams: Promise<{ [key: s
     } else {
         // Employees see tasks assigned to them OR tasks in their department
         const deptTaskTypes: Record<string, string[]> = {
-            'GST': ['GST_1', 'GSTR_3B'],
+            'GST': ['GST_1', 'GSTR_1', 'GSTR1', 'GSTR_3B', 'GSTR3B'],
             'TDS': ['TDS_PAYMENT', 'TDS_RETURN'],
-            'ACCOUNTING': ['ACCOUNTING']
+            'ACCOUNTING': ['ACCOUNTING'],
+            'LABOUR': ['PF_ESI_PT']
         };
         const allowedTypes = deptTaskTypes[userDept] || [];
         

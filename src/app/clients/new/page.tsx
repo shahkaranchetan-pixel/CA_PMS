@@ -125,7 +125,7 @@ export default function NewClientPage() {
                         <span className="badge b-high" style={{ fontSize: '9px' }}>OPTIONAL</span>
                     </div>
                     <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '4px' }}>
-                        You can also add other custom logins (e.g. MCA, MSME) from the client's profile page later.
+                        You can also add other custom logins (e.g. MCA, MSME) from the client&apos;s profile page later.
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>

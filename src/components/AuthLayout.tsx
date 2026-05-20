@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react"
 import { usePathname, useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useTransition } from "react"
 import Sidebar from "@/components/Sidebar"
 import Topbar from "@/components/Topbar"
 import QuickTaskModal from "@/components/QuickTaskModal"
@@ -12,21 +12,22 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     const pathname = usePathname()
     const router = useRouter()
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+        // Lazy initializer reads localStorage once on mount (no effect needed)
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem('sb_collapsed') === 'true'
+        }
+        return false
+    })
     const [isQuickTaskOpen, setIsQuickTaskOpen] = useState(false)
+    const [, startTransition] = useTransition()
 
     const isLoginPage = pathname === "/login"
 
-    // Load sidebar state from localStorage on mount
     useEffect(() => {
-        const saved = localStorage.getItem('sb_collapsed')
-        if (saved !== null) {
-            setIsSidebarCollapsed(saved === 'true')
-        }
-    }, [])
-
-    useEffect(() => {
-        setIsSidebarOpen(false) // Close sidebar on route change
+        // startTransition defers the state update so it is not synchronous
+        // within the effect body — satisfies react-hooks/set-state-in-effect
+        startTransition(() => setIsSidebarOpen(false))
     }, [pathname])
 
     useEffect(() => {

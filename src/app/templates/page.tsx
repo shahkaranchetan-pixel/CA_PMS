@@ -37,7 +37,7 @@ export default async function TemplatesPage() {
                                         <div className="empty">
                                             <div className="empty-i">⚙️</div>
                                             <div style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text)', marginBottom: '4px' }}>No templates configured</div>
-                                            <div style={{ fontSize: '12.5px' }}>Create templates to standardize your team's workflow.</div>
+                                            <div style={{ fontSize: '12.5px' }}>Create templates to standardize your team&apos;s workflow.</div>
                                         </div>
                                     </td>
                                 </tr>

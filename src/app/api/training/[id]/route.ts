@@ -6,7 +6,7 @@ import { NextResponse } from "next/server"
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params
-        const module = await prisma.trainingModule.findUnique({
+        const trainingModule = await prisma.trainingModule.findUnique({
             where: { id },
             include: {
                 materials: {
@@ -15,11 +15,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
             }
         })
 
-        if (!module) {
+        if (!trainingModule) {
             return NextResponse.json({ error: "Module not found" }, { status: 404 })
         }
 
-        return NextResponse.json(module)
+        return NextResponse.json(trainingModule)
     } catch (error) {
         return NextResponse.json({ error: "Failed to fetch module" }, { status: 500 })
     }

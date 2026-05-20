@@ -1,99 +1,80 @@
-import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import nodemailer from "nodemailer";
+import { NextResponse } from "next/server"
+import { prisma } from "@/lib/prisma"
+import { sendTrackedEmail } from "@/lib/mailer"
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"
 
 export async function GET(req: Request) {
     try {
-        // Security: Accept either Vercel's CRON_SECRET header or query param
-        const authHeader = req.headers.get('authorization');
-        const { searchParams } = new URL(req.url);
-        const secret = searchParams.get('secret');
-        const cronSecret = process.env.CRON_SECRET;
-        
+        const authHeader = req.headers.get("authorization")
+        const { searchParams } = new URL(req.url)
+        const secret = searchParams.get("secret")
+        const cronSecret = process.env.CRON_SECRET
+
         if (cronSecret) {
-            const isAuthorized = authHeader === `Bearer ${cronSecret}` || secret === cronSecret;
+            const isAuthorized = authHeader === `Bearer ${cronSecret}` || secret === cronSecret
             if (!isAuthorized) {
-                return new NextResponse("Unauthorized", { status: 401 });
+                return new NextResponse("Unauthorized", { status: 401 })
             }
         }
 
-        // 1. Fetch SMTP settings
-        const settingsRaw = await prisma.systemSetting.findMany();
-        const settings: Record<string, string> = {};
-        settingsRaw.forEach(s => settings[s.key] = s.value);
+        const settingsRaw = await prisma.systemSetting.findMany()
+        const settings: Record<string, string> = {}
+        settingsRaw.forEach(setting => settings[setting.key] = setting.value)
 
-        if (!settings.SMTP_HOST || !settings.SMTP_USER || !settings.SMTP_PASS) {
-            return NextResponse.json({ error: "SMTP credentials not configured" }, { status: 400 });
-        }
-
-        // 2. Identify tasks due in the next 3 days
-        const targetDate = new Date();
-        targetDate.setDate(targetDate.getDate() + 3);
+        const reminderDays = Math.max(parseInt(settings.REMINDER_DAYS_BEFORE || "3", 10) || 3, 0)
+        const targetDate = new Date()
+        targetDate.setDate(targetDate.getDate() + reminderDays)
 
         const tasksToRemind = await prisma.task.findMany({
             where: {
-                status: { in: ['PENDING', 'IN_PROGRESS'] },
+                status: { in: ["PENDING", "IN_PROGRESS"] },
                 dueDate: {
                     lte: targetDate,
-                    gte: new Date()
+                    gte: new Date(),
                 },
-                taskType: { in: ['GST_1', 'GSTR_3B', 'TDS_PAYMENT', 'PF_ESI_PT'] }
+                taskType: {
+                    in: ["GST_1", "GSTR_1", "GSTR1", "GSTR_3B", "GSTR3B", "TDS_PAYMENT", "TDS_RETURN", "PF_ESI_PT"],
+                },
+                deletedAt: null,
             },
-            include: { client: true }
-        });
+            include: { client: true },
+        })
 
         if (tasksToRemind.length === 0) {
-            return NextResponse.json({ message: "No reminders to send today" });
+            return NextResponse.json({ message: "No reminders to send today", remindersSent: 0 })
         }
 
-        // 3. Setup Transporter
-        const transporter = nodemailer.createTransport({
-            host: settings.SMTP_HOST,
-            port: parseInt(settings.SMTP_PORT || '587'),
-            secure: settings.SMTP_PORT === '465',
-            auth: {
-                user: settings.SMTP_USER,
-                pass: settings.SMTP_PASS,
-            },
-        });
+        const results: any[] = []
+        await Promise.allSettled(tasksToRemind.map(async task => {
+            if (!task.client?.contactEmail) return
 
-        const results: any[] = [];
-        const mailPromises = tasksToRemind.map(async (task) => {
-            if (!task.client?.contactEmail) return null; // Skip if no contact email
+            const message = await sendTrackedEmail({
+                to: [{ email: task.client.contactEmail, name: task.client.contactPerson || task.client.name, clientId: task.clientId }],
+                category: "REMINDER",
+                clientId: task.clientId,
+                taskId: task.id,
+                subject: `Compliance Reminder: ${task.title} is due soon`,
+                body: `Dear ${task.client.name},
 
-            const mailOptions = {
-                from: settings.EMAIL_FROM || settings.SMTP_USER,
-                to: task.client.contactEmail,
-                subject: `📌 Compliance Reminder: ${task.title} is due soon`,
-                html: `
-                    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-                        <h2 style="color: #4FACFE;">KCS TaskPro Reminder</h2>
-                        <p>Dear ${task.client.name},</p>
-                        <p>This is a friendly reminder regarding your upcoming statutory compliance filing:</p>
-                        <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                            <strong>Task:</strong> ${task.title}<br>
-                            <strong>Due Date:</strong> ${task.dueDate?.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}<br>
-                            <strong>Status:</strong> ${task.status}
-                        </div>
-                        <p>Please ensure all necessary documents are shared with our team to avoid last-minute delays.</p>
-                        <p>Regards,<br><strong>KCS Team</strong></p>
-                        <hr style="border: none; border-top: 1px solid #eee; margin-top: 20px;">
-                        <p style="font-size: 11px; color: #999;">Automated notification from KCS TaskPro Practice Management Suite.</p>
-                    </div>
-                `
-            };
+This is a friendly reminder regarding your upcoming statutory compliance filing.
 
-            await transporter.sendMail(mailOptions);
-            results.push({ taskId: task.id, clientId: task.clientId, status: 'SENT' });
-        });
+Task: ${task.title}
+Due Date: ${task.dueDate?.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
+Status: ${task.status}
 
-        await Promise.allSettled(mailPromises);
+Please ensure all necessary documents are shared with our team to avoid last-minute delays.
 
-        return NextResponse.json({ success: true, remindersSent: results.length, details: results });
+Regards,
+KCS Team`,
+            })
+
+            results.push({ taskId: task.id, clientId: task.clientId, status: message.status })
+        }))
+
+        return NextResponse.json({ success: true, remindersSent: results.filter(item => item.status === "SENT").length, details: results })
     } catch (error: any) {
-        console.error("Reminder Error:", error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        console.error("Reminder Error:", error)
+        return NextResponse.json({ error: error.message }, { status: 500 })
     }
 }

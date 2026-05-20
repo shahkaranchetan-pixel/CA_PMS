@@ -57,6 +57,7 @@ model User {
   notifications Notification[]
   vaultAuditLogs VaultAuditLog[]
   trainingProgress UserTrainingProgress[]
+  sentEmails    EmailMessage[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -149,6 +150,8 @@ model Client {
   vaultEntries ClientVaultEntry[]
   documents    ClientDocument[]
   vaultAuditLogs VaultAuditLog[]
+  emailMessages EmailMessage[]
+  emailRecipients EmailRecipient[]
   
   deletedAt    DateTime?
   createdAt    DateTime  @default(now())
@@ -223,6 +226,7 @@ model Task {
 
   activities  Activity[]
   logs        TaskLog[]
+  emailMessages EmailMessage[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -364,4 +368,71 @@ model VaultAuditLog {
 
   @@index([clientId])
   @@index([userId])
+}
+
+model EmailTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  category    String   @default("GENERAL")
+  subject     String
+  body        String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([isActive])
+}
+
+model EmailMessage {
+  id            String   @id @default(cuid())
+  subject       String
+  body          String
+  status        String   @default("DRAFT") // DRAFT, QUEUED, SENT, FAILED
+  category      String   @default("GENERAL")
+  failureReason String?
+  sentAt        DateTime?
+
+  senderId      String
+  sender        User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  clientId      String?
+  client        Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  taskId        String?
+  task          Task?    @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  recipients    EmailRecipient[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([senderId])
+  @@index([clientId])
+  @@index([taskId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model EmailRecipient {
+  id            String   @id @default(cuid())
+  email         String
+  name          String?
+  status        String   @default("QUEUED") // QUEUED, SENT, FAILED
+  error         String?
+  sentAt        DateTime?
+
+  messageId     String
+  message       EmailMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  clientId      String?
+  client        Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([messageId])
+  @@index([clientId])
+  @@index([email])
+  @@index([status])
 }

@@ -183,7 +183,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="field" style={{ marginTop: '16px' }}>
-                    <label>Default "From" Address</label>
+                    <label>Default &quot;From&quot; Address</label>
                     <input
                         type="text"
                         value={config.EMAIL_FROM}
@@ -195,6 +195,30 @@ export default function SettingsPage() {
                 <div style={{ marginTop: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
                     <button onClick={handleSave} disabled={saving} className="btn btn-p">
                         {saving ? 'Saving...' : '💾 Save All Settings'}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={async () => {
+                            setSaving(true)
+                            setMessage('')
+                            try {
+                                const res = await fetch('/api/settings/test-email', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ to: config.SMTP_USER || config.EMAIL_FROM })
+                                })
+                                const data = await res.json()
+                                setMessage(res.ok ? 'Test email sent successfully!' : (data.error || 'Test email failed.'))
+                            } catch (error) {
+                                setMessage('Network error sending test email.')
+                            } finally {
+                                setSaving(false)
+                            }
+                        }}
+                        disabled={saving}
+                        className="btn btn-g"
+                    >
+                        Send Test Email
                     </button>
                     {message && (
                         <span style={{ fontSize: '13px', color: message.includes('Error') ? 'var(--danger)' : '#00CF84', fontWeight: 600 }}>

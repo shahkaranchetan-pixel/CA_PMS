@@ -159,7 +159,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ m
                         <div style={{ fontSize: '24px' }}>✨</div>
                         <div>
                             <div style={{ fontWeight: 600, color: 'var(--text)' }}>Monthly Statutory Tasks</div>
-                            <div style={{ fontSize: '13px', color: 'var(--muted)' }}>It looks like you haven't populated statutory tasks for {currentPeriod} yet.</div>
+                            <div style={{ fontSize: '13px', color: 'var(--muted)' }}>It looks like you haven&apos;t populated statutory tasks for {currentPeriod} yet.</div>
                         </div>
                     </div>
                     <Link href="/tasks" className="btn btn-p" style={{ background: '#4FACFE', color: 'var(--text)' }}>Populate Now</Link>

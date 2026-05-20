@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { sendEmail } from "@/lib/mailer";
+import { sendTrackedEmail } from "@/lib/mailer";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
 
@@ -12,6 +12,7 @@ export async function POST(request: Request) {
         if (!session) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
+        const senderId = (session.user as any)?.id;
 
         const body = await request.json();
         const { title, description, dueDate, period, clientId, taskType, frequency, assigneeIds, templateId, priority, estimatedMinutes, blockedById, notifyClient } = body;
@@ -61,24 +62,22 @@ export async function POST(request: Request) {
                         });
 
                         if (ta.user?.email) {
-                            await sendEmail({
-                                to: ta.user.email,
+                            await sendTrackedEmail({
+                                senderId,
+                                to: [{ email: ta.user.email, name: ta.user.name }],
+                                category: "ASSIGNMENT",
                                 subject: `New Task: ${task.title}`,
-                                html: `
-                                    <div style="font-family: sans-serif; padding: 20px; color: #333;">
-                                        <h2 style="color: #4FACFE;">New Task Assigned</h2>
-                                        <p>Hi ${ta.user.name},</p>
-                                        <p>You have been assigned a new task in KCS TaskPro:</p>
-                                        <div style="background: #f4f4f4; padding: 15px; border-radius: 8px; border-left: 4px solid #4FACFE;">
-                                            <strong>Task:</strong> ${task.title}<br/>
-                                            <strong>Client:</strong> ${task.client.name}<br/>
-                                            <strong>Due Date:</strong> ${task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'}
-                                        </div>
-                                        <p style="margin-top: 20px;">
-                                            <a href="${process.env.NEXTAUTH_URL}/tasks/${task.id}" style="background: #4FACFE; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Task</a>
-                                        </p>
-                                    </div>
-                                `
+                                body: `Hi ${ta.user.name || "there"},
+
+You have been assigned a new task in KCS TaskPro.
+
+Task: ${task.title}
+Client: ${task.client.name}
+Due Date: ${task.dueDate ? new Date(task.dueDate).toLocaleDateString("en-IN") : "No due date"}
+
+View Task: ${process.env.NEXTAUTH_URL || ""}/tasks/${task.id}`,
+                                taskId: task.id,
+                                clientId: task.clientId,
                             });
                         }
                     }));
@@ -86,24 +85,26 @@ export async function POST(request: Request) {
 
                 // Trigger Client Notification if requested
                 if (notifyClient && task.client && task.client.contactEmail) {
-                    await sendEmail({
-                        to: task.client.contactEmail,
+                    await sendTrackedEmail({
+                        senderId,
+                        to: [{ email: task.client.contactEmail, name: task.client.contactPerson || task.client.name, clientId: task.clientId }],
+                        category: "CLIENT_UPDATE",
                         subject: `KCS Team: Started work on your ${task.taskType?.replace(/_/g, ' ') || 'Task'}: ${task.title}`,
-                        html: `
-                            <div style="font-family: sans-serif; padding: 20px; color: #333;">
-                                <h2 style="color: #E8A020;">Task Initiated</h2>
-                                <p>Dear ${task.client.name},</p>
-                                <p>We've started work on your compliance task at KCS Practice Management Software:</p>
-                                <div style="background: #f4f4f5; padding: 16px; border-left: 4px solid #E8A020; margin: 16px 0;">
-                                    <strong>Task:</strong> ${task.title}<br/>
-                                    <strong>Type:</strong> ${task.taskType?.replace(/_/g, ' ')}<br/>
-                                    <strong>Period:</strong> ${task.period || 'N/A'}<br/>
-                                    <strong>Est. Completion:</strong> ${task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'TBD'}
-                                </div>
-                                <p>We will keep you updated as we progress. Feel free to reach out if you have any questions.</p>
-                                <p>Warm Regards,<br/><strong>KCS Practice Team</strong></p>
-                            </div>
-                        `
+                        body: `Dear ${task.client.name},
+
+We have started work on your compliance task.
+
+Task: ${task.title}
+Type: ${task.taskType?.replace(/_/g, " ")}
+Period: ${task.period || "N/A"}
+Estimated Completion: ${task.dueDate ? new Date(task.dueDate).toLocaleDateString("en-IN") : "TBD"}
+
+We will keep you updated as we progress.
+
+Regards,
+KCS Practice Team`,
+                        taskId: task.id,
+                        clientId: task.clientId,
                     });
                 }
 

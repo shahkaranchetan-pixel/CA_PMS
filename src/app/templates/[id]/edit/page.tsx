@@ -210,7 +210,7 @@ export default function EditTemplatePage() {
                 <div className="card" style={{ height: 'fit-content' }}>
                     <div className="ctitle">💡 Usage Tip</div>
                     <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.6 }}>
-                        When you apply this template to a client, the "Due Day Offset" will be used to automatically set the deadline for that specific month.
+                        When you apply this template to a client, the &quot;Due Day Offset&quot; will be used to automatically set the deadline for that specific month.
                         <br/><br/>
                         For example, if you set it to <b>10</b> and create the task for <b>April 2026</b>, the subtask will be due on <b>10th April 2026</b>.
                     </div>

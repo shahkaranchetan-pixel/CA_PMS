@@ -37,6 +37,11 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
             },
             documents: {
                 orderBy: { uploadedAt: 'desc' }
+            },
+            emailMessages: {
+                include: { recipients: true, sender: { select: { name: true, email: true } }, task: { select: { id: true, title: true } } },
+                orderBy: { createdAt: 'desc' },
+                take: 5
             }
         }
     })
@@ -209,6 +214,36 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                         </div>
                     )}
                 </div>
+            </div>
+
+            <div className="card" style={{ marginTop: '16px' }}>
+                <div className="ctitle">
+                    <span>Recent Client Mail</span>
+                    <Link href="/mail/compose" className="btn btn-g btn-sm">Compose</Link>
+                </div>
+                {client.emailMessages.length === 0 ? (
+                    <div className="empty" style={{ padding: '20px 0' }}>No tracked emails for this client yet.</div>
+                ) : (
+                    <div className="table-wrapper" style={{ maxHeight: '320px' }}>
+                        <table className="tbl">
+                            <tbody>
+                                {client.emailMessages.map((mail: any) => (
+                                    <tr key={mail.id}>
+                                        <td>
+                                            <div style={{ fontWeight: 700 }}>{mail.subject}</div>
+                                            <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: 3 }}>
+                                                {mail.task ? `Task: ${mail.task.title}` : mail.category}
+                                            </div>
+                                        </td>
+                                        <td>{mail.recipients?.map((r: any) => r.email).join(', ')}</td>
+                                        <td><span className={`badge b-${mail.status === 'SENT' ? 'completed' : mail.status === 'FAILED' ? 'blocked' : 'pending'}`}>{mail.status}</span></td>
+                                        <td style={{ textAlign: 'right' }}>{new Date(mail.createdAt).toLocaleString('en-IN')}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
         </div>
     )

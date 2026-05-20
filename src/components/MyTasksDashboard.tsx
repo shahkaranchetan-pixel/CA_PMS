@@ -13,7 +13,7 @@ export default function MyTasksDashboard({ tasks }: MyTasksDashboardProps) {
     const now = new Date()
 
     const tabs = [
-        "Processing", "Open", "Finalized for Submission", "Overdue", "Stuck", "Completed", "Under Consultation"
+        "Processing", "Open", "Under Review", "Overdue", "Blocked", "Completed"
     ]
 
     const filterTasks = () => {
@@ -34,16 +34,14 @@ export default function MyTasksDashboard({ tasks }: MyTasksDashboardProps) {
                 return filtered.filter(t => t.status === "IN_PROGRESS");
             case "Open":
                 return filtered.filter(t => t.status === "PENDING" && (!t.dueDate || new Date(t.dueDate) >= now));
-            case "Finalized for Submission":
-                return filtered.filter(t => t.status === "FINALIZED" || t.status === "UNDER_REVIEW");
+            case "Under Review":
+                return filtered.filter(t => t.status === "UNDER_REVIEW");
             case "Overdue":
                 return filtered.filter(t => t.status !== "COMPLETED" && t.dueDate && new Date(t.dueDate) < now);
-            case "Stuck":
+            case "Blocked":
                 return filtered.filter(t => t.status === "BLOCKED");
             case "Completed":
                 return filtered.filter(t => t.status === "COMPLETED");
-            case "Under Consultation":
-                return filtered.filter(t => t.status === "CONSULTATION");
             default:
                 return filtered;
         }

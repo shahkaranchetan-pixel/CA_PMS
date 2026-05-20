@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback, useTransition } from "react"
 import Link from "next/link"
 
 interface Notification {
@@ -32,8 +32,11 @@ export default function NotificationBell() {
         }
     }, [])
 
+    const [, startTransition] = useTransition()
+
     useEffect(() => {
-        fetchNotifications()
+        // Wrap initial fetch in startTransition to avoid synchronous setState-in-effect
+        startTransition(() => { fetchNotifications() })
         
         // Poll every 60s instead of 15s to reduce API load
         const startPolling = () => {

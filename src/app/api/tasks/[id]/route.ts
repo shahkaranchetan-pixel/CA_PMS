@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { sendEmail } from "@/lib/mailer";
+import { mergeTemplate, sendTrackedEmail } from "@/lib/mailer";
 import { requireAuth } from "@/lib/auth-helpers";
 import { MONTHS, MONTH_NAMES } from "@/lib/constants";
 
@@ -141,24 +141,45 @@ export async function PATCH(
                 }
 
                 // Notify client on completion
-                if (notifyClient && status === "COMPLETED" && task.client) {
-                    await sendEmail({
-                        to: task.client.contactEmail || "client@example.com",
-                        subject: `Task Completed: ${task.title}`,
-                        html: `
-                            <div style="font-family: sans-serif; padding: 20px; color: #333;">
-                                <h2 style="color: #E8A020;">Update on your compliance task</h2>
-                                <p>Dear ${task.client.name},</p>
-                                <p>We are pleased to inform you that the following task has been successfully completed by our team:</p>
-                                <div style="background: #f4f4f5; padding: 16px; border-left: 4px solid #E8A020; margin: 16px 0;">
-                                    <strong>Task:</strong> ${task.title}<br/>
-                                    <strong>Period:</strong> ${task.period || 'N/A'}<br/>
-                                    <strong>Completed By:</strong> ${task.taskAssignees.map(ta => ta.user?.name).filter(Boolean).join(', ') || 'CA Practice Team'}
-                                </div>
-                                <p>If you have any questions, please feel free to reach out to us.</p>
-                                <p>Best Regards,<br/><strong>Your CA Practice Team</strong></p>
-                            </div>
-                        `
+                if (notifyClient && status === "COMPLETED" && task.client?.contactEmail) {
+                    const settings = await prisma.systemSetting.findMany({
+                        where: { key: { in: ["FIRM_NAME"] } }
+                    });
+                    const firmName = settings.find(s => s.key === "FIRM_NAME")?.value || "KCS Practice Team";
+                    const completedBy = task.taskAssignees.map(ta => ta.user?.name).filter(Boolean).join(", ") || firmName;
+                    const template = await prisma.emailTemplate.findFirst({
+                        where: { category: "TASK_COMPLETION", isActive: true },
+                        orderBy: { createdAt: "desc" }
+                    });
+                    const values = {
+                        clientName: task.client.name,
+                        taskTitle: task.title,
+                        period: task.period || "N/A",
+                        completedBy,
+                        firmName
+                    };
+                    const subject = mergeTemplate(template?.subject || "Task Completed: {{taskTitle}}", values);
+                    const body = mergeTemplate(template?.body || `Dear {{clientName}},
+
+We are pleased to inform you that the following task has been completed by our team.
+
+Task: {{taskTitle}}
+Period: {{period}}
+Completed By: {{completedBy}}
+
+If you have any questions, please feel free to reach out to us.
+
+Regards,
+{{firmName}}`, values);
+
+                    await sendTrackedEmail({
+                        senderId: userId,
+                        to: [{ email: task.client.contactEmail, name: task.client.contactPerson || task.client.name, clientId: task.clientId }],
+                        subject,
+                        body,
+                        category: "TASK_COMPLETION",
+                        clientId: task.clientId,
+                        taskId: task.id,
                     });
                 }
             } catch (e) {
@@ -201,24 +222,22 @@ export async function PATCH(
 
                             const assigneeUser = await prisma.user.findUnique({ where: { id: newUserId } });
                             if (assigneeUser?.email) {
-                                await sendEmail({
-                                    to: assigneeUser.email,
+                                await sendTrackedEmail({
+                                    senderId: userId,
+                                    to: [{ email: assigneeUser.email, name: assigneeUser.name }],
+                                    category: "ASSIGNMENT",
                                     subject: `Reassigned Task: ${task.title}`,
-                                    html: `
-                                        <div style="font-family: sans-serif; padding: 20px; color: #333;">
-                                            <h2 style="color: #4FACFE;">Task Assigned</h2>
-                                            <p>Hi ${assigneeUser.name},</p>
-                                            <p>A task has been assigned to you in KCS TaskPro:</p>
-                                            <div style="background: #f4f4f4; padding: 15px; border-radius: 8px; border-left: 4px solid #4FACFE;">
-                                                <strong>Task:</strong> ${task.title}<br/>
-                                                <strong>Client:</strong> ${task.client.name}<br/>
-                                                <strong>Due Date:</strong> ${task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'}
-                                            </div>
-                                            <p style="margin-top: 20px;">
-                                                <a href="${process.env.NEXTAUTH_URL}/tasks/${task.id}" style="background: #4FACFE; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Task</a>
-                                            </p>
-                                        </div>
-                                    `
+                                    body: `Hi ${assigneeUser.name || "there"},
+
+A task has been assigned to you in KCS TaskPro.
+
+Task: ${task.title}
+Client: ${task.client.name}
+Due Date: ${task.dueDate ? new Date(task.dueDate).toLocaleDateString("en-IN") : "No due date"}
+
+View Task: ${process.env.NEXTAUTH_URL || ""}/tasks/${task.id}`,
+                                    taskId: task.id,
+                                    clientId: task.clientId,
                                 });
                             }
                         }));

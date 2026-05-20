@@ -25,7 +25,12 @@ export default async function TaskDetailPage(props: { params: Promise<{ id: stri
                 include: { user: { select: { name: true, image: true, email: true } } },
                 orderBy: { createdAt: "desc" },
                 take: 50
-            }
+            },
+            emailMessages: {
+                include: { recipients: true, sender: { select: { name: true, email: true } } },
+                orderBy: { createdAt: "desc" },
+                take: 5
+            },
         }
     })
 
