@@ -4,7 +4,7 @@ import { resendTrackedEmail } from "@/lib/mailer"
 
 export const dynamic = "force-dynamic"
 
-export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(_request: Request, { params }: any) {
     try {
         const { user, error } = await requireAuth()
         if (error) return error

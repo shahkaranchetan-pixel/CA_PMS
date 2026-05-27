@@ -4,7 +4,7 @@ import { requireAuth } from "@/lib/auth-helpers"
 
 export const dynamic = "force-dynamic"
 
-export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(request: Request, { params }: any) {
     try {
         const { error } = await requireAuth("ADMIN")
         if (error) return error
@@ -31,7 +31,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     }
 }
 
-export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(_request: Request, { params }: any) {
     try {
         const { error } = await requireAuth("ADMIN")
         if (error) return error

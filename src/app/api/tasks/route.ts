@@ -1,27 +1,33 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendTrackedEmail } from "@/lib/mailer";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth-options";
+import { requireAuth } from "@/lib/auth-helpers";
+import { taskSchema } from "@/lib/validations";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-        const senderId = (session.user as any)?.id;
+        // Point 6: standardised auth helper instead of raw getServerSession
+        const { user, error } = await requireAuth();
+        if (error) return error;
+        const senderId = user.id;
 
         const body = await request.json();
-        const { title, description, dueDate, period, clientId, taskType, frequency, assigneeIds, templateId, priority, estimatedMinutes, blockedById, notifyClient } = body;
 
-        if (!title || !clientId || !taskType || !dueDate) {
+        // Point 7: Zod validation for core task fields
+        const validation = taskSchema.safeParse(body);
+        if (!validation.success) {
             return NextResponse.json(
-                { error: "Title, Client ID, Task Type, and Due Date are required" },
+                { error: "Validation failed", details: validation.error.format() },
                 { status: 400 }
             );
+        }
+
+        const { title, description, dueDate, period, clientId, taskType, frequency, assigneeIds, templateId, priority, estimatedMinutes, blockedById, notifyClient } = body;
+
+        if (!clientId) {
+            return NextResponse.json({ error: "Client ID is required" }, { status: 400 });
         }
 
         const task = await prisma.task.create({
@@ -167,6 +173,10 @@ KCS Practice Team`,
 
 export async function GET(request: Request) {
     try {
+        // Point 6: GET was completely unauthenticated — fixed
+        const { user, error } = await requireAuth();
+        if (error) return error;
+
         const { searchParams } = new URL(request.url);
         const clientId = searchParams.get("clientId");
         const taskType = searchParams.get("taskType");

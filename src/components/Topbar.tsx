@@ -10,20 +10,14 @@ export default function Topbar({
     onToggleSidebar?: () => void,
     onQuickTask?: () => void
 }) {
-    const [theme, setTheme] = useState(() => {
-        // Lazy initializer — reads localStorage once on mount, no effect needed
+    const [theme, setTheme] = useState("dark")
+
+    useEffect(() => {
         if (typeof window !== 'undefined') {
             const saved = localStorage.getItem("theme") || "dark"
-            document.documentElement.setAttribute("data-theme", saved)
-            return saved
+            setTheme(saved)
         }
-        return "dark"
-    })
-
-    // Keep DOM in sync whenever theme changes after first render
-    useEffect(() => {
-        document.documentElement.setAttribute("data-theme", theme)
-    }, [theme])
+    }, [])
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {

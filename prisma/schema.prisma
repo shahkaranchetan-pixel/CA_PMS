@@ -62,7 +62,18 @@ model User {
   updatedAt     DateTime  @updatedAt
 }
 
-// ... (existing code)
+// Point 4: Password reset token for forgot-password flow
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  email     String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([token])
+}
 
 model TrainingModule {
   id          String             @id @default(cuid())

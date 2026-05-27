@@ -3,10 +3,35 @@ import { prisma } from "@/lib/prisma";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
+/**
+ * FILE STORAGE — LOCAL (current)
+ * Files are written to public/uploads/ on the server filesystem.
+ *
+ * ⚠️  VERCEL / SERVERLESS WARNING:
+ *   The Vercel filesystem is ephemeral — files written here will be LOST
+ *   on the next deployment or cold-start. This is fine for local dev.
+ *
+ * TODO — UPGRADE PATH (when you have credentials):
+ *   1. npm install @aws-sdk/client-s3   (for AWS S3)
+ *      — OR —
+ *      npm install @aws-sdk/client-s3 @aws-sdk/s3-request-presigner  (for Cloudflare R2)
+ *   2. Add to .env:
+ *        STORAGE_PROVIDER=s3          # or r2
+ *        S3_BUCKET=your-bucket-name
+ *        S3_REGION=ap-south-1
+ *        S3_ACCESS_KEY_ID=...
+ *        S3_SECRET_ACCESS_KEY=...
+ *        S3_ENDPOINT=https://...      # R2 only
+ *   3. Replace the writeFile block below with an S3 PutObjectCommand.
+ *   4. Replace filePath in the DB with the S3/R2 public URL.
+ */
+
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+
 export const dynamic = "force-dynamic";
 
 // GET documents for a client
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, { params }: any) {
     try {
         const { id } = await params;
         const docs = await prisma.clientDocument.findMany({
@@ -20,7 +45,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 }
 
 // POST upload a document
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(request: Request, { params }: any) {
     try {
         const { id } = await params;
         const formData = await request.formData();
@@ -30,6 +55,21 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
         if (!file) {
             return NextResponse.json({ error: "No file provided" }, { status: 400 });
+        }
+
+        if (file.size > MAX_FILE_SIZE_BYTES) {
+            return NextResponse.json(
+                { error: `File too large. Maximum allowed size is 10 MB (received ${(file.size / 1048576).toFixed(1)} MB).` },
+                { status: 413 }
+            );
+        }
+
+        // Warn in production if using ephemeral local storage on Vercel
+        if (process.env.VERCEL && !process.env.STORAGE_PROVIDER) {
+            console.warn(
+                "[documents] ⚠️  Writing to local filesystem on Vercel — files will be lost on next deployment. "
+                + "Configure STORAGE_PROVIDER=s3 (or r2) to use persistent cloud storage."
+            );
         }
 
         // Create uploads directory

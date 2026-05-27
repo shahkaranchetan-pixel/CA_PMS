@@ -6,7 +6,7 @@ import { requireAuth } from "@/lib/auth-helpers";
 export const dynamic = "force-dynamic";
 
 // GET all vault entries for a client
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, { params }: any) {
     try {
         const { user, error } = await requireAuth("ADMIN");
         if (error) return error;
@@ -29,7 +29,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 }
 
 // POST a new custom vault entry
-export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(request: Request, { params }: any) {
     try {
         const { user, error } = await requireAuth("ADMIN");
         if (error) return error;

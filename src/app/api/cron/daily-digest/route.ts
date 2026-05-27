@@ -6,10 +6,11 @@ export const dynamic = "force-dynamic"
 
 /**
  * Daily Digest Cron — fires every day at 3:30 AM UTC (9:00 AM IST)
- * 
- * - Each employee receives a personalized email listing their pending tasks
- * - Admin receives a consolidated summary of all staff pending work
- * 
+ *
+ * - Each employee receives a personalized email listing their overdue tasks
+ *   and tasks due today (tasks with no due date or future due dates are excluded)
+ * - Admin receives a consolidated summary of all staff overdue / due-today work
+ *
  * Protected by CRON_SECRET env variable.
  * Call: GET /api/cron/daily-digest?secret=<CRON_SECRET>
  *       or with header: Authorization: Bearer <CRON_SECRET>
@@ -30,11 +31,24 @@ export async function GET(req: Request) {
             }
         }
 
-        // ── Fetch all pending/in-progress tasks with assignees + client ──
+        // ── Compute start and end of today in IST ───────────────────────
+        const nowUtc = new Date()
+        const istDateStr = nowUtc.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }) // "YYYY-MM-DD"
+        const startOfTodayIST = new Date(`${istDateStr}T00:00:00+05:30`)
+        const endOfTodayIST   = new Date(`${istDateStr}T23:59:59+05:30`)
+
+        // ── Fetch overdue + due-today tasks with assignees + client ──────
+        // Overdue:   dueDate < start of today IST
+        // Due today: dueDate >= start of today IST AND dueDate <= end of today IST
+        // Combined:  dueDate is NOT NULL AND dueDate <= end of today IST
         const pendingTasks = await prisma.task.findMany({
             where: {
                 deletedAt: null,
                 status: { in: ["PENDING", "IN_PROGRESS"] },
+                dueDate: {
+                    not: null,
+                    lte: endOfTodayIST,
+                },
             },
             include: {
                 client: { select: { name: true } },
@@ -110,36 +124,40 @@ export async function GET(req: Request) {
                     return
                 }
 
+                const overdueCount  = tasks.filter((t) => t.dueDate! < startOfTodayIST).length
+                const dueTodayCount = tasks.filter((t) => t.dueDate! >= startOfTodayIST).length
+
                 const taskRows = tasks
                     .map((t) => {
-                        const due = t.dueDate
-                            ? t.dueDate.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" })
-                            : "No due date"
-                        const statusBadge =
-                            t.status === "IN_PROGRESS"
-                                ? `<span style="color:#E8A020;font-weight:600;">In Progress</span>`
-                                : `<span style="color:#e53e3e;font-weight:600;">Pending</span>`
+                        const due = t.dueDate!.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" })
+                        const isOverdue = t.dueDate! < startOfTodayIST
+                        const urgencyBadge = isOverdue
+                            ? `<span style="color:#e53e3e;font-weight:600;">⚠ Overdue</span>`
+                            : `<span style="color:#E8A020;font-weight:600;">📅 Due Today</span>`
                         return `
                         <tr>
                             <td style="padding:8px 12px;border-bottom:1px solid #EAECF0;">${t.title}</td>
                             <td style="padding:8px 12px;border-bottom:1px solid #EAECF0;">${t.client?.name || "—"}</td>
                             <td style="padding:8px 12px;border-bottom:1px solid #EAECF0;">${due}</td>
-                            <td style="padding:8px 12px;border-bottom:1px solid #EAECF0;">${statusBadge}</td>
+                            <td style="padding:8px 12px;border-bottom:1px solid #EAECF0;">${urgencyBadge}</td>
                         </tr>`
                     })
                     .join("")
 
                 const html = wrapEmailHtml(`
                     <p>Hi <strong>${user.name || "there"}</strong>,</p>
-                    <p>Here is your daily pending task update for <strong>${today}</strong>.</p>
-                    <p>You have <strong>${tasks.length}</strong> pending task(s) assigned to you:</p>
+                    <p>Here is your task reminder for <strong>${today}</strong>.</p>
+                    <p>You have <strong>${tasks.length}</strong> task(s) requiring attention
+                        ${overdueCount > 0 ? `— <span style="color:#e53e3e;font-weight:600;">${overdueCount} overdue</span>` : ""}
+                        ${dueTodayCount > 0 ? `${overdueCount > 0 ? " and " : "— "}<span style="color:#E8A020;font-weight:600;">${dueTodayCount} due today</span>` : ""}.
+                    </p>
                     <table style="width:100%;border-collapse:collapse;margin-top:16px;font-size:14px;">
                         <thead>
                             <tr style="background:#F5F7FA;">
                                 <th style="padding:10px 12px;text-align:left;border-bottom:2px solid #E8A020;color:#172033;">Task</th>
                                 <th style="padding:10px 12px;text-align:left;border-bottom:2px solid #E8A020;color:#172033;">Client</th>
                                 <th style="padding:10px 12px;text-align:left;border-bottom:2px solid #E8A020;color:#172033;">Due Date</th>
-                                <th style="padding:10px 12px;text-align:left;border-bottom:2px solid #E8A020;color:#172033;">Status</th>
+                                <th style="padding:10px 12px;text-align:left;border-bottom:2px solid #E8A020;color:#172033;">Urgency</th>
                             </tr>
                         </thead>
                         <tbody>${taskRows}</tbody>
@@ -150,7 +168,7 @@ export async function GET(req: Request) {
 
                 const sent = await sendEmail({
                     to: user.email,
-                    subject: `📋 Your Daily Task Update — ${today} (${tasks.length} pending)`,
+                    subject: `📋 Task Reminder — ${today} (${overdueCount} overdue, ${dueTodayCount} due today)`,
                     html,
                 })
 
@@ -174,29 +192,34 @@ export async function GET(req: Request) {
                 (t) => t.taskAssignees.length === 0
             )
 
+            const totalOverdue  = pendingTasks.filter((t) => t.dueDate! < startOfTodayIST).length
+            const totalDueToday = pendingTasks.filter((t) => t.dueDate! >= startOfTodayIST).length
+
             let adminBody = `
                 <p>Hi <strong>${adminUser.name || "Admin"}</strong>,</p>
-                <p>Here is the consolidated staff pending work summary for <strong>${today}</strong>.</p>
-                <p>Total pending tasks: <strong>${pendingTasks.length}</strong> across <strong>${employeeGroups.length}</strong> staff member(s).</p>
+                <p>Here is the consolidated staff task summary for <strong>${today}</strong>.</p>
+                <p>
+                    Tasks requiring attention: <strong>${pendingTasks.length}</strong> across <strong>${employeeGroups.length}</strong> staff member(s)
+                    — <span style="color:#e53e3e;font-weight:600;">${totalOverdue} overdue</span>,
+                    <span style="color:#E8A020;font-weight:600;">${totalDueToday} due today</span>.
+                </p>
             `
 
             // Section per employee
             for (const { user, tasks } of employeeGroups) {
                 const taskRows = tasks
                     .map((t) => {
-                        const due = t.dueDate
-                            ? t.dueDate.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" })
-                            : "—"
-                        const overdue =
-                            t.dueDate && t.dueDate < new Date()
-                                ? `<span style="color:#e53e3e;font-weight:600;">⚠ Overdue</span>`
-                                : ""
+                        const due = t.dueDate!.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata" })
+                        const isOverdue = t.dueDate! < startOfTodayIST
+                        const urgencyBadge = isOverdue
+                            ? `<span style="color:#e53e3e;font-weight:600;">⚠ Overdue</span>`
+                            : `<span style="color:#E8A020;font-weight:600;">📅 Due Today</span>`
                         return `
                             <tr>
                                 <td style="padding:7px 10px;border-bottom:1px solid #EAECF0;">${t.title}</td>
                                 <td style="padding:7px 10px;border-bottom:1px solid #EAECF0;">${t.client?.name || "—"}</td>
-                                <td style="padding:7px 10px;border-bottom:1px solid #EAECF0;">${due} ${overdue}</td>
-                                <td style="padding:7px 10px;border-bottom:1px solid #EAECF0;">${t.status}</td>
+                                <td style="padding:7px 10px;border-bottom:1px solid #EAECF0;">${due}</td>
+                                <td style="padding:7px 10px;border-bottom:1px solid #EAECF0;">${urgencyBadge}</td>
                             </tr>`
                     })
                     .join("")
@@ -212,7 +235,7 @@ export async function GET(req: Request) {
                                     <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #EAECF0;">Task</th>
                                     <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #EAECF0;">Client</th>
                                     <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #EAECF0;">Due Date</th>
-                                    <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #EAECF0;">Status</th>
+                                    <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #EAECF0;">Urgency</th>
                                 </tr>
                             </thead>
                             <tbody>${taskRows}</tbody>
@@ -248,7 +271,7 @@ export async function GET(req: Request) {
                                     <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #EAECF0;">Task</th>
                                     <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #EAECF0;">Client</th>
                                     <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #EAECF0;">Due Date</th>
-                                    <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #EAECF0;">Status</th>
+                                    <th style="padding:8px 10px;text-align:left;border-bottom:2px solid #EAECF0;">Urgency</th>
                                 </tr>
                             </thead>
                             <tbody>${unassignedRows}</tbody>
@@ -260,7 +283,7 @@ export async function GET(req: Request) {
 
             const sent = await sendEmail({
                 to: adminUser.email,
-                subject: `📊 Admin Daily Summary — ${today} (${pendingTasks.length} pending tasks)`,
+                subject: `📊 Admin Daily Summary — ${today} (${totalOverdue} overdue, ${totalDueToday} due today)`,
                 html: wrapEmailHtml(adminBody),
             })
 
@@ -284,7 +307,9 @@ export async function GET(req: Request) {
         return NextResponse.json({
             success: true,
             date: today,
-            totalPendingTasks: pendingTasks.length,
+            totalTasksInDigest: pendingTasks.length,
+            overdueCount: pendingTasks.filter((t) => t.dueDate! < startOfTodayIST).length,
+            dueTodayCount: pendingTasks.filter((t) => t.dueDate! >= startOfTodayIST).length,
             emailsSent: sentCount,
             emailsSkipped: skippedCount,
             emailsFailed: failedCount,

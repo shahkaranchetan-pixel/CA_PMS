@@ -7,14 +7,20 @@
 }
 
 :root {
-  --bg: #07101f;
+  --navy: #0b1d3a;
+  --gold: #c9a84c;
+  --gold-light: #ebd99e;
+  --off-white: #f8f9fa;
+  --text-grey: #444444;
+  --light-grey: #e9ecef;
+
+  --bg: #071326; /* Dark Navy base background */
   --surface: rgba(255, 255, 255, 0.04);
   --surface2: rgba(255, 255, 255, 0.07);
   --border: rgba(255, 255, 255, 0.08);
   --border2: rgba(255, 255, 255, 0.14);
-  --gold: #E8A020;
-  --gold2: #F5C842;
-  --gold-bg: rgba(232, 160, 32, 0.1);
+  --gold2: #ebd99e;
+  --gold-bg: rgba(201, 168, 76, 0.1);
   --text: #DDE4F0;
   --muted: rgba(221, 228, 240, 0.45);
   --muted2: rgba(221, 228, 240, 0.2);
@@ -26,17 +32,17 @@
 }
 
 [data-theme="light"] {
-  --bg: #F4F6FA;
-  --surface: rgba(255, 255, 255, 0.85);
-  --surface2: rgba(255, 255, 255, 0.95);
-  --border: rgba(0, 20, 60, 0.10);
-  --border2: rgba(0, 20, 60, 0.18);
-  --gold: #B07A10;
-  --gold2: #8F6200;
-  --gold-bg: rgba(176, 122, 16, 0.08);
-  --text: #0A0F1E;
-  --muted: #3A4460;
-  --muted2: rgba(10, 15, 30, 0.25);
+  --bg: #f8f9fa; /* Off-white standard background */
+  --surface: rgba(255, 255, 255, 0.95);
+  --surface2: #ffffff;
+  --border: rgba(11, 29, 58, 0.12); /* Navy-tinted border */
+  --border2: rgba(11, 29, 58, 0.22);
+  --gold: #c9a84c;
+  --gold2: #ebd99e;
+  --gold-bg: rgba(201, 168, 76, 0.08);
+  --text: #444444; /* Text Grey */
+  --muted: #5e6b82;
+  --muted2: rgba(11, 29, 58, 0.25);
   --danger: #CC2020;
   --success: #088A58;
 }
@@ -52,8 +58,11 @@
   box-shadow: 2px 0 12px rgba(0, 20, 60, .04) !important;
 }
 
-[data-theme="light"] .sb-brand {
-  color: #C48A18 !important;
+[data-theme="light"] .sb-brand span:first-child {
+  color: var(--navy) !important;
+}
+[data-theme="light"] .sb-brand span:nth-child(2) {
+  color: var(--gold) !important;
 }
 
 [data-theme="light"] .topbar-main {
@@ -705,14 +714,29 @@ body {
 }
 
 .btn-p {
-  background: var(--gold);
-  color: #07101f
+  background: var(--navy);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .btn-p:hover {
-  background: var(--gold2);
+  background: var(--gold);
+  color: #0b1d3a;
   transform: translateY(-1px);
-  box-shadow: 0 5px 18px rgba(232, 160, 32, .3)
+  box-shadow: 0 5px 18px rgba(201, 168, 76, .3);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+}
+
+.btn-outline:hover {
+  background: var(--gold);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 18px rgba(201, 168, 76, .2);
 }
 
 .btn-g {

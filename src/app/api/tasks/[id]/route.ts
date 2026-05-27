@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(
     request: Request,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: any
 ) {
     try {
         const { user, error } = await requireAuth();
@@ -46,7 +46,7 @@ export async function GET(
 // PATCH to update task
 export async function PATCH(
     request: Request,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: any
 ) {
     try {
         const { user, error } = await requireAuth();
@@ -279,7 +279,7 @@ View Task: ${process.env.NEXTAUTH_URL || ""}/tasks/${task.id}`,
 // DELETE to soft-delete task
 export async function DELETE(
     request: Request,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: any
 ) {
     try {
         const { user, error } = await requireAuth("ADMIN");

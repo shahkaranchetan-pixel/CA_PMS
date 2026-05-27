@@ -4,7 +4,7 @@ import { requireAuth } from "@/lib/auth-helpers"
 
 export const dynamic = "force-dynamic"
 
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(_request: Request, { params }: any) {
     try {
         const { user, error } = await requireAuth()
         if (error) return error

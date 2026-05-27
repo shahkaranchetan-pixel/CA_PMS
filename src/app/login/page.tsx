@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 
 export default function LoginPage() {
     const router = useRouter()
@@ -170,17 +171,20 @@ export default function LoginPage() {
                     </div>
 
                     <div style={{ marginBottom: '26px' }}>
-                        <label style={{
-                            display: 'block',
-                            fontSize: '10px',
-                            fontWeight: 700,
-                            color: 'var(--muted)',
-                            letterSpacing: '1px',
-                            textTransform: 'uppercase',
-                            marginBottom: '7px'
-                        }}>
-                            PASSWORD
-                        </label>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '7px' }}>
+                            <label style={{
+                                fontSize: '10px',
+                                fontWeight: 700,
+                                color: 'var(--muted)',
+                                letterSpacing: '1px',
+                                textTransform: 'uppercase',
+                            }}>
+                                PASSWORD
+                            </label>
+                            <a href="/forgot-password" style={{ fontSize: '11px', color: 'var(--gold)', textDecoration: 'none', fontWeight: 500 }}>
+                                Forgot password?
+                            </a>
+                        </div>
                         <input
                             type="password"
                             placeholder="Enter password"
@@ -257,7 +261,7 @@ export default function LoginPage() {
                     onMouseEnter={e => { (e.target as HTMLElement).style.background = 'var(--surface2)'; (e.target as HTMLElement).style.borderColor = 'var(--gold)' }}
                     onMouseLeave={e => { (e.target as HTMLElement).style.background = 'var(--surface2)'; (e.target as HTMLElement).style.borderColor = 'var(--border)' }}
                 >
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="18" height="18" />
+                    <Image src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width={18} height={18} unoptimized />
                     Sign in with Google
                 </button>
 

@@ -8,10 +8,11 @@ import { redirect } from "next/navigation"
 
 export default async function EmployeesPage() {
     const session = await getServerSession(authOptions)
+    if (!session) redirect("/login")
 
-    // Check if user is admin (Assuming checking name for now if role isn't populated properly in session)
-    // Real implementation should check `session.user.role === 'ADMIN'`
-    // Assuming for demo purposes, the first user or designated user is admin
+    // Point 11: Enforce ADMIN-only access to user management
+    const userRole = (session?.user as any)?.role
+    if (userRole !== "ADMIN") redirect("/")
 
     const employees = await prisma.user.findMany({
         orderBy: {

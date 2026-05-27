@@ -8,7 +8,8 @@ import { redirect } from "next/navigation"
 import ComplianceMatrix from "@/components/ComplianceMatrix"
 import CalendarHeader from "@/components/CalendarHeader"
 
-export const revalidate = 30
+// Point 16: use force-dynamic so the auth check is always fresh
+export const dynamic = "force-dynamic"
 
 export default async function CalendarPage({ searchParams }: { searchParams: Promise<any> }) {
     const sParams = await searchParams;

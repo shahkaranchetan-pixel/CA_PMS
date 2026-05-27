@@ -1,17 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { encrypt, decrypt } from "@/lib/encryption";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth-options";
+import { requireAuth } from "@/lib/auth-helpers";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, { params }: any) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+        // Point 6: standardised to requireAuth
+        const { user, error } = await requireAuth();
+        if (error) return error;
 
         const { id } = await params;
         const client = await prisma.client.findUnique({
@@ -22,7 +20,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
             return NextResponse.json({ error: "Client not found" }, { status: 404 });
         }
 
-        const user = session?.user as any;
         const isAdmin = user?.role === 'ADMIN';
 
         // Decrypt passwords ONLY if user is ADMIN
@@ -49,14 +46,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     }
 }
 
-export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(request: Request, { params }: any) {
     try {
-        const session = await getServerSession(authOptions);
-        const user = session?.user as any;
-
-        if (!session || user?.role !== 'ADMIN') {
-            return NextResponse.json({ error: "Unauthorized. Admin access required." }, { status: 403 });
-        }
+        const { user, error } = await requireAuth("ADMIN");
+        if (error) return error;
 
         const { id } = await params;
         const data = await request.json();
@@ -95,13 +88,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     }
 }
 
-export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: Request, { params }: any) {
     try {
-        const session = await getServerSession(authOptions);
-        const user = session?.user as any;
-        if (!session || user?.role !== 'ADMIN') {
-            return NextResponse.json({ error: "Unauthorized. Admin access required." }, { status: 403 });
-        }
+        const { error } = await requireAuth("ADMIN");
+        if (error) return error;
 
         const { id } = await params;
         const client = await prisma.client.update({

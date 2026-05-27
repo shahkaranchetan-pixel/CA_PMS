@@ -4,6 +4,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 import GoogleProvider from "next-auth/providers/google"
+import { checkRateLimit } from "@/lib/rate-limit"
 
 export const authOptions: NextAuthOptions = {
     adapter: PrismaAdapter(prisma) as any,
@@ -11,7 +12,8 @@ export const authOptions: NextAuthOptions = {
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID || "",
             clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-            allowDangerousEmailAccountLinking: true,
+            // NOTE: allowDangerousEmailAccountLinking removed — it allowed account
+            // takeover if an attacker registered a Google account with an employee's email.
             profile(profile) {
                 return {
                     id: profile.sub,
@@ -32,21 +34,36 @@ export const authOptions: NextAuthOptions = {
                 if (!credentials?.email || !credentials?.password) {
                     throw new Error("Invalid credentials");
                 }
+
+                // ── Point 2: Brute-force protection ─────────────────────
+                // Rate-limit by email: max 5 attempts per 15 minutes
+                const rl = checkRateLimit(`login:${credentials.email}`, 5, 15 * 60 * 1000);
+                if (!rl.allowed) {
+                    const waitMin = Math.ceil(rl.resetIn / 60000);
+                    throw new Error(`Too many login attempts. Try again in ${waitMin} minute(s).`);
+                }
+
                 const user = await prisma.user.findUnique({
                     where: { email: credentials.email }
                 });
                 if (!user || !user.password) {
+                    // ── Point 5: Login audit log ────────────────────────
+                    console.warn(`[AUTH] Failed login — unknown email: ${credentials.email}`);
                     throw new Error("Invalid credentials");
                 }
                 const isValid = await bcrypt.compare(credentials.password, user.password);
                 if (!isValid) {
+                    // ── Point 5: Login audit log ────────────────────────
+                    console.warn(`[AUTH] Failed login — wrong password for: ${credentials.email}`);
                     throw new Error("Invalid credentials");
                 }
+
+                console.info(`[AUTH] Successful login: ${credentials.email} (${user.role})`);
                 return {
                     id: user.id,
                     email: user.email,
                     name: user.name,
-                    role: user.role
+                    role: user.role as "ADMIN" | "EMPLOYEE"
                 };
             }
         })

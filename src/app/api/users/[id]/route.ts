@@ -4,7 +4,7 @@ import { requireAuth } from "@/lib/auth-helpers";
 
 export async function PATCH(
     req: Request,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: any
 ) {
     try {
         const { user, error } = await requireAuth("ADMIN");
@@ -40,7 +40,7 @@ export async function PATCH(
 
 export async function DELETE(
     req: Request,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: any
 ) {
     try {
         const { user, error: authError } = await requireAuth("ADMIN");

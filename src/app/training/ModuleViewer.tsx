@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
@@ -37,6 +38,7 @@ export default function ModuleViewer({ params }: { params: { id: string } }) {
     useEffect(() => {
         fetchModule()
         fetchProgress()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [params.id])
 
     const fetchModule = async () => {
@@ -184,7 +186,7 @@ export default function ModuleViewer({ params }: { params: { id: string } }) {
                     <div style={{ maxWidth: '850px', margin: '0 auto' }}>
                         {heroImage && (
                             <div style={{ marginBottom: '32px', borderRadius: '32px', overflow: 'hidden', height: '240px', position: 'relative', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
-                                <img src={heroImage} alt={module.category} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                <Image src={heroImage} alt={module.category} fill style={{ objectFit: 'cover' }} unoptimized />
                                 <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #0B0D11 0%, transparent 100%)' }} />
                             </div>
                         )}

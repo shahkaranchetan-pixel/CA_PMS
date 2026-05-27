@@ -92,11 +92,35 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
 
 
-            <div className="content-area">
+            <div className="content-area" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
                 <Topbar onToggleSidebar={toggleSidebar} onQuickTask={() => setIsQuickTaskOpen(true)} />
-                <main className="main" style={{ marginTop: '60px' }}>
+                <main className="main" style={{ marginTop: '60px', flex: 1 }}>
                     {children}
                 </main>
+                <footer style={{
+                    background: 'var(--navy, #0b1d3a)',
+                    borderTop: '1px solid var(--border)',
+                    padding: '20px 28px',
+                    color: '#ffffff',
+                    fontSize: '12px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: '12px',
+                    zIndex: 10
+                }}>
+                    <div>
+                        <span style={{ fontWeight: 700 }}>KC Shah</span>
+                        <span style={{ color: 'var(--gold, #c9a84c)', fontWeight: 700 }}> & Associates</span>
+                        <span style={{ color: 'var(--muted)', marginLeft: '8px' }}>© {new Date().getFullYear()} All Rights Reserved.</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '16px' }}>
+                        <a href="https://kcshah.com" target="_blank" rel="noreferrer" style={{ color: 'var(--gold, #c9a84c)', textDecoration: 'none', fontWeight: 600 }}>kcshah.com</a>
+                        <span style={{ color: 'var(--muted2)' }}>|</span>
+                        <span style={{ color: 'var(--muted)' }}>TaskPro PMS v1.0</span>
+                    </div>
+                </footer>
             </div>
         </div>
     )

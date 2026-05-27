@@ -5,7 +5,7 @@ import { authOptions } from "@/lib/auth-options";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, { params }: any) {
     try {
         const session = await getServerSession(authOptions);
         if (!session) {
@@ -33,7 +33,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     }
 }
 
-export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(request: Request, { params }: any) {
     try {
         const session = await getServerSession(authOptions);
         const user = session?.user as any;
@@ -88,7 +88,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     }
 }
 
-export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(request: Request, { params }: any) {
     try {
         const session = await getServerSession(authOptions);
         const user = session?.user as any;
