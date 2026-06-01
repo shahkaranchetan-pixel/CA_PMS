@@ -11,6 +11,7 @@ import TaskStatusSelect from "./TaskStatusSelect";
 import BoardView from "./BoardView";
 import StatutoryTaskButton from "./StatutoryTaskButton";
 import SearchInput from "@/components/SearchInput";
+import TaskTableClient from "./TaskTableClient";
 
 const TASK_MAP: Record<string, { label: string, color: string, icon: string }> = {
     TDS_PAYMENT: { label: 'TDS Payment', color: '#FF6B6B', icon: 'TDS' },
@@ -49,7 +50,13 @@ export default async function TasksPage(props: { searchParams: Promise<{ [key: s
     };
 
     if (userRole === 'ADMIN') {
-        if (assigneeFilter) filterConditions.taskAssignees = { some: { userId: assigneeFilter } };
+        if (assigneeFilter) {
+            if (assigneeFilter === 'unassigned') {
+                filterConditions.taskAssignees = { none: {} };
+            } else {
+                filterConditions.taskAssignees = { some: { userId: assigneeFilter } };
+            }
+        }
     } else {
         // Employees see tasks assigned to them OR tasks in their department
         const deptTaskTypes: Record<string, string[]> = {
@@ -96,6 +103,8 @@ export default async function TasksPage(props: { searchParams: Promise<{ [key: s
         take: 100
     }) as any[]
 
+    const users = await prisma.user.findMany({ select: { id: true, name: true } });
+
     return (
         <div>
             <div className="topbar">
@@ -129,98 +138,12 @@ export default async function TasksPage(props: { searchParams: Promise<{ [key: s
             <TaskFilters currentUserId={currentUserId} />
 
             {view === 'list' ? (
-                <div className="card" style={{ padding: 0, overflow: 'hidden', marginTop: '16px' }}>
-                    <div className="table-wrapper">
-<table className="tbl">
-                        <thead style={{ background: 'rgba(255,255,255,.01)' }}>
-                            <tr>
-                                <th style={{ width: 40, padding: '12px' }}>#</th>
-                                <th>Task Overview</th>
-                                <th>Entity</th>
-                                <th>Priority</th>
-                                <th>Due Date</th>
-                                <th>Assignee</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {tasks.length === 0 ? (
-                                <tr>
-                                    <td colSpan={7}>
-                                        <div className="empty">
-                                            <div className="empty-i">📋</div>
-                                            <div style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text)', marginBottom: '4px' }}>No tasks found</div>
-                                            <div style={{ fontSize: '12.5px' }}>Adjust filters or create a new task.</div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ) : (
-                                tasks.map((task, index) => {
-                                    const tm = TASK_MAP[task.taskType] || { label: task.taskType.replace(/_/g, ' '), color: 'var(--muted)', icon: '📝' };
-                                    const s = task.status.toLowerCase();
-                                    const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && s !== 'completed';
-
-                                    return (
-                                        <tr key={task.id}>
-                                            <td style={{ textAlign: 'center' }}>
-                                                <span style={{ color: 'var(--muted)', fontSize: '11px' }}>{index + 1}</span>
-                                            </td>
-                                            <td>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <div style={{ width: 32, height: 32, borderRadius: 8, background: tm.color + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
-                                                        {tm.icon}
-                                                    </div>
-                                                    <div>
-                                                        <Link href={`/tasks/${task.id}`} style={{ fontWeight: 600, fontSize: '13.5px', color: 'var(--text)' }}>
-                                                            {task.title}
-                                                        </Link>
-                                                        <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px', display: 'flex', gap: '6px', alignItems: 'center' }}>
-                                                            <span>{tm.label}</span>
-                                                            {task.subtasks.length > 0 && <span style={{ background: 'var(--surface2)', padding: '2px 6px', borderRadius: 4, color: 'var(--text)' }}>{task.subtasks.filter((t: any) => t.status === 'COMPLETED').length}/{task.subtasks.length} Subtasks</span>}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td style={{ fontWeight: 500 }}>{task.client.name}</td>
-                                            <td>
-                                                <span className={`badge b-${task.priority.toLowerCase()}`}>
-                                                    {task.priority.toUpperCase()}
-                                                </span>
-                                            </td>
-                                            <td style={{ fontWeight: 500, color: isOverdue ? 'var(--danger)' : 'var(--text)' }}>
-                                                {isOverdue && '⚠️ '}
-                                                {task.dueDate ? new Date(task.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '-'}
-                                            </td>
-                                            <td>
-                                                {task.taskAssignees && task.taskAssignees.length > 0 ? (
-                                                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                        {task.taskAssignees.slice(0, 3).map((ta: any, i: number) => (
-                                                            <div key={ta.id} style={{ width: 24, height: 24, borderRadius: 6, background: ta.user?.color || 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#000', marginLeft: i > 0 ? '-6px' : 0, border: '2px solid var(--surface)', zIndex: 3 - i }} title={ta.user?.name}>
-                                                                {ta.user?.name?.substring(0, 2).toUpperCase() || 'U'}
-                                                            </div>
-                                                        ))}
-                                                        {task.taskAssignees.length > 3 && (
-                                                            <span style={{ marginLeft: '4px', fontSize: '10px', color: 'var(--muted)' }}>+{task.taskAssignees.length - 3}</span>
-                                                        )}
-                                                        {task.taskAssignees.length === 1 && (
-                                                            <span style={{ fontSize: '12px', marginLeft: '6px' }}>{task.taskAssignees[0].user?.name?.split(' ')[0]}</span>
-                                                        )}
-                                                    </div>
-                                                ) : (
-                                                    <span style={{ color: 'var(--muted)', fontSize: '12px', fontStyle: 'italic' }}>Unassigned</span>
-                                                )}
-                                            </td>
-                                            <td>
-                                                <TaskStatusSelect taskId={task.id} initialStatus={s} />
-                                            </td>
-                                        </tr>
-                                    )
-                                })
-                            )}
-                        </tbody>
-                    </table>
-</div>
-                </div>
+                <TaskTableClient 
+                    tasks={tasks} 
+                    taskMap={TASK_MAP} 
+                    users={users} 
+                    currentUserRole={userRole} 
+                />
             ) : (
                 <BoardView tasks={tasks} taskMap={TASK_MAP} />
             )}
