@@ -63,22 +63,25 @@ export default function TaskTableClient({ tasks, taskMap, users, currentUserRole
 
     return (
         <div className="card" style={{ padding: 0, overflow: 'hidden', marginTop: '16px' }}>
-            {selectedTasks.length > 0 && currentUserRole === 'ADMIN' && (
+            {currentUserRole === 'ADMIN' && (
                 <div style={{ padding: '12px 16px', background: 'var(--surface2)', display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid var(--border)' }}>
-                    <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text)' }}>{selectedTasks.length} tasks selected</span>
+                    <span style={{ fontSize: '14px', fontWeight: 500, color: selectedTasks.length > 0 ? 'var(--text)' : 'var(--muted)' }}>
+                        {selectedTasks.length} tasks selected
+                    </span>
                     <select
-                        style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: '13px' }}
+                        style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', fontSize: '13px', opacity: selectedTasks.length > 0 ? 1 : 0.5 }}
                         value={bulkAssignee}
                         onChange={e => setBulkAssignee(e.target.value)}
+                        disabled={selectedTasks.length === 0}
                     >
-                        <option value="">Select Assignee...</option>
+                        <option value="">Select Assignee for bulk assignment...</option>
                         {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
                     </select>
                     <button 
                         className="btn btn-p" 
-                        style={{ padding: '6px 12px', fontSize: '13px' }}
+                        style={{ padding: '6px 12px', fontSize: '13px', opacity: selectedTasks.length > 0 && bulkAssignee ? 1 : 0.5 }}
                         onClick={handleBulkAssign}
-                        disabled={isAssigning || !bulkAssignee}
+                        disabled={isAssigning || !bulkAssignee || selectedTasks.length === 0}
                     >
                         {isAssigning ? 'Assigning...' : 'Bulk Assign'}
                     </button>
