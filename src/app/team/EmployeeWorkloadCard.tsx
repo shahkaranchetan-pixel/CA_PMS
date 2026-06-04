@@ -29,7 +29,7 @@ export default function EmployeeWorkloadCard({ member, allMembers, now, isAdmin 
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px', position: 'relative' }}>
                 <div style={{
                     width: 42, height: 42, borderRadius: '12px',
-                    background: member.color || 'var(--gold)',
+                    background: member.color || 'var(--ca-saffron)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 15, fontWeight: 700, color: '#000'
                 }}>

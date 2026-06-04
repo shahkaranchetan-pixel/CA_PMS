@@ -104,12 +104,12 @@ export default function NotificationBell() {
             <style jsx global>{`
                 .nb-badge.pulse {
                     animation: bell-pulse 2s infinite;
-                    box-shadow: 0 0 0 0 rgba(232, 160, 32, 0.7);
+                    box-shadow: 0 0 0 0 rgba(243, 112, 33, 0.7);
                 }
                 @keyframes bell-pulse {
-                    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(232, 160, 32, 0.7); }
-                    70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(232, 160, 32, 0); }
-                    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(232, 160, 32, 0); }
+                    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(243, 112, 33, 0.7); }
+                    70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(243, 112, 33, 0); }
+                    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(243, 112, 33, 0); }
                 }
             `}</style>
 
@@ -120,7 +120,7 @@ export default function NotificationBell() {
                         {unreadCount > 0 && (
                             <button
                                 onClick={() => markAsRead()}
-                                style={{ background: 'none', border: 'none', color: 'var(--gold)', fontSize: '11px', cursor: 'pointer', fontWeight: 600 }}
+                                style={{ background: 'none', border: 'none', color: 'var(--ca-saffron)', fontSize: '11px', cursor: 'pointer', fontWeight: 600 }}
                             >
                                 Mark all read
                             </button>

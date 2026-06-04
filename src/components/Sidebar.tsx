@@ -130,7 +130,7 @@ export default function Sidebar({
                 <div style={{ opacity: propIsCollapsed ? 0 : 1, transition: "opacity 0.2s", whiteSpace: "nowrap", width: propIsCollapsed ? 0 : "auto", overflow: "hidden" }}>
                     <div className="sb-brand">
                         <span>KC Shah</span>
-                        <span style={{ color: "var(--gold)" }}> & Associates</span>
+                        <span style={{ color: "var(--ca-saffron)" }}> & Associates</span>
                     </div>
                     <div className="sb-sub">TaskPro PMS</div>
                 </div>
@@ -138,7 +138,7 @@ export default function Sidebar({
                     <button
                         onClick={onToggleCollapse}
                         className="mobile-hide"
-                        style={{ background: "none", border: "none", color: "var(--gold)", cursor: "pointer", fontSize: "16px", padding: "4px" }}
+                        style={{ background: "none", border: "none", color: "var(--ca-saffron)", cursor: "pointer", fontSize: "16px", padding: "4px" }}
                         title={propIsCollapsed ? "Expand sidebar" : "Collapse sidebar"}
                     >
                         {propIsCollapsed ? ">" : "<"}
@@ -156,7 +156,7 @@ export default function Sidebar({
 
             {!propIsCollapsed && (
                 <div className="sb-user" style={{ overflow: "hidden", transition: "all 0.3s ease" }}>
-                    <div className="sb-av" style={{ background: "var(--navy)", color: "#ffffff", border: "1px solid var(--border)" }}>{initials}</div>
+                    <div className="sb-av" style={{ background: "var(--ca-blue)", color: "#ffffff", border: "1px solid var(--border)" }}>{initials}</div>
                     <div style={{ overflow: "hidden" }}>
                         <div className="sb-uname" style={{ whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden" }}>{user?.name || "User"}</div>
                         <div className="sb-urole">{role}</div>
@@ -166,7 +166,7 @@ export default function Sidebar({
 
             {propIsCollapsed && (
                 <div style={{ padding: "20px 0", display: "flex", justifyContent: "center" }}>
-                    <div className="sb-av" style={{ background: "var(--navy)", color: "#ffffff", border: "1px solid var(--border)", width: "32px", height: "32px", fontSize: "12px" }}>{initials}</div>
+                    <div className="sb-av" style={{ background: "var(--ca-blue)", color: "#ffffff", border: "1px solid var(--border)", width: "32px", height: "32px", fontSize: "12px" }}>{initials}</div>
                 </div>
             )}
 
@@ -177,7 +177,7 @@ export default function Sidebar({
                     const isActive = pathname === n.id || (n.id !== "/" && pathname.startsWith(n.id))
                     return (
                         <Link key={n.id} href={n.id} title={propIsCollapsed ? n.label : undefined} className={`sb-item ${isActive ? "active" : ""}`}>
-                            <span className="sb-icon" style={{ color: isActive ? "var(--gold)" : "currentColor" }}>{getIcon(n.icon)}</span>
+                            <span className="sb-icon" style={{ color: isActive ? "var(--ca-saffron)" : "currentColor" }}>{getIcon(n.icon)}</span>
                             {!propIsCollapsed && <span style={{ marginLeft: "10px" }}>{n.label}</span>}
                         </Link>
                     )

@@ -7,9 +7,9 @@
 }
 
 :root {
-  --navy: #0b1d3a;
-  --gold: #c9a84c;
-  --gold-light: #ebd99e;
+  --ca-blue: #165A92;
+  --ca-saffron: #F37021;
+  --ca-saffron-light: #F9A876;
   --off-white: #f8f9fa;
   --text-grey: #444444;
   --light-grey: #e9ecef;
@@ -19,8 +19,8 @@
   --surface2: rgba(255, 255, 255, 0.07);
   --border: rgba(255, 255, 255, 0.08);
   --border2: rgba(255, 255, 255, 0.14);
-  --gold2: #ebd99e;
-  --gold-bg: rgba(201, 168, 76, 0.1);
+  --ca-saffron2: #F9A876;
+  --ca-saffron-bg: rgba(243, 112, 33, 0.1);
   --text: #DDE4F0;
   --muted: rgba(221, 228, 240, 0.45);
   --muted2: rgba(221, 228, 240, 0.2);
@@ -35,14 +35,14 @@
   --bg: #f8f9fa; /* Off-white standard background */
   --surface: rgba(255, 255, 255, 0.95);
   --surface2: #ffffff;
-  --border: rgba(11, 29, 58, 0.12); /* Navy-tinted border */
-  --border2: rgba(11, 29, 58, 0.22);
-  --gold: #c9a84c;
-  --gold2: #ebd99e;
-  --gold-bg: rgba(201, 168, 76, 0.08);
+  --border: rgba(22, 90, 146, 0.12); /* Navy-tinted border */
+  --border2: rgba(22, 90, 146, 0.22);
+  --ca-saffron: #F37021;
+  --ca-saffron2: #F9A876;
+  --ca-saffron-bg: rgba(243, 112, 33, 0.08);
   --text: #444444; /* Text Grey */
   --muted: #5e6b82;
-  --muted2: rgba(11, 29, 58, 0.25);
+  --muted2: rgba(22, 90, 146, 0.25);
   --danger: #CC2020;
   --success: #088A58;
 }
@@ -54,44 +54,44 @@
 
 [data-theme="light"] .sb {
   background: #FFFFFF !important;
-  border-right: 1px solid rgba(0, 20, 60, .08) !important;
-  box-shadow: 2px 0 12px rgba(0, 20, 60, .04) !important;
+  border-right: 1px solid rgba(22, 90, 146, .08) !important;
+  box-shadow: 2px 0 12px rgba(22, 90, 146, .04) !important;
 }
 
 [data-theme="light"] .sb-brand span:first-child {
-  color: var(--navy) !important;
+  color: var(--ca-blue) !important;
 }
 [data-theme="light"] .sb-brand span:nth-child(2) {
-  color: var(--gold) !important;
+  color: var(--ca-saffron) !important;
 }
 
 [data-theme="light"] .topbar-main {
   background: rgba(244, 246, 250, .92) !important;
-  border-bottom-color: rgba(0, 20, 60, .06) !important;
+  border-bottom-color: rgba(22, 90, 146, .06) !important;
   backdrop-filter: blur(12px) !important;
 }
 
 [data-theme="light"] .card,
 [data-theme="light"] .scard {
   background: #FFFFFF !important;
-  border-color: rgba(0, 20, 60, .06) !important;
-  box-shadow: 0 1px 4px rgba(0, 20, 60, .04) !important;
+  border-color: rgba(22, 90, 146, .06) !important;
+  box-shadow: 0 1px 4px rgba(22, 90, 146, .04) !important;
 }
 
 [data-theme="light"] .tbl thead {
-  background: rgba(0, 20, 60, .02) !important;
+  background: rgba(22, 90, 146, .02) !important;
 }
 
 [data-theme="light"] .tbl td,
 [data-theme="light"] .tbl th {
-  border-bottom-color: rgba(0, 20, 60, .06) !important;
+  border-bottom-color: rgba(22, 90, 146, .06) !important;
 }
 
 [data-theme="light"] input,
 [data-theme="light"] select,
 [data-theme="light"] textarea {
   background: #FFFFFF !important;
-  border-color: rgba(0, 20, 60, .12) !important;
+  border-color: rgba(22, 90, 146, .12) !important;
   color: #1A2340 !important;
 }
 
@@ -103,14 +103,14 @@
 }
 
 [data-theme="light"] .btn-g {
-  background: rgba(0, 20, 60, .04) !important;
+  background: rgba(22, 90, 146, .04) !important;
   color: #1A2340 !important;
-  border-color: rgba(0, 20, 60, .1) !important;
+  border-color: rgba(22, 90, 146, .1) !important;
 }
 
 [data-theme="light"] .wl-card {
   background: #FFFFFF !important;
-  border-color: rgba(0, 20, 60, .06) !important;
+  border-color: rgba(22, 90, 146, .06) !important;
 }
 
 [data-theme="light"] .sb-nav a {
@@ -124,7 +124,7 @@
 }
 
 [data-theme="light"] .badge {
-  border-color: rgba(0, 20, 60, .08) !important;
+  border-color: rgba(22, 90, 146, .08) !important;
 }
 
 [data-theme="light"] .fab {
@@ -159,10 +159,10 @@ body {
   background: rgba(255, 255, 255, 0.2);
 }
 [data-theme="light"] ::-webkit-scrollbar-thumb {
-  background: rgba(0, 20, 60, 0.15);
+  background: rgba(22, 90, 146, 0.15);
 }
 [data-theme="light"] ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 20, 60, 0.25);
+  background: rgba(22, 90, 146, 0.25);
 }
 
 .app {
@@ -238,7 +238,7 @@ body {
   font-family: 'Playfair Display', serif;
   font-size: 19px;
   font-weight: 700;
-  color: var(--gold);
+  color: var(--ca-saffron);
   line-height: 1
 }
 
@@ -313,9 +313,9 @@ body {
 }
 
 .sb-item.active {
-  background: var(--gold-bg);
-  color: var(--gold);
-  border: 1px solid rgba(232, 160, 32, .2)
+  background: var(--ca-saffron-bg);
+  color: var(--ca-saffron);
+  border: 1px solid rgba(243, 112, 33, .2)
 }
 
 .sb-icon {
@@ -564,9 +564,9 @@ body {
 }
 
 .b-admin {
-  background: rgba(232, 160, 32, .12);
-  color: var(--gold);
-  border: 1px solid rgba(232, 160, 32, .25)
+  background: rgba(243, 112, 33, .12);
+  color: var(--ca-saffron);
+  border: 1px solid rgba(243, 112, 33, .25)
 }
 
 .b-member {
@@ -648,9 +648,9 @@ body {
 }
 
 .b-custom {
-  background: rgba(232, 160, 32, .12);
-  color: var(--gold);
-  border: 1px solid rgba(232, 160, 32, .25)
+  background: rgba(243, 112, 33, .12);
+  color: var(--ca-saffron);
+  border: 1px solid rgba(243, 112, 33, .25)
 }
 
 .dot {
@@ -696,7 +696,7 @@ body {
 
 .sel-assign:focus,
 .sel-status:focus {
-  border-color: var(--gold)
+  border-color: var(--ca-saffron)
 }
 
 .btn {
@@ -714,29 +714,29 @@ body {
 }
 
 .btn-p {
-  background: var(--navy);
+  background: var(--ca-blue);
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .btn-p:hover {
-  background: var(--gold);
-  color: #0b1d3a;
+  background: var(--ca-saffron);
+  color: #165A92;
   transform: translateY(-1px);
-  box-shadow: 0 5px 18px rgba(201, 168, 76, .3);
+  box-shadow: 0 5px 18px rgba(243, 112, 33, .3);
 }
 
 .btn-outline {
   background: transparent;
-  border: 1px solid var(--gold);
-  color: var(--gold);
+  border: 1px solid var(--ca-saffron);
+  color: var(--ca-saffron);
 }
 
 .btn-outline:hover {
-  background: var(--gold);
+  background: var(--ca-saffron);
   color: #ffffff;
   transform: translateY(-1px);
-  box-shadow: 0 5px 18px rgba(201, 168, 76, .2);
+  box-shadow: 0 5px 18px rgba(243, 112, 33, .2);
 }
 
 .btn-g {
@@ -836,9 +836,9 @@ body {
 }
 
 .fpill.on {
-  border-color: var(--gold);
-  color: var(--gold);
-  background: var(--gold-bg)
+  border-color: var(--ca-saffron);
+  color: var(--ca-saffron);
+  background: var(--ca-saffron-bg)
 }
 
 .fpill:hover:not(.on) {
@@ -933,14 +933,14 @@ option {
 .field input:focus,
 .field select:focus,
 .field textarea:focus {
-  border-color: var(--gold)
+  border-color: var(--ca-saffron)
 }
 
 .fdiv {
   grid-column: 1/-1;
   font-size: 10px;
   font-weight: 700;
-  color: var(--gold);
+  color: var(--ca-saffron);
   letter-spacing: 1.5px;
   text-transform: uppercase;
   padding: 5px 0;
@@ -1055,7 +1055,7 @@ option {
 }
 
 .premium-btn {
-  background: var(--gold);
+  background: var(--ca-saffron);
   color: #07101f;
   border: none;
   border-radius: var(--rsm);
@@ -1066,9 +1066,9 @@ option {
 }
 
 .premium-btn:hover {
-  background: var(--gold2);
+  background: var(--ca-saffron2);
   transform: translateY(-1px);
-  box-shadow: 0 5px 18px rgba(232, 160, 32, .3)
+  box-shadow: 0 5px 18px rgba(243, 112, 33, .3)
 }
 
 .nb-wrap {
@@ -1153,14 +1153,14 @@ option {
 }
 
 .nb-item.unread {
-  background: rgba(232, 160, 32, 0.03);
+  background: rgba(243, 112, 33, 0.03);
 }
 
 .nb-item.unread::before {
   content: '';
   width: 6px;
   height: 6px;
-  background: var(--gold);
+  background: var(--ca-saffron);
   border-radius: 50%;
   margin-top: 6px;
   flex-shrink: 0;
@@ -1319,13 +1319,13 @@ option {
   width: 52px;
   height: 52px;
   border-radius: 16px;
-  background: var(--gold);
+  background: var(--ca-saffron);
   color: #07101f;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 22px;
-  box-shadow: 0 8px 32px rgba(232, 160, 32, 0.35);
+  box-shadow: 0 8px 32px rgba(243, 112, 33, 0.35);
   z-index: 1000;
   border: 1px solid rgba(255, 255, 255, 0.2);
   cursor: pointer;
@@ -1334,7 +1334,7 @@ option {
 
 .fab:hover {
   transform: scale(1.1) rotate(90deg);
-  box-shadow: 0 12px 40px rgba(232, 160, 32, 0.5);
+  box-shadow: 0 12px 40px rgba(243, 112, 33, 0.5);
 }
 
 .fab:active {

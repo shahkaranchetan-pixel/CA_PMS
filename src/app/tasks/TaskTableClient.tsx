@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import TaskStatusSelect from './TaskStatusSelect';
+import EscalationModal from '@/components/EscalationModal';
 
 export default function TaskTableClient({ tasks, taskMap, users, currentUserRole }: { tasks: any[], taskMap: any, users: { id: string, name: string | null }[], currentUserRole: string }) {
     const router = useRouter();
@@ -11,6 +12,7 @@ export default function TaskTableClient({ tasks, taskMap, users, currentUserRole
     const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
     const [bulkAssignee, setBulkAssignee] = useState('');
     const [isAssigning, setIsAssigning] = useState(false);
+    const [escalateTaskId, setEscalateTaskId] = useState<string | null>(null);
 
     const toggleSelectAll = () => {
         if (selectedTasks.length === tasks.length) {
@@ -132,6 +134,7 @@ export default function TaskTableClient({ tasks, taskMap, users, currentUserRole
                                 </div>
                             </th>
                             <th>Status</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -196,7 +199,7 @@ export default function TaskTableClient({ tasks, taskMap, users, currentUserRole
                                             {task.taskAssignees && task.taskAssignees.length > 0 ? (
                                                 <div style={{ display: 'flex', alignItems: 'center' }}>
                                                     {task.taskAssignees.slice(0, 3).map((ta: any, i: number) => (
-                                                        <div key={ta.id} style={{ width: 24, height: 24, borderRadius: 6, background: ta.user?.color || 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#000', marginLeft: i > 0 ? '-6px' : 0, border: '2px solid var(--surface)', zIndex: 3 - i }} title={ta.user?.name}>
+                                                        <div key={ta.id} style={{ width: 24, height: 24, borderRadius: 6, background: ta.user?.color || 'var(--ca-saffron)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#000', marginLeft: i > 0 ? '-6px' : 0, border: '2px solid var(--surface)', zIndex: 3 - i }} title={ta.user?.name}>
                                                             {ta.user?.name?.substring(0, 2).toUpperCase() || 'U'}
                                                         </div>
                                                     ))}
@@ -214,6 +217,15 @@ export default function TaskTableClient({ tasks, taskMap, users, currentUserRole
                                         <td onClick={(e) => e.stopPropagation()}>
                                             <TaskStatusSelect taskId={task.id} initialStatus={s} />
                                         </td>
+                                        <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                                            <button 
+                                                onClick={() => setEscalateTaskId(task.id)}
+                                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ca-saffron)', fontSize: '16px' }}
+                                                title="Escalate Task"
+                                            >
+                                                ↗️
+                                            </button>
+                                        </td>
                                     </tr>
                                 )
                             })
@@ -221,6 +233,12 @@ export default function TaskTableClient({ tasks, taskMap, users, currentUserRole
                     </tbody>
                 </table>
             </div>
+            {escalateTaskId && (
+                <EscalationModal 
+                    taskId={escalateTaskId} 
+                    onClose={() => setEscalateTaskId(null)} 
+                />
+            )}
         </div>
     );
 }

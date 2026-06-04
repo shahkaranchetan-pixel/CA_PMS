@@ -133,7 +133,7 @@ export default function ModuleViewer({ params }: { params: { id: string } }) {
         <div className="training-viewer-mode" style={{ display: 'flex', minHeight: 'calc(100vh - 80px)', background: '#0B0D11', color: '#fff' }}>
             {/* Sidebar Navigation */}
             <div style={{ width: '300px', borderRight: '1px solid rgba(255,255,255,0.1)', padding: '24px', background: 'rgba(255, 255, 255, 0.02)', backdropFilter: 'blur(10px)', flexShrink: 0 }}>
-                <Link href="/training" style={{ color: 'var(--gold)', fontSize: '13px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px', fontWeight: 600 }}>
+                <Link href="/training" style={{ color: 'var(--ca-saffron)', fontSize: '13px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px', fontWeight: 600 }}>
                     ← Back to Academy
                 </Link>
 
@@ -151,8 +151,8 @@ export default function ModuleViewer({ params }: { params: { id: string } }) {
                                 display: 'flex', gap: '12px', alignItems: 'center', padding: '12px', borderRadius: '10px',
                                 background: activeLessonIndex === idx ? 'rgba(212, 175, 55, 0.15)' : 'transparent',
                                 border: '1px solid',
-                                borderColor: activeLessonIndex === idx ? 'var(--gold)' : 'transparent',
-                                color: activeLessonIndex === idx ? 'var(--gold)' : 'rgba(255,255,255,0.5)',
+                                borderColor: activeLessonIndex === idx ? 'var(--ca-saffron)' : 'transparent',
+                                color: activeLessonIndex === idx ? 'var(--ca-saffron)' : 'rgba(255,255,255,0.5)',
                                 textAlign: 'left', cursor: 'pointer', transition: 'all 0.2s', fontSize: '13px', width: '100%',
                             }}
                         >
@@ -175,7 +175,7 @@ export default function ModuleViewer({ params }: { params: { id: string } }) {
                 <div style={{ marginTop: 'auto', paddingTop: '40px' }}>
                     <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginBottom: '8px' }}>OVERALL PROGRESS</div>
                     <div style={{ height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
-                        <div style={{ height: '100%', background: 'var(--gold)', width: progress?.completed ? '100%' : `${((activeLessonIndex + 1) / materialsCount) * 100}%` }}></div>
+                        <div style={{ height: '100%', background: 'var(--ca-saffron)', width: progress?.completed ? '100%' : `${((activeLessonIndex + 1) / materialsCount) * 100}%` }}></div>
                     </div>
                 </div>
             </div>
@@ -242,7 +242,7 @@ export default function ModuleViewer({ params }: { params: { id: string } }) {
                                                     return (
                                                         <div key={qIdx} style={{ marginBottom: '40px', padding: '24px', borderRadius: '20px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
                                                             <div style={{ fontSize: '18px', fontWeight: 700, marginBottom: '24px', display: 'flex', gap: '12px' }}>
-                                                                <span style={{ color: 'var(--gold)', opacity: 0.8 }}>Q{qIdx + 1}</span> {q.q}
+                                                                <span style={{ color: 'var(--ca-saffron)', opacity: 0.8 }}>Q{qIdx + 1}</span> {q.q}
                                                             </div>
                                                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                                                                 {q.opts.map((opt: string, optIdx: number) => {
@@ -277,9 +277,9 @@ export default function ModuleViewer({ params }: { params: { id: string } }) {
                                                 })}
 
                                                 {allAnswered && (
-                                                    <div style={{ background: 'var(--gold-dim)', border: '1px solid var(--gold)', padding: '32px', borderRadius: '24px', textAlign: 'center', marginTop: '40px' }}>
+                                                    <div style={{ background: 'var(--ca-saffron-dim)', border: '1px solid var(--ca-saffron)', padding: '32px', borderRadius: '24px', textAlign: 'center', marginTop: '40px' }}>
                                                         <div style={{ fontSize: '40px', marginBottom: '8px' }}>{score === questions.length ? '🌟' : '👏'}</div>
-                                                        <h3 style={{ color: 'var(--gold)', margin: 0, fontSize: '24px' }}>Result: {score}/{questions.length}</h3>
+                                                        <h3 style={{ color: 'var(--ca-saffron)', margin: 0, fontSize: '24px' }}>Result: {score}/{questions.length}</h3>
                                                         <p style={{ color: 'var(--muted)', marginTop: '8px' }}>{score === questions.length ? 'Outstanding! You have mastered this module.' : 'Great effort! Review the explanations above to perfect your score.'}</p>
                                                     </div>
                                                 )}
@@ -355,29 +355,29 @@ export default function ModuleViewer({ params }: { params: { id: string } }) {
                     box-shadow: 0 40px 100px rgba(0,0,0,0.5);
                 }
                 .form-group { margin-bottom: 24px; }
-                label { display: block; font-size: 11px; font-weight: 800; color: var(--gold); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+                label { display: block; font-size: 11px; font-weight: 800; color: var(--ca-saffron); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
                 input, select, textarea { width: 100%; padding: 14px; border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; background: rgba(0,0,0,0.3); color: #fff; font-size: 14px; }
                 textarea { height: 250px; }
                 
-                .markdown-reader :global(h1) { color: var(--gold); font-size: 32px; margin-bottom: 24px; font-weight: 800; }
+                .markdown-reader :global(h1) { color: var(--ca-saffron); font-size: 32px; margin-bottom: 24px; font-weight: 800; }
                 .markdown-reader :global(h2) { color: #fff; font-size: 22px; margin: 48px 0 20px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; font-weight: 700; }
-                .markdown-reader :global(h3) { color: var(--gold); font-size: 18px; margin: 32px 0 16px 0; font-weight: 600; }
+                .markdown-reader :global(h3) { color: var(--ca-saffron); font-size: 18px; margin: 32px 0 16px 0; font-weight: 600; }
                 .markdown-reader :global(p) { line-height: 1.9; margin-bottom: 24px; color: rgba(255,255,255,0.8); font-size: 17px; }
                 .markdown-reader :global(ul), .markdown-reader :global(ol) { margin-bottom: 24px; padding-left: 24px; }
                 .markdown-reader :global(li) { margin-bottom: 14px; line-height: 1.7; color: rgba(255,255,255,0.8); }
-                .markdown-reader :global(blockquote) { border-left: 5px solid var(--gold); background: rgba(212, 175, 55, 0.04); padding: 32px; margin: 40px 0; border-radius: 0 20px 20px 0; font-style: italic; }
+                .markdown-reader :global(blockquote) { border-left: 5px solid var(--ca-saffron); background: rgba(212, 175, 55, 0.04); padding: 32px; margin: 40px 0; border-radius: 0 20px 20px 0; font-style: italic; }
                 .markdown-reader :global(strong) { color: #fff; font-weight: 700; }
-                .markdown-reader :global(code) { background: rgba(212, 175, 55, 0.1); color: var(--gold); padding: 4px 10px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.9em; }
+                .markdown-reader :global(code) { background: rgba(212, 175, 55, 0.1); color: var(--ca-saffron); padding: 4px 10px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.9em; }
                 .markdown-reader :global(hr) { border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 60px 0; }
                 .markdown-reader :global(table) { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 32px; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
                 .markdown-reader :global(th), .markdown-reader :global(td) { padding: 16px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
-                .markdown-reader :global(th) { background: rgba(212, 175, 55, 0.1); color: var(--gold); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
+                .markdown-reader :global(th) { background: rgba(212, 175, 55, 0.1); color: var(--ca-saffron); font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
                 .markdown-reader :global(tr:last-child td) { border-bottom: none; }
                 .markdown-reader :global(tr:nth-child(even)) { background: rgba(255,255,255,0.02); }
                 
                 .markdown-reader :global(details) { background: rgba(255,255,255,0.03); padding: 16px; border-radius: 12px; margin-bottom: 24px; cursor: pointer; border: 1px solid rgba(255,255,255,0.08); transition: all 0.2s; }
                 .markdown-reader :global(details[open]) { background: rgba(212, 175, 55, 0.05); border-color: rgba(212, 175, 55, 0.2); }
-                .markdown-reader :global(summary) { font-weight: 700; color: var(--gold); outline: none; margin-bottom: 8px; font-size: 15px; }
+                .markdown-reader :global(summary) { font-weight: 700; color: var(--ca-saffron); outline: none; margin-bottom: 8px; font-size: 15px; }
                 .training-viewer-mode :global(.card) {
                     background: rgba(255, 255, 255, 0.03) !important;
                     border: 1px solid rgba(255, 255, 255, 0.08) !important;

@@ -57,7 +57,7 @@ export default function AuditLogViewer({ clientId }: { clientId: string }) {
                 <div style={{ display: 'grid', gap: '8px', maxHeight: '300px', overflowY: 'auto', paddingRight: '4px' }}>
                     {logs.map(log => (
                         <div key={log.id} style={{ fontSize: '11px', background: 'var(--surface2)', padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: '12px', alignItems: 'center' }}>
-                            <div style={{ fontWeight: 700, color: log.action === 'COPY' ? 'var(--gold)' : '#4FACFE' }}>
+                            <div style={{ fontWeight: 700, color: log.action === 'COPY' ? 'var(--ca-saffron)' : '#4FACFE' }}>
                                 {log.action}
                             </div>
                             <div>

@@ -106,7 +106,7 @@ export default function EditEmployeeModal({ member, onClose }: { member: any, on
             >
                 {/* Header strip */}
                 <div style={{
-                    background: 'linear-gradient(90deg, rgba(232,160,32,0.12) 0%, transparent 100%)',
+                    background: 'linear-gradient(90deg, rgba(243, 112, 33,0.12) 0%, transparent 100%)',
                     borderBottom: '1px solid rgba(255,255,255,0.07)',
                     padding: '20px 24px',
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between'
@@ -114,8 +114,8 @@ export default function EditEmployeeModal({ member, onClose }: { member: any, on
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <div style={{
                             width: 40, height: 40, borderRadius: '10px',
-                            background: 'rgba(232,160,32,0.15)',
-                            border: '1px solid rgba(232,160,32,0.3)',
+                            background: 'rgba(243, 112, 33,0.15)',
+                            border: '1px solid rgba(243, 112, 33,0.3)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             fontSize: '18px'
                         }}>✏️</div>
@@ -162,9 +162,9 @@ export default function EditEmployeeModal({ member, onClose }: { member: any, on
                         <div style={{ display: 'flex', gap: '6px', marginTop: '4px', alignItems: 'center' }}>
                             <span style={{
                                 fontSize: '10px', padding: '2px 8px', borderRadius: '99px', fontWeight: 700,
-                                background: formData.role === 'ADMIN' ? 'rgba(232,160,32,0.15)' : 'rgba(79,172,254,0.12)',
-                                color: formData.role === 'ADMIN' ? 'var(--gold)' : '#4FACFE',
-                                border: `1px solid ${formData.role === 'ADMIN' ? 'rgba(232,160,32,0.3)' : 'rgba(79,172,254,0.25)'}`
+                                background: formData.role === 'ADMIN' ? 'rgba(243, 112, 33,0.15)' : 'rgba(79,172,254,0.12)',
+                                color: formData.role === 'ADMIN' ? 'var(--ca-saffron)' : '#4FACFE',
+                                border: `1px solid ${formData.role === 'ADMIN' ? 'rgba(243, 112, 33,0.3)' : 'rgba(79,172,254,0.25)'}`
                             }}>
                                 {formData.role}
                             </span>
@@ -176,7 +176,7 @@ export default function EditEmployeeModal({ member, onClose }: { member: any, on
                 <form onSubmit={handleSubmit} style={{ padding: '20px 24px 24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
 
                     {/* Section: Identity */}
-                    <div style={{ fontSize: '9.5px', fontWeight: 700, color: 'var(--gold)', letterSpacing: '1.5px', textTransform: 'uppercase', borderBottom: '1px solid rgba(232,160,32,0.15)', paddingBottom: '6px' }}>
+                    <div style={{ fontSize: '9.5px', fontWeight: 700, color: 'var(--ca-saffron)', letterSpacing: '1.5px', textTransform: 'uppercase', borderBottom: '1px solid rgba(243, 112, 33,0.15)', paddingBottom: '6px' }}>
                         Identity
                     </div>
 
@@ -217,7 +217,7 @@ export default function EditEmployeeModal({ member, onClose }: { member: any, on
                     </div>
 
                     {/* Section: Access & Department */}
-                    <div style={{ fontSize: '9.5px', fontWeight: 700, color: 'var(--gold)', letterSpacing: '1.5px', textTransform: 'uppercase', borderBottom: '1px solid rgba(232,160,32,0.15)', paddingBottom: '6px', marginTop: '4px' }}>
+                    <div style={{ fontSize: '9.5px', fontWeight: 700, color: 'var(--ca-saffron)', letterSpacing: '1.5px', textTransform: 'uppercase', borderBottom: '1px solid rgba(243, 112, 33,0.15)', paddingBottom: '6px', marginTop: '4px' }}>
                         Access & Department
                     </div>
 
@@ -241,7 +241,7 @@ export default function EditEmployeeModal({ member, onClose }: { member: any, on
                     </div>
 
                     {/* Section: Theme Color */}
-                    <div style={{ fontSize: '9.5px', fontWeight: 700, color: 'var(--gold)', letterSpacing: '1.5px', textTransform: 'uppercase', borderBottom: '1px solid rgba(232,160,32,0.15)', paddingBottom: '6px', marginTop: '4px' }}>
+                    <div style={{ fontSize: '9.5px', fontWeight: 700, color: 'var(--ca-saffron)', letterSpacing: '1.5px', textTransform: 'uppercase', borderBottom: '1px solid rgba(243, 112, 33,0.15)', paddingBottom: '6px', marginTop: '4px' }}>
                         Avatar Color
                     </div>
 

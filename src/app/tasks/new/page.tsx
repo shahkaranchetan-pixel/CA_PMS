@@ -212,7 +212,7 @@ export default function NewTaskPage() {
                                     return (
                                         <span key={id} style={{
                                             display: 'inline-flex', alignItems: 'center', gap: '4px',
-                                            background: 'var(--gold)', color: '#000',
+                                            background: 'var(--ca-saffron)', color: '#000',
                                             borderRadius: '99px', padding: '2px 10px 2px 6px',
                                             fontSize: '11.5px', fontWeight: 600
                                         }}>
@@ -247,7 +247,7 @@ export default function NewTaskPage() {
                                     <label key={emp.id} style={{
                                         display: 'flex', alignItems: 'center', gap: '10px',
                                         padding: '8px 12px', cursor: 'pointer',
-                                        background: selectedAssignees.includes(emp.id) ? 'rgba(232,160,32,0.15)' : '#0e1c33',
+                                        background: selectedAssignees.includes(emp.id) ? 'rgba(243, 112, 33,0.15)' : '#0e1c33',
                                         borderBottom: '1px solid var(--surface2)',
                                         fontSize: '13px'
                                     }}>
@@ -255,11 +255,11 @@ export default function NewTaskPage() {
                                             type="checkbox"
                                             checked={selectedAssignees.includes(emp.id)}
                                             onChange={() => toggleAssignee(emp.id)}
-                                            style={{ accentColor: 'var(--gold)' }}
+                                            style={{ accentColor: 'var(--ca-saffron)' }}
                                         />
                                         <div style={{
                                             width: 24, height: 24, borderRadius: '50%',
-                                            background: emp.color || 'var(--gold)',
+                                            background: emp.color || 'var(--ca-saffron)',
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                             fontSize: '10px', fontWeight: 700, color: '#000'
                                         }}>
@@ -284,15 +284,15 @@ export default function NewTaskPage() {
 
                     <div className="field" style={{ gridColumn: '1 / -1' }}>
                         <label htmlFor="templateId">Auto-Apply Template Bundle</label>
-                        <select id="templateId" name="templateId" style={{ background: 'var(--surface2)', border: '1px solid var(--gold)', color: 'var(--gold)' }} value={formValues.templateId} onChange={e => handleTemplateChange(e.target.value)}>
+                        <select id="templateId" name="templateId" style={{ background: 'var(--surface2)', border: '1px solid var(--ca-saffron)', color: 'var(--ca-saffron)' }} value={formValues.templateId} onChange={e => handleTemplateChange(e.target.value)}>
                             <option value="">No Template (Create Single Custom Task)</option>
                             {templates.map(tmp => (
                                 <option key={tmp.id} value={tmp.id}>⚡ {tmp.name}</option>
                             ))}
                         </select>
                         {templatePreview && (
-                            <div style={{ marginTop: '8px', padding: '10px', background: 'rgba(232,160,32,0.05)', borderRadius: '8px', border: '1px dashed var(--gold)' }}>
-                                <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--gold)', textTransform: 'uppercase', marginBottom: '6px' }}>Template Preview: จะสร้าง {templatePreview.length} งานย่อย</div>
+                            <div style={{ marginTop: '8px', padding: '10px', background: 'rgba(243, 112, 33,0.05)', borderRadius: '8px', border: '1px dashed var(--ca-saffron)' }}>
+                                <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--ca-saffron)', textTransform: 'uppercase', marginBottom: '6px' }}>Template Preview: จะสร้าง {templatePreview.length} งานย่อย</div>
                                 <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
                                     {templatePreview.map((item, i) => (
                                         <span key={i} style={{ fontSize: '11px', background: 'var(--surface2)', padding: '2px 8px', borderRadius: '4px', color: 'var(--muted)' }}>
@@ -371,14 +371,14 @@ export default function NewTaskPage() {
                     />
 
                     <div className="field" style={{ gridColumn: '1 / -1', marginTop: '10px' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: '12px', background: 'rgba(232,160,32,0.05)', borderRadius: '8px', border: '1px solid rgba(232,160,32,0.15)' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: '12px', background: 'rgba(243, 112, 33,0.05)', borderRadius: '8px', border: '1px solid rgba(243, 112, 33,0.15)' }}>
                             <input 
                                 type="checkbox" 
                                 checked={formValues.notifyClient} 
                                 onChange={e => setFieldValue("notifyClient", e.target.checked)}
                                 style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                             />
-                            <span style={{ fontSize: '13.5px', fontWeight: 600, color: 'var(--gold)' }}>📧 Notify Client via Email immediately?</span>
+                            <span style={{ fontSize: '13.5px', fontWeight: 600, color: 'var(--ca-saffron)' }}>📧 Notify Client via Email immediately?</span>
                         </label>
                     </div>
                 </div>

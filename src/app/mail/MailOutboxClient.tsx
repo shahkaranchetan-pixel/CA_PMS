@@ -92,9 +92,9 @@ export default function MailOutboxClient({ initialMessages, isAdmin }: { initial
                                         </td>
                                         <td>
                                             {message.task ? (
-                                                <Link href={`/tasks/${message.task.id}`} style={{ color: "var(--gold)", fontWeight: 600 }}>{message.task.title}</Link>
+                                                <Link href={`/tasks/${message.task.id}`} style={{ color: "var(--ca-saffron)", fontWeight: 600 }}>{message.task.title}</Link>
                                             ) : message.client ? (
-                                                <Link href={`/clients/${message.client.id}`} style={{ color: "var(--gold)", fontWeight: 600 }}>{message.client.name}</Link>
+                                                <Link href={`/clients/${message.client.id}`} style={{ color: "var(--ca-saffron)", fontWeight: 600 }}>{message.client.name}</Link>
                                             ) : (
                                                 <span style={{ color: "var(--muted)" }}>General</span>
                                             )}

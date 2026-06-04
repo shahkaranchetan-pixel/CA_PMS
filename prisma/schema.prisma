@@ -58,6 +58,8 @@ model User {
   vaultAuditLogs VaultAuditLog[]
   trainingProgress UserTrainingProgress[]
   sentEmails    EmailMessage[]
+  escalationsCreated TaskEscalation[] @relation("EscalatedBy")
+  escalationsReceived EscalationRecipient[] @relation("EscalationRecipients")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -155,6 +157,7 @@ model Client {
   esiPassword  String?
   ptLogin      String?   
   ptPassword   String?
+  gDriveLink   String?
 
   tasks        Task[]
   notes        ClientNote[]
@@ -238,6 +241,7 @@ model Task {
   activities  Activity[]
   logs        TaskLog[]
   emailMessages EmailMessage[]
+  escalations TaskEscalation[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -446,4 +450,32 @@ model EmailRecipient {
   @@index([clientId])
   @@index([email])
   @@index([status])
+}
+
+model TaskEscalation {
+  id              String   @id @default(cuid())
+  taskId          String
+  task            Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  escalatedById   String
+  escalatedBy     User     @relation("EscalatedBy", fields: [escalatedById], references: [id], onDelete: Cascade)
+  note            String?
+  status          String   @default("PENDING") // PENDING, RESOLVED
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  recipients      EscalationRecipient[]
+
+  @@index([taskId])
+  @@index([escalatedById])
+}
+
+model EscalationRecipient {
+  id              String   @id @default(cuid())
+  escalationId    String
+  escalation      TaskEscalation @relation(fields: [escalationId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User     @relation("EscalationRecipients", fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([escalationId, userId])
+  @@index([userId])
 }

@@ -56,7 +56,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                         fontFamily: 'Playfair Display, serif',
                         fontSize: '24px',
                         fontWeight: 700,
-                        color: 'var(--gold)',
+                        color: 'var(--ca-saffron)',
                         marginBottom: '8px'
                     }}>KCS TaskPro</div>
                     <div style={{ fontSize: '12px', color: 'var(--muted)', letterSpacing: '2px', textTransform: 'uppercase' }}>Loading...</div>
@@ -98,7 +98,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                     {children}
                 </main>
                 <footer style={{
-                    background: 'var(--navy, #0b1d3a)',
+                    background: 'var(--ca-blue, #165A92)',
                     borderTop: '1px solid var(--border)',
                     padding: '20px 28px',
                     color: '#ffffff',
@@ -112,11 +112,11 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                 }}>
                     <div>
                         <span style={{ fontWeight: 700 }}>KC Shah</span>
-                        <span style={{ color: 'var(--gold, #c9a84c)', fontWeight: 700 }}> & Associates</span>
+                        <span style={{ color: 'var(--ca-saffron, #F37021)', fontWeight: 700 }}> & Associates</span>
                         <span style={{ color: 'var(--muted)', marginLeft: '8px' }}>© {new Date().getFullYear()} All Rights Reserved.</span>
                     </div>
                     <div style={{ display: 'flex', gap: '16px' }}>
-                        <a href="https://kcshah.com" target="_blank" rel="noreferrer" style={{ color: 'var(--gold, #c9a84c)', textDecoration: 'none', fontWeight: 600 }}>kcshah.com</a>
+                        <a href="https://kcshah.com" target="_blank" rel="noreferrer" style={{ color: 'var(--ca-saffron, #F37021)', textDecoration: 'none', fontWeight: 600 }}>kcshah.com</a>
                         <span style={{ color: 'var(--muted2)' }}>|</span>
                         <span style={{ color: 'var(--muted)' }}>TaskPro PMS v1.0</span>
                     </div>

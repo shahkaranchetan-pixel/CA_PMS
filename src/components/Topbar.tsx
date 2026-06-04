@@ -52,7 +52,7 @@ export default function Topbar({
                     onClick={onQuickTask}
                     title="Quick Create Task (Shortcut: C)"
                     style={{
-                        background: 'var(--gold)',
+                        background: 'var(--ca-saffron)',
                         color: '#07101f',
                         border: 'none',
                         borderRadius: '10px',

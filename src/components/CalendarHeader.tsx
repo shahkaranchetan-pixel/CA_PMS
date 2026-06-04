@@ -39,7 +39,7 @@ export default function CalendarHeader({ currentPeriod, monthName, year }: Calen
                         style={{
                             background: 'var(--surface2)',
                             border: '1px solid var(--border)',
-                            color: 'var(--gold)',
+                            color: 'var(--ca-saffron)',
                             fontSize: '12px',
                             padding: '4px 10px',
                             borderRadius: '8px',

@@ -320,7 +320,7 @@ Return ONLY this JSON (no markdown fences, no explanation):
                 </div>
                 {userRole === 'ADMIN' && (
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                        <button onClick={() => setShowAIModal(true)} className="btn btn-g" style={{ color: 'var(--gold)', border: '1px solid var(--gold)' }}>✨ Generate with AI</button>
+                        <button onClick={() => setShowAIModal(true)} className="btn btn-g" style={{ color: 'var(--ca-saffron)', border: '1px solid var(--ca-saffron)' }}>✨ Generate with AI</button>
                         <button onClick={openImportModal} className="btn btn-p" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             📥 Import Material
                         </button>
@@ -334,7 +334,7 @@ Return ONLY this JSON (no markdown fences, no explanation):
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
                     {categories.map(cat => (
                         <div key={cat}>
-                            <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--gold)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--ca-saffron)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <span>{getCategoryIcon(cat)}</span> {cat}
                             </h2>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
@@ -362,7 +362,7 @@ Return ONLY this JSON (no markdown fences, no explanation):
                                         </p>
                                         <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                             <span style={{ fontSize: '11px', color: 'var(--muted)' }}>{module.materials?.length || 0} lessons</span>
-                                            <span style={{ fontSize: '12px', color: 'var(--gold)', fontWeight: 600 }}>Start Learning →</span>
+                                            <span style={{ fontSize: '12px', color: 'var(--ca-saffron)', fontWeight: 600 }}>Start Learning →</span>
                                         </div>
                                     </Link>
                                 ))}
@@ -380,7 +380,7 @@ Return ONLY this JSON (no markdown fences, no explanation):
             {/* ====== AI GENERATE MODAL (existing) ====== */}
             {showAIModal && (
                 <div className="modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-                    <div className="card" style={{ width: '450px', padding: '28px', border: '2px solid var(--gold)' }}>
+                    <div className="card" style={{ width: '450px', padding: '28px', border: '2px solid var(--ca-saffron)' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
                             <span style={{ fontSize: '24px' }}>✨</span>
                             <h2 style={{ margin: 0 }}>AI Course Generator</h2>
@@ -425,7 +425,7 @@ Return ONLY this JSON (no markdown fences, no explanation):
                             </div>
                             <div style={{ display: 'flex', gap: '10px', marginTop: '24px' }}>
                                 <button type="button" onClick={() => setShowAIModal(false)} className="btn btn-g" style={{ flex: 1 }} disabled={generating}>Cancel</button>
-                                <button type="submit" className="btn btn-p" style={{ flex: 1, background: 'var(--gold)', color: '#000' }} disabled={generating}>
+                                <button type="submit" className="btn btn-p" style={{ flex: 1, background: 'var(--ca-saffron)', color: '#000' }} disabled={generating}>
                                     {generating ? '✨ Generating...' : 'Generate Course'}
                                 </button>
                             </div>

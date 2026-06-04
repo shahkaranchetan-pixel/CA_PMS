@@ -167,15 +167,15 @@ export default function EditTaskPage() {
                                 onClick={() => toggleAssignee(u.id)}
                                 style={{ 
                                     display: 'flex', alignItems: 'center', gap: '10px', padding: '10px', 
-                                    background: formData.assigneeIds.includes(u.id) ? 'rgba(232,160,32,0.1)' : 'var(--surface2)',
-                                    borderRadius: '8px', border: `1px solid ${formData.assigneeIds.includes(u.id) ? 'var(--gold)' : 'var(--border)'}`,
+                                    background: formData.assigneeIds.includes(u.id) ? 'rgba(243, 112, 33,0.1)' : 'var(--surface2)',
+                                    borderRadius: '8px', border: `1px solid ${formData.assigneeIds.includes(u.id) ? 'var(--ca-saffron)' : 'var(--border)'}`,
                                     cursor: 'pointer'
                                 }}
                             >
                                 <div style={{ 
                                     width: 14, height: 14, borderRadius: 3, 
-                                    border: `2px solid ${formData.assigneeIds.includes(u.id) ? 'var(--gold)' : 'var(--muted)'}`,
-                                    background: formData.assigneeIds.includes(u.id) ? 'var(--gold)' : 'transparent',
+                                    border: `2px solid ${formData.assigneeIds.includes(u.id) ? 'var(--ca-saffron)' : 'var(--muted)'}`,
+                                    background: formData.assigneeIds.includes(u.id) ? 'var(--ca-saffron)' : 'transparent',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center'
                                 }}>
                                     {formData.assigneeIds.includes(u.id) && <span style={{ color: '#000', fontSize: '10px', fontWeight: 900 }}>✓</span>}

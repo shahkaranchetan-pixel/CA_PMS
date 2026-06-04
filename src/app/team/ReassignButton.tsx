@@ -58,7 +58,7 @@ export default function ReassignButton({ taskId, team }: { taskId: string, team:
                                     fontSize: '11px', color: 'var(--text)', cursor: 'pointer',
                                     transition: 'background 0.2s'
                                 }}
-                                onMouseOver={e => (e.currentTarget.style.background = 'var(--gold-soft)')}
+                                onMouseOver={e => (e.currentTarget.style.background = 'var(--ca-saffron-soft)')}
                                 onMouseOut={e => (e.currentTarget.style.background = 'var(--surface2)')}
                             >
                                 {m.name}

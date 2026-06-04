@@ -9,13 +9,13 @@ interface ComplianceMatrixProps {
     currentPeriod: string;
 }
 
-function getStatusIcon(status: string) {
-    const config: Record<string, { color: string, glow: string, label: string }> = {
-        'COMPLETED': { color: '#00CF84', glow: 'rgba(0, 207, 132, 0.4)', label: 'Completed' },
-        'IN_PROGRESS': { color: '#4FACFE', glow: 'rgba(79, 172, 254, 0.4)', label: 'In Progress' },
-        'BLOCKED': { color: '#FF5757', glow: 'rgba(255, 87, 87, 0.4)', label: 'Blocked' },
-        'UNDER_REVIEW': { color: '#B89AFF', glow: 'rgba(184, 154, 255, 0.4)', label: 'Under Review' },
-        'PENDING': { color: 'var(--surface2)', glow: 'transparent', label: 'Pending' }
+function getStatusBadge(status: string) {
+    const config: Record<string, { color: string, bg: string, border: string, label: string }> = {
+        'COMPLETED': { color: '#00CF84', bg: 'rgba(0, 207, 132, 0.1)', border: 'rgba(0, 207, 132, 0.3)', label: 'Done' },
+        'IN_PROGRESS': { color: '#4FACFE', bg: 'rgba(79, 172, 254, 0.1)', border: 'rgba(79, 172, 254, 0.3)', label: 'Doing' },
+        'BLOCKED': { color: '#FF5757', bg: 'rgba(255, 87, 87, 0.1)', border: 'rgba(255, 87, 87, 0.3)', label: 'Stuck' },
+        'UNDER_REVIEW': { color: '#B89AFF', bg: 'rgba(184, 154, 255, 0.1)', border: 'rgba(184, 154, 255, 0.3)', label: 'Review' },
+        'PENDING': { color: 'var(--muted)', bg: 'transparent', border: 'var(--border)', label: 'Todo' }
     };
 
     const s = config[status] || config['PENDING'];
@@ -24,15 +24,20 @@ function getStatusIcon(status: string) {
         <div 
             title={s.label}
             style={{ 
-                width: '10px', 
-                height: '10px', 
-                borderRadius: '50%', 
-                background: s.color,
-                margin: '0 auto',
-                boxShadow: status !== 'PENDING' ? `0 0 8px ${s.glow}` : 'none',
-                border: status === 'PENDING' ? '1px solid var(--border)' : 'none'
+                padding: '4px 8px', 
+                borderRadius: '12px', 
+                background: s.bg,
+                color: s.color,
+                fontSize: '10px',
+                fontWeight: 700,
+                border: `1px solid ${s.border}`,
+                display: 'inline-block',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
             }} 
-        />
+        >
+            {s.label}
+        </div>
     );
 }
 
@@ -62,7 +67,7 @@ export default function ComplianceMatrix({ clients, tasks, currentPeriod }: Comp
     return (
         <div className="card glass-matrix" style={{ padding: 0, overflow: 'hidden', border: '1px solid var(--border)', background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(10px)' }}>
             <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)' }}>
-                <div style={{ fontSize: '11px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px', letterSpacing: '1.5px', color: 'var(--gold)', textShadow: '0 0 10px rgba(232, 160, 32, 0.2)' }}>
+                <div style={{ fontSize: '11px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px', letterSpacing: '1.5px', color: 'var(--ca-saffron)', textShadow: '0 0 10px rgba(243, 112, 33, 0.2)' }}>
                     STATUTORY COMPLIANCE MATRIX
                 </div>
                 <select 
@@ -90,33 +95,52 @@ export default function ComplianceMatrix({ clients, tasks, currentPeriod }: Comp
                     <thead>
                         <tr>
                             <th style={{ position: 'sticky', left: 0, background: 'var(--surface)', zIndex: 20, minWidth: '140px', borderRight: '1px solid var(--border)', fontSize: '9px', letterSpacing: '1px', padding: '12px' }}>ENTITY NAME</th>
+                            <th style={{ textAlign: 'center', minWidth: '60px', fontSize: '9px', letterSpacing: '1px', padding: '12px', background: 'var(--surface2)' }}>SCORE</th>
                             {STATUTORY_TYPES.map(type => (
                                 <th key={type.key} style={{ textAlign: 'center', minWidth: '70px', fontSize: '9px', letterSpacing: '1px', padding: '12px' }}>{type.label}</th>
                             ))}
                         </tr>
                     </thead>
                     <tbody>
-                        {clients.map(client => (
+                        {clients.map(client => {
+                            // Calculate scorecard
+                            let totalTasks = 0;
+                            let completedTasks = 0;
+                            STATUTORY_TYPES.forEach(type => {
+                                const task = tasks.find(t => t.clientId === client.id && t.taskType === type.key);
+                                if (task) {
+                                    totalTasks++;
+                                    if (task.status === 'COMPLETED') completedTasks++;
+                                }
+                            });
+                            const score = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+                            const scoreColor = score === 100 ? '#00CF84' : score >= 50 ? '#F37021' : '#FF5757';
+
+                            return (
                             <tr key={client.id} className="matrix-row">
                                 <td style={{ position: 'sticky', left: 0, background: 'var(--surface)', zIndex: 5, fontWeight: 700, fontSize: '12px', borderRight: '1px solid var(--border)', whiteSpace: 'nowrap', fontStyle: 'italic', padding: '12px', transition: 'all 0.2s' }}>
                                     {client.name}
+                                </td>
+                                <td style={{ textAlign: 'center', padding: '12px 6px', fontWeight: 800, fontSize: '11px', color: scoreColor, background: 'rgba(255,255,255,0.01)' }}>
+                                    {totalTasks > 0 ? `${score}%` : '-'}
                                 </td>
                                 {STATUTORY_TYPES.map(type => {
                                     const task = tasks.find(t => t.clientId === client.id && t.taskType === type.key);
                                     return (
                                         <td key={type.key} style={{ textAlign: 'center', padding: '12px 6px' }}>
                                             {task ? (
-                                                <Link href={`/tasks/${task.id}`} className="status-dot-link" style={{ textDecoration: 'none', display: 'block' }}>
-                                                    {getStatusIcon(task.status)}
+                                                <Link href={`/tasks/${task.id}`} className="status-badge-link" style={{ textDecoration: 'none', display: 'block' }}>
+                                                    {getStatusBadge(task.status)}
                                                 </Link>
                                             ) : (
-                                                <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', margin: '0 auto' }} />
+                                                <div style={{ padding: '4px 8px', borderRadius: '12px', border: '1px dashed var(--border)', color: 'var(--muted)', fontSize: '10px', display: 'inline-block' }}>N/A</div>
                                             )}
                                         </td>
                                     );
                                 })}
                             </tr>
-                        ))}
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>
@@ -132,11 +156,12 @@ export default function ComplianceMatrix({ clients, tasks, currentPeriod }: Comp
                 .matrix-row:hover td {
                     background: rgba(255,255,255,0.02) !important;
                 }
-                .status-dot-link {
-                    transition: transform 0.2s;
+                .status-badge-link {
+                    transition: transform 0.2s, opacity 0.2s;
                 }
-                .status-dot-link:hover {
-                    transform: scale(1.4) !important;
+                .status-badge-link:hover {
+                    transform: scale(1.05) !important;
+                    opacity: 0.8;
                 }
                 .glass-matrix {
                     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);

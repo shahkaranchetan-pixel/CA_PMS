@@ -49,7 +49,7 @@ export default function LoginPage() {
             <div style={{
                 position: 'fixed', top: '-200px', right: '-200px',
                 width: '600px', height: '600px', borderRadius: '50%',
-                background: 'radial-gradient(circle, rgba(232,160,32,0.06) 0%, transparent 70%)',
+                background: 'radial-gradient(circle, rgba(243, 112, 33,0.06) 0%, transparent 70%)',
                 pointerEvents: 'none'
             }} />
             <div style={{
@@ -73,7 +73,7 @@ export default function LoginPage() {
                 <div style={{
                     position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
                     width: '200px', height: '3px',
-                    background: 'linear-gradient(90deg, transparent, var(--gold), transparent)',
+                    background: 'linear-gradient(90deg, transparent, var(--ca-saffron), transparent)',
                     borderRadius: '0 0 10px 10px'
                 }} />
 
@@ -83,7 +83,7 @@ export default function LoginPage() {
                         fontFamily: 'Playfair Display, serif',
                         fontSize: '32px',
                         fontWeight: 700,
-                        color: 'var(--gold)',
+                        color: 'var(--ca-saffron)',
                         lineHeight: 1,
                         marginBottom: '6px'
                     }}>
@@ -165,7 +165,7 @@ export default function LoginPage() {
                                 transition: 'border-color .2s',
                                 boxSizing: 'border-box'
                             }}
-                            onFocus={e => e.target.style.borderColor = 'var(--gold)'}
+                            onFocus={e => e.target.style.borderColor = 'var(--ca-saffron)'}
                             onBlur={e => e.target.style.borderColor = 'var(--border)'}
                         />
                     </div>
@@ -181,7 +181,7 @@ export default function LoginPage() {
                             }}>
                                 PASSWORD
                             </label>
-                            <a href="/forgot-password" style={{ fontSize: '11px', color: 'var(--gold)', textDecoration: 'none', fontWeight: 500 }}>
+                            <a href="/forgot-password" style={{ fontSize: '11px', color: 'var(--ca-saffron)', textDecoration: 'none', fontWeight: 500 }}>
                                 Forgot password?
                             </a>
                         </div>
@@ -204,7 +204,7 @@ export default function LoginPage() {
                                 transition: 'border-color .2s',
                                 boxSizing: 'border-box'
                             }}
-                            onFocus={e => e.target.style.borderColor = 'var(--gold)'}
+                            onFocus={e => e.target.style.borderColor = 'var(--ca-saffron)'}
                             onBlur={e => e.target.style.borderColor = 'var(--border)'}
                         />
                     </div>
@@ -215,7 +215,7 @@ export default function LoginPage() {
                         style={{
                             width: '100%',
                             padding: '14px',
-                            background: 'var(--gold)',
+                            background: 'var(--ca-saffron)',
                             color: '#07101f',
                             border: 'none',
                             borderRadius: '10px',
@@ -258,7 +258,7 @@ export default function LoginPage() {
                         gap: '12px',
                         transition: 'all .2s'
                     }}
-                    onMouseEnter={e => { (e.target as HTMLElement).style.background = 'var(--surface2)'; (e.target as HTMLElement).style.borderColor = 'var(--gold)' }}
+                    onMouseEnter={e => { (e.target as HTMLElement).style.background = 'var(--surface2)'; (e.target as HTMLElement).style.borderColor = 'var(--ca-saffron)' }}
                     onMouseLeave={e => { (e.target as HTMLElement).style.background = 'var(--surface2)'; (e.target as HTMLElement).style.borderColor = 'var(--border)' }}
                 >
                     <Image src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width={18} height={18} unoptimized />

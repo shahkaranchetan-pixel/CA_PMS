@@ -44,7 +44,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ m
         completedThisMonth,
         blockedTasksCount,
         underReviewTasksCount,
-        upcomingDeadlines
+        upcomingDeadlines,
+        recentEscalations,
+        recentClients
     ] = await Promise.all([
         prisma.client.count({ where: { deletedAt: null } }),
         prisma.client.findMany({ 
@@ -117,7 +119,24 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ m
             select: { id: true, title: true, status: true, dueDate: true, priority: true, client: { select: { name: true } } },
             orderBy: { dueDate: 'asc' },
             take: 7
-        })
+        }),
+        // Fetch recent escalations for admin
+        userRole === 'ADMIN' ? prisma.taskEscalation.findMany({
+            take: 5,
+            orderBy: { createdAt: 'desc' },
+            include: {
+                task: { select: { id: true, title: true } },
+                escalatedBy: { select: { name: true, color: true } },
+                recipients: { include: { user: { select: { name: true, color: true } } } }
+            }
+        }) : Promise.resolve([]),
+        // Fetch recently onboarded clients
+        userRole === 'ADMIN' ? prisma.client.findMany({
+            where: { deletedAt: null },
+            orderBy: { createdAt: 'desc' },
+            take: 3,
+            select: { id: true, name: true, createdAt: true, gDriveLink: true }
+        }) : Promise.resolve([])
     ]);
 
     // Calendar logic
@@ -206,6 +225,46 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ m
                 </div>
             </div>
 
+            {/* Compliance Health Widget */}
+            <div className="card" style={{ marginBottom: '24px', padding: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <div className="ctitle" style={{ margin: 0 }}>📊 Compliance Health ({currentPeriod})</div>
+                    <Link href="/calendar" style={{ fontSize: '11px', color: 'var(--ca-saffron)' }}>View Matrix →</Link>
+                </div>
+                <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: '150px', background: 'var(--surface2)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                        <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '8px', fontWeight: 600 }}>Total Statutory Tasks</div>
+                        <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text)' }}>{statutoryTasksCount}</div>
+                    </div>
+                    <div style={{ flex: 1, minWidth: '150px', background: 'rgba(0, 207, 132, 0.05)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(0, 207, 132, 0.2)' }}>
+                        <div style={{ fontSize: '12px', color: '#00CF84', marginBottom: '8px', fontWeight: 600 }}>Completed</div>
+                        <div style={{ fontSize: '28px', fontWeight: 800, color: '#00CF84' }}>{completedThisMonth}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '4px' }}>{statutoryTasksCount > 0 ? Math.round((completedThisMonth / statutoryTasksCount) * 100) : 0}% completion rate</div>
+                    </div>
+                    <div style={{ flex: 1, minWidth: '150px', background: 'rgba(255, 87, 87, 0.05)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255, 87, 87, 0.2)' }}>
+                        <div style={{ fontSize: '12px', color: '#FF5757', marginBottom: '8px', fontWeight: 600 }}>Overdue & Attention Needed</div>
+                        <div style={{ fontSize: '28px', fontWeight: 800, color: '#FF5757' }}>{overdueTasksCount}</div>
+                        <div style={{ fontSize: '11px', color: '#FF5757', marginTop: '4px' }}>Critical filings missed</div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Recently Onboarded Clients (Admin Only) */}
+            {userRole === 'ADMIN' && recentClients && recentClients.length > 0 && (
+                <div className="card" style={{ marginBottom: '24px', padding: '16px', background: 'rgba(243, 112, 33, 0.05)', border: '1px solid rgba(243, 112, 33, 0.2)' }}>
+                    <div className="ctitle" style={{ margin: '0 0 12px 0', color: 'var(--ca-saffron)' }}>🌟 Newly Onboarded Clients</div>
+                    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                        {recentClients.map((client: any) => (
+                            <Link key={client.id} href={`/clients/${client.id}`} style={{ flex: 1, minWidth: '200px', background: 'var(--surface)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border)', textDecoration: 'none' }}>
+                                <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text)', marginBottom: '4px' }}>{client.name}</div>
+                                <div style={{ fontSize: '10px', color: 'var(--muted)' }}>Joined {timeAgo(client.createdAt)}</div>
+                                {client.gDriveLink && <div style={{ fontSize: '10px', color: '#4FACFE', marginTop: '6px' }}>📁 Has Drive Link</div>}
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             {/* My Tasks Section */}
             <div style={{ marginBottom: '24px' }}>
                 <MyTasksDashboard tasks={myTasks} />
@@ -224,7 +283,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ m
                                 <Link href={`/?month=${nextMonth}&year=${nextYear}`} scroll={false} className="btn-ic" style={{ padding: '2px 8px', fontSize: '14px' }}>›</Link>
                             </div>
                         </div>
-                        <Link href="/calendar" style={{ fontSize: '11px', color: 'var(--gold)' }}>Full View →</Link>
+                        <Link href="/calendar" style={{ fontSize: '11px', color: 'var(--ca-saffron)' }}>Full View →</Link>
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', background: 'var(--border)', borderRadius: '10px', overflow: 'hidden' }}>
                         {/* Weekday Headers */}
@@ -242,7 +301,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ m
 
                             return (
                                 <div key={i} style={{
-                                    background: isToday ? 'rgba(232,160,32,.08)' : 'var(--surface)',
+                                    background: isToday ? 'rgba(243, 112, 33,.08)' : 'var(--surface)',
                                     minHeight: '52px',
                                     padding: '4px',
                                     position: 'relative'
@@ -253,7 +312,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ m
                                                 width: '22px', height: '22px',
                                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                 borderRadius: '50%',
-                                                background: isToday ? 'var(--gold)' : 'transparent',
+                                                background: isToday ? 'var(--ca-saffron)' : 'transparent',
                                                 color: isToday ? '#000' : hasOverdue ? 'var(--danger)' : 'var(--text)',
                                                 fontWeight: isToday ? 700 : 400,
                                                 fontSize: '11px',
@@ -283,8 +342,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ m
 
                     {/* Today's Tasks */}
                     {tasksByDay[now.getDate()] && tasksByDay[now.getDate()].length > 0 && displayMonth === now.getMonth() && displayYear === now.getFullYear() && (
-                        <div style={{ marginTop: '12px', padding: '10px', background: 'rgba(232,160,32,.05)', borderRadius: '8px', border: '1px solid rgba(232,160,32,.15)' }}>
-                            <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>
+                        <div style={{ marginTop: '12px', padding: '10px', background: 'rgba(243, 112, 33,.05)', borderRadius: '8px', border: '1px solid rgba(243, 112, 33,.15)' }}>
+                            <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--ca-saffron)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>
                                 📌 Due Today
                             </div>
                             {tasksByDay[now.getDate()].map((t: any) => (
@@ -367,7 +426,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ m
                                                 <span style={{ color: 'var(--muted)' }}>commented</span>
                                             )}
                                         </div>
-                                        <Link href={`/tasks/${log.taskId}`} style={{ fontSize: '10px', color: 'var(--gold)', display: 'block', marginTop: '1px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        <Link href={`/tasks/${log.taskId}`} style={{ fontSize: '10px', color: 'var(--ca-saffron)', display: 'block', marginTop: '1px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                             {log.task?.title}
                                         </Link>
                                         <div style={{ fontSize: '9px', color: 'var(--muted)', marginTop: '2px' }}>
@@ -380,11 +439,56 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ m
                     )}
                 </div>
 
+                {userRole === 'ADMIN' && (
+                    <div className="card">
+                        <div className="ctitle">
+                            <span>↗️ Recent Escalations</span>
+                        </div>
+                        {recentEscalations.length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--muted)', fontSize: '13px', fontStyle: 'italic' }}>No recent escalations</div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '320px', overflowY: 'auto' }}>
+                                {recentEscalations.map((esc: any) => (
+                                    <div key={esc.id} style={{ display: 'flex', gap: '8px', fontSize: '11.5px', background: 'var(--surface2)', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                                        <div style={{ width: 24, height: 24, borderRadius: '50%', background: esc.escalatedBy?.color || 'var(--surface2)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 700, color: '#000' }}>
+                                            {esc.escalatedBy?.name?.charAt(0).toUpperCase() || 'U'}
+                                        </div>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ display: 'flex', gap: '4px', alignItems: 'baseline', flexWrap: 'wrap' }}>
+                                                <span style={{ fontWeight: 600 }}>{esc.escalatedBy?.name?.split(' ')[0] || 'User'}</span>
+                                                <span style={{ color: 'var(--muted)' }}>escalated to</span>
+                                                <div style={{ display: 'flex', gap: '4px' }}>
+                                                    {esc.recipients.map((r: any) => (
+                                                        <span key={r.id} style={{ fontWeight: 600, color: 'var(--ca-saffron)' }}>
+                                                            {r.user?.name?.split(' ')[0]}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <Link href={`/tasks/${esc.taskId}`} style={{ fontSize: '10.5px', color: 'var(--text)', display: 'block', marginTop: '2px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                {esc.task?.title}
+                                            </Link>
+                                            {esc.note && (
+                                                <div style={{ marginTop: '6px', padding: '6px', background: 'rgba(255,255,255,0.03)', borderLeft: '2px solid var(--ca-saffron)', borderRadius: '4px', fontSize: '11px', color: 'var(--muted)', fontStyle: 'italic' }}>
+                                                    &quot;{esc.note}&quot;
+                                                </div>
+                                            )}
+                                            <div style={{ fontSize: '9px', color: 'var(--muted)', marginTop: '4px' }}>
+                                                {timeAgo(esc.createdAt)}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {/* Team Load */}
                 <div className="card">
                     <div className="ctitle">
                         <span>📊 Team Load</span>
-                        <Link href="/team" style={{ fontSize: '11px', color: 'var(--gold)' }}>View All →</Link>
+                        <Link href="/team" style={{ fontSize: '11px', color: 'var(--ca-saffron)' }}>View All →</Link>
                     </div>
                     {team.length === 0 ? (
                         <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--muted)', fontSize: '13px', fontStyle: 'italic' }}>No team members</div>
@@ -395,7 +499,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ m
                             const color = load > 80 ? '#FF5757' : load > 50 ? '#FFB020' : '#00CF84';
                             return (
                                 <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '5px 0' }}>
-                                    <div style={{ width: 24, height: 24, borderRadius: 6, background: (m as any).color || 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#000' }}>
+                                    <div style={{ width: 24, height: 24, borderRadius: 6, background: (m as any).color || 'var(--ca-saffron)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#000' }}>
                                         {m.name?.substring(0, 2).toUpperCase() || 'U'}
                                     </div>
                                     <div style={{ fontSize: '12px', fontWeight: 500, flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.name}</div>

@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import EscalationModal from "./EscalationModal"
 
 interface MyTasksDashboardProps {
     tasks: any[]
@@ -10,6 +11,7 @@ interface MyTasksDashboardProps {
 export default function MyTasksDashboard({ tasks }: MyTasksDashboardProps) {
     const [activeTab, setActiveTab] = useState("Open")
     const [search, setSearch] = useState("")
+    const [escalateTaskId, setEscalateTaskId] = useState<string | null>(null)
     const now = new Date()
 
     const tabs = [
@@ -131,6 +133,7 @@ export default function MyTasksDashboard({ tasks }: MyTasksDashboardProps) {
                             <th style={{ textAlign: 'left', padding: '12px 20px', fontSize: '11px', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--border)' }}>Reviewer</th>
                             <th style={{ textAlign: 'left', padding: '12px 20px', fontSize: '11px', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--border)' }}>Client</th>
                             <th style={{ textAlign: 'left', padding: '12px 20px', fontSize: '11px', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--border)' }}>Due Date</th>
+                            <th style={{ textAlign: 'center', padding: '12px 20px', fontSize: '11px', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--border)' }}>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -155,7 +158,7 @@ export default function MyTasksDashboard({ tasks }: MyTasksDashboardProps) {
                                         <div style={{ display: 'flex', gap: '4px' }}>
                                             {task.taskAssignees?.map((ta: any) => (
                                                 <div key={ta.id} style={{ 
-                                                    width: '24px', height: '24px', borderRadius: '50%', background: ta.user?.color || 'var(--gold)',
+                                                    width: '24px', height: '24px', borderRadius: '50%', background: ta.user?.color || 'var(--ca-saffron)',
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 700, color: '#000'
                                                 }} title={ta.user?.name}>
                                                     {ta.user?.name?.charAt(0).toUpperCase()}
@@ -178,6 +181,15 @@ export default function MyTasksDashboard({ tasks }: MyTasksDashboardProps) {
                                                 {new Date(task.dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                                             </span>
                                         ) : '—'}
+                                    </td>
+                                    <td style={{ padding: '14px 20px', textAlign: 'center' }}>
+                                        <button 
+                                            onClick={() => setEscalateTaskId(task.id)}
+                                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ca-saffron)', fontSize: '16px' }}
+                                            title="Escalate Task"
+                                        >
+                                            ↗️
+                                        </button>
                                     </td>
                                 </tr>
                             ))
@@ -215,6 +227,13 @@ export default function MyTasksDashboard({ tasks }: MyTasksDashboardProps) {
                         </button>
                     </div>
                 </div>
+            )}
+
+            {escalateTaskId && (
+                <EscalationModal 
+                    taskId={escalateTaskId} 
+                    onClose={() => setEscalateTaskId(null)} 
+                />
             )}
         </div>
     )

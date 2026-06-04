@@ -77,12 +77,12 @@ export default function CustomVaultSection({ clientId, entries }: CustomVaultPro
     return (
         <div style={{ marginTop: '12px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '1.5px' }}>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--ca-saffron)', textTransform: 'uppercase', letterSpacing: '1.5px' }}>
                     🔑 Custom Logins
                 </div>
                 <button
                     onClick={() => setShowForm(!showForm)}
-                    style={{ background: 'none', border: '1px solid var(--gold)', color: 'var(--gold)', padding: '4px 10px', borderRadius: '6px', fontSize: '10px', fontWeight: 700, cursor: 'pointer', fontFamily: 'DM Sans,sans-serif' }}
+                    style={{ background: 'none', border: '1px solid var(--ca-saffron)', color: 'var(--ca-saffron)', padding: '4px 10px', borderRadius: '6px', fontSize: '10px', fontWeight: 700, cursor: 'pointer', fontFamily: 'DM Sans,sans-serif' }}
                 >
                     {showForm ? '✕ Cancel' : '+ Add Login'}
                 </button>
@@ -127,7 +127,7 @@ export default function CustomVaultSection({ clientId, entries }: CustomVaultPro
             <div style={{ display: 'grid', gap: '6px' }}>
                 {entries.map(entry => (
                     <div key={entry.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px', padding: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ width: '36px', height: '36px', background: 'rgba(232,160,32,.1)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', color: 'var(--gold)', flexShrink: 0 }}>
+                        <div style={{ width: '36px', height: '36px', background: 'rgba(243, 112, 33,.1)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', color: 'var(--ca-saffron)', flexShrink: 0 }}>
                             🔑
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -149,7 +149,7 @@ export default function CustomVaultSection({ clientId, entries }: CustomVaultPro
                                 <div>
                                     <span style={{ fontSize: '10px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         Password
-                                        <button onClick={() => handleReveal(entry.id, entry.portalName)} style={{ background: 'none', border: 'none', color: 'var(--gold)', fontSize: '10px', cursor: 'pointer', fontWeight: 600 }}>
+                                        <button onClick={() => handleReveal(entry.id, entry.portalName)} style={{ background: 'none', border: 'none', color: 'var(--ca-saffron)', fontSize: '10px', cursor: 'pointer', fontWeight: 600 }}>
                                             {showPasswords[entry.id] ? 'HIDE' : 'SHOW'}
                                         </button>
                                     </span>

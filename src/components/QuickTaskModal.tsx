@@ -120,7 +120,7 @@ export default function QuickTaskModal({ isOpen, onClose }: QuickTaskModalProps)
         }}>
             <div ref={modalRef} className="card" style={{ width: '100%', maxWidth: '450px', position: 'relative' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                    <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--gold)' }}>⚡ Quick Task</h2>
+                    <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--ca-saffron)' }}>⚡ Quick Task</h2>
                     <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '20px', cursor: 'pointer' }}>×</button>
                 </div>
 
@@ -160,7 +160,7 @@ export default function QuickTaskModal({ isOpen, onClose }: QuickTaskModalProps)
                                     position: 'absolute', right: '4px', top: '50%', transform: 'translateY(-50%)',
                                     background: isListening ? 'var(--danger)' : 'var(--surface2)',
                                     border: 'none', borderRadius: '6px', width: '30px', height: '30px',
-                                    color: isListening ? '#fff' : 'var(--gold)', cursor: 'pointer',
+                                    color: isListening ? '#fff' : 'var(--ca-saffron)', cursor: 'pointer',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center'
                                 }}
                                 title="Voice Dictation"
@@ -189,14 +189,14 @@ export default function QuickTaskModal({ isOpen, onClose }: QuickTaskModalProps)
                     <PeriodSelector value={period} onChange={setPeriod} />
 
                     <div className="field" style={{ gridColumn: '1 / -1', marginTop: '6px' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: '10px', background: 'rgba(232,160,32,0.05)', borderRadius: '8px', border: '1px solid rgba(232,160,32,0.15)' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: '10px', background: 'rgba(243, 112, 33,0.05)', borderRadius: '8px', border: '1px solid rgba(243, 112, 33,0.15)' }}>
                             <input 
                                 type="checkbox" 
                                 checked={notifyClient} 
                                 onChange={e => setNotifyClient(e.target.checked)}
                                 style={{ width: '16px', height: '16px', cursor: 'pointer' }}
                             />
-                            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gold)' }}>📧 Notify Client via Email?</span>
+                            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--ca-saffron)' }}>📧 Notify Client via Email?</span>
                         </label>
                     </div>
 

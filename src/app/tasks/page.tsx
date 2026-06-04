@@ -58,19 +58,7 @@ export default async function TasksPage(props: { searchParams: Promise<{ [key: s
             }
         }
     } else {
-        // Employees see tasks assigned to them OR tasks in their department
-        const deptTaskTypes: Record<string, string[]> = {
-            'GST': ['GST_1', 'GSTR_1', 'GSTR1', 'GSTR_3B', 'GSTR3B'],
-            'TDS': ['TDS_PAYMENT', 'TDS_RETURN'],
-            'ACCOUNTING': ['ACCOUNTING'],
-            'LABOUR': ['PF_ESI_PT']
-        };
-        const allowedTypes = deptTaskTypes[userDept] || [];
-        
-        filterConditions.OR = [
-            { taskAssignees: { some: { userId: currentUserId } } },
-            { taskType: { in: allowedTypes } }
-        ];
+        filterConditions.taskAssignees = { some: { userId: currentUserId } };
     }
     if (typeFilter) {
         filterConditions.taskType = typeFilter;

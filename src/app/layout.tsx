@@ -6,7 +6,7 @@ import NextTopLoader from 'nextjs-toploader'
 import { Toaster } from 'react-hot-toast'
 
 export const viewport: Viewport = {
-    themeColor: '#c9a84c',
+    themeColor: '#F37021',
     width: 'device-width',
     initialScale: 1,
     maximumScale: 1,
@@ -39,7 +39,7 @@ export default function RootLayout({
                 }} />
             </head>
             <body>
-                <NextTopLoader color="#c9a84c" showSpinner={false} />
+                <NextTopLoader color="#F37021" showSpinner={false} />
                 <Toaster position="top-right" toastOptions={{ style: { background: 'var(--surface2)', color: 'var(--text)', border: '1px solid var(--border)' } }} />
                 <Providers>
                     <AuthLayout>

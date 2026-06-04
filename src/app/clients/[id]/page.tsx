@@ -135,7 +135,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
                     </div>
 
                     {/* Separated PF, ESI, PT */}
-                    <div style={{ marginTop: '12px', fontSize: '10px', fontWeight: 700, color: 'var(--gold)', letterSpacing: '1.5px', textTransform: 'uppercase', paddingBottom: '6px', borderBottom: '1px solid var(--border)' }}>
+                    <div style={{ marginTop: '12px', fontSize: '10px', fontWeight: 700, color: 'var(--ca-saffron)', letterSpacing: '1.5px', textTransform: 'uppercase', paddingBottom: '6px', borderBottom: '1px solid var(--border)' }}>
                         Labour & Statutory
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px', marginTop: '8px' }}>

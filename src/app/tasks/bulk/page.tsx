@@ -248,7 +248,7 @@ export default function BulkTaskCreationPage() {
                                         return (
                                             <span key={id} style={{
                                                 display: 'inline-flex', alignItems: 'center', gap: '4px',
-                                                background: 'var(--gold)', color: '#000',
+                                                background: 'var(--ca-saffron)', color: '#000',
                                                 borderRadius: '99px', padding: '2px 10px 2px 6px',
                                                 fontSize: '11.5px', fontWeight: 600
                                             }}>
@@ -283,7 +283,7 @@ export default function BulkTaskCreationPage() {
                                         <label key={u.id} style={{
                                             display: 'flex', alignItems: 'center', gap: '10px',
                                             padding: '8px 12px', cursor: 'pointer',
-                                            background: selectedAssignees.includes(u.id) ? 'rgba(232,160,32,0.15)' : '#0e1c33',
+                                            background: selectedAssignees.includes(u.id) ? 'rgba(243, 112, 33,0.15)' : '#0e1c33',
                                             borderBottom: '1px solid var(--surface2)',
                                             fontSize: '13px'
                                         }}>
@@ -291,11 +291,11 @@ export default function BulkTaskCreationPage() {
                                                 type="checkbox"
                                                 checked={selectedAssignees.includes(u.id)}
                                                 onChange={() => toggleAssignee(u.id)}
-                                                style={{ accentColor: 'var(--gold)' }}
+                                                style={{ accentColor: 'var(--ca-saffron)' }}
                                             />
                                             <div style={{
                                                 width: 24, height: 24, borderRadius: '50%',
-                                                background: u.color || 'var(--gold)',
+                                                background: u.color || 'var(--ca-saffron)',
                                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                 fontSize: '10px', fontWeight: 700, color: '#000'
                                             }}>
@@ -318,7 +318,7 @@ export default function BulkTaskCreationPage() {
 
                         <div style={{ fontSize: '12px', color: 'var(--text)', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span>
-                                <span style={{ color: 'var(--gold)', fontWeight: 700 }}>{getSelectedCount()}</span> of {clients.length} selected
+                                <span style={{ color: 'var(--ca-saffron)', fontWeight: 700 }}>{getSelectedCount()}</span> of {clients.length} selected
                             </span>
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 <button type="button" onClick={() => handleSelectAll(true)} className="btn btn-g btn-sm">Select All</button>
@@ -328,12 +328,12 @@ export default function BulkTaskCreationPage() {
 
                         <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: '8px', overflowY: 'auto', maxHeight: '420px', padding: '4px' }}>
                             {clients.map(client => (
-                                <label key={client.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', cursor: 'pointer', borderRadius: '4px', background: selectedClients[client.id] ? 'rgba(232, 160, 32, 0.1)' : 'transparent' }}>
+                                <label key={client.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', cursor: 'pointer', borderRadius: '4px', background: selectedClients[client.id] ? 'rgba(243, 112, 33, 0.1)' : 'transparent' }}>
                                     <input
                                         type="checkbox"
                                         checked={selectedClients[client.id] || false}
                                         onChange={(e) => setSelectedClients(prev => ({ ...prev, [client.id]: e.target.checked }))}
-                                        style={{ accentColor: 'var(--gold)' }}
+                                        style={{ accentColor: 'var(--ca-saffron)' }}
                                     />
                                     <div>
                                         <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text)' }}>{client.name}</div>

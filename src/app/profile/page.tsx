@@ -105,7 +105,7 @@ export default function ProfilePage() {
                         <div style={{ marginTop: '16px' }}>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                                 <div style={{ background: 'var(--surface2)', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>
-                                    <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--gold)' }}>{tasks.filter(t => t.status !== 'COMPLETED').length}</div>
+                                    <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--ca-saffron)' }}>{tasks.filter(t => t.status !== 'COMPLETED').length}</div>
                                     <div style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '4px' }}>Pending</div>
                                 </div>
                                 <div style={{ background: 'var(--surface2)', padding: '16px', borderRadius: '12px', textAlign: 'center' }}>

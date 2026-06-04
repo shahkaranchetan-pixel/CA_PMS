@@ -123,7 +123,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
 
                         return (
                             <div key={i} style={{
-                                background: isToday ? 'rgba(232, 160, 32, 0.05)' : 'var(--surface)',
+                                background: isToday ? 'rgba(243, 112, 33, 0.05)' : 'var(--surface)',
                                 minHeight: '100px',
                                 padding: '8px',
                                 borderTop: '1px solid var(--border)'
@@ -135,7 +135,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
                                                 width: '24px', height: '24px',
                                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                 borderRadius: '50%',
-                                                background: isToday ? 'var(--gold)' : 'transparent',
+                                                background: isToday ? 'var(--ca-saffron)' : 'transparent',
                                                 color: isToday ? '#000' : 'var(--text)',
                                                 fontWeight: isToday ? 700 : 500,
                                                 fontSize: '13px'
@@ -150,7 +150,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
                                                     textDecoration: 'none',
                                                     padding: '4px 6px',
                                                     background: task.status === 'COMPLETED' ? 'rgba(34, 197, 94, 0.05)' : 'var(--surface2)',
-                                                    borderLeft: `2px solid ${task.status === 'COMPLETED' ? 'var(--success)' : (task.priority === 'high' ? 'var(--danger)' : 'var(--gold)')}`,
+                                                    borderLeft: `2px solid ${task.status === 'COMPLETED' ? 'var(--success)' : (task.priority === 'high' ? 'var(--danger)' : 'var(--ca-saffron)')}`,
                                                     borderRadius: '4px',
                                                     fontSize: '10px',
                                                     display: 'flex',

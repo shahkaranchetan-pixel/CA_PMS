@@ -144,7 +144,7 @@ export default function DocumentUploadSection({ clientId, documents }: DocSectio
                         const docs = grouped[cat]
                         return (
                             <div key={cat}>
-                                <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--ca-saffron)', textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                     <span>{catInfo.icon}</span> {catInfo.label}
                                 </div>
                                 {docs.map(doc => (

@@ -278,7 +278,7 @@ export default function TaskDetailClient({ task, isAdmin }: { task: any, isAdmin
                                         </span>
                                         <div style={{ display: 'flex', alignItems: 'center' }}>
                                             {sub.taskAssignees && sub.taskAssignees.map((ta: any, i: number) => (
-                                                <div key={ta.id} style={{ width: 20, height: 20, borderRadius: '50%', background: ta.user?.color || 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px', fontWeight: 700, color: '#000', marginLeft: i > 0 ? '-4px' : 0, border: '2px solid var(--surface2)' }}>
+                                                <div key={ta.id} style={{ width: 20, height: 20, borderRadius: '50%', background: ta.user?.color || 'var(--ca-saffron)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8px', fontWeight: 700, color: '#000', marginLeft: i > 0 ? '-4px' : 0, border: '2px solid var(--surface2)' }}>
                                                     {ta.user?.name?.substring(0, 2).toUpperCase() || 'U'}
                                                 </div>
                                             ))}
@@ -355,7 +355,7 @@ export default function TaskDetailClient({ task, isAdmin }: { task: any, isAdmin
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                     {task.taskAssignees.map((ta: any) => (
                                         <div key={ta.id} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                            <div style={{ width: 36, height: 36, borderRadius: '10px', background: ta.user?.color || 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '13px', color: '#000' }}>
+                                            <div style={{ width: 36, height: 36, borderRadius: '10px', background: ta.user?.color || 'var(--ca-saffron)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '13px', color: '#000' }}>
                                                 {ta.user?.name ? ta.user.name.charAt(0).toUpperCase() : 'U'}
                                             </div>
                                             <div>
@@ -540,8 +540,8 @@ function AIReminderDraft({ taskId, client, taskTitle, period }: { taskId: string
     };
 
     return (
-        <div className="card" style={{ border: '1px solid var(--gold-soft)', background: 'rgba(232,160,32,0.03)' }}>
-            <div className="ctitle" style={{ color: 'var(--gold)' }}>✨ AI Reminder Draft</div>
+        <div className="card" style={{ border: '1px solid var(--ca-saffron-soft)', background: 'rgba(243, 112, 33,0.03)' }}>
+            <div className="ctitle" style={{ color: 'var(--ca-saffron)' }}>✨ AI Reminder Draft</div>
             <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
                 <select 
                     value={channel} 

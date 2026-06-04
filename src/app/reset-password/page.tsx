@@ -55,7 +55,7 @@ function ResetPasswordForm() {
                 <div style={{ fontSize: "40px", marginBottom: "16px" }}>❌</div>
                 <div style={{ fontFamily: "Playfair Display, serif", fontSize: "20px", fontWeight: 600, color: "var(--text)", marginBottom: "10px" }}>Invalid link</div>
                 <div style={{ fontSize: "13px", color: "var(--muted)", marginBottom: "24px" }}>This reset link is missing a token. Please request a new one.</div>
-                <a href="/forgot-password" style={{ display: "inline-block", padding: "12px 24px", background: "var(--gold)", color: "#07101f", borderRadius: "10px", textDecoration: "none", fontWeight: 700, fontSize: "14px" }}>
+                <a href="/forgot-password" style={{ display: "inline-block", padding: "12px 24px", background: "var(--ca-saffron)", color: "#07101f", borderRadius: "10px", textDecoration: "none", fontWeight: 700, fontSize: "14px" }}>
                     Request New Link
                 </a>
             </div>
@@ -101,7 +101,7 @@ function ResetPasswordForm() {
                         onChange={e => setPassword(e.target.value)}
                         required
                         style={{ width: "100%", background: "rgba(255,255,255,.04)", border: "1px solid var(--border)", borderRadius: "10px", padding: "13px 16px", color: "var(--text)", fontFamily: "DM Sans, sans-serif", fontSize: "14px", outline: "none", boxSizing: "border-box" }}
-                        onFocus={e => e.target.style.borderColor = "var(--gold)"}
+                        onFocus={e => e.target.style.borderColor = "var(--ca-saffron)"}
                         onBlur={e => e.target.style.borderColor = "var(--border)"}
                     />
                 </div>
@@ -117,7 +117,7 @@ function ResetPasswordForm() {
                         onChange={e => setConfirm(e.target.value)}
                         required
                         style={{ width: "100%", background: "rgba(255,255,255,.04)", border: "1px solid var(--border)", borderRadius: "10px", padding: "13px 16px", color: "var(--text)", fontFamily: "DM Sans, sans-serif", fontSize: "14px", outline: "none", boxSizing: "border-box" }}
-                        onFocus={e => e.target.style.borderColor = "var(--gold)"}
+                        onFocus={e => e.target.style.borderColor = "var(--ca-saffron)"}
                         onBlur={e => e.target.style.borderColor = "var(--border)"}
                     />
                 </div>
@@ -125,7 +125,7 @@ function ResetPasswordForm() {
                 <button
                     type="submit"
                     disabled={loading}
-                    style={{ width: "100%", padding: "14px", background: "var(--gold)", color: "#07101f", border: "none", borderRadius: "10px", fontFamily: "DM Sans, sans-serif", fontSize: "15px", fontWeight: 700, cursor: loading ? "wait" : "pointer", opacity: loading ? 0.7 : 1, letterSpacing: ".5px" }}
+                    style={{ width: "100%", padding: "14px", background: "var(--ca-saffron)", color: "#07101f", border: "none", borderRadius: "10px", fontFamily: "DM Sans, sans-serif", fontSize: "15px", fontWeight: 700, cursor: loading ? "wait" : "pointer", opacity: loading ? 0.7 : 1, letterSpacing: ".5px" }}
                 >
                     {loading ? "Updating..." : "Update Password →"}
                 </button>
@@ -137,13 +137,13 @@ function ResetPasswordForm() {
 export default function ResetPasswordPage() {
     return (
         <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg)", padding: "20px" }}>
-            <div style={{ position: "fixed", top: "-200px", right: "-200px", width: "600px", height: "600px", borderRadius: "50%", background: "radial-gradient(circle, rgba(232,160,32,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
+            <div style={{ position: "fixed", top: "-200px", right: "-200px", width: "600px", height: "600px", borderRadius: "50%", background: "radial-gradient(circle, rgba(243, 112, 33,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
 
             <div style={{ width: "100%", maxWidth: "420px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "20px", padding: "40px 36px", position: "relative", overflow: "hidden" }}>
-                <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: "200px", height: "3px", background: "linear-gradient(90deg, transparent, var(--gold), transparent)", borderRadius: "0 0 10px 10px" }} />
+                <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: "200px", height: "3px", background: "linear-gradient(90deg, transparent, var(--ca-saffron), transparent)", borderRadius: "0 0 10px 10px" }} />
 
                 <div style={{ textAlign: "center", marginBottom: "28px" }}>
-                    <div style={{ fontFamily: "Playfair Display, serif", fontSize: "28px", fontWeight: 700, color: "var(--gold)", lineHeight: 1, marginBottom: "6px" }}>KCS TaskPro</div>
+                    <div style={{ fontFamily: "Playfair Display, serif", fontSize: "28px", fontWeight: 700, color: "var(--ca-saffron)", lineHeight: 1, marginBottom: "6px" }}>KCS TaskPro</div>
                     <div style={{ fontSize: "9px", color: "var(--muted)", letterSpacing: "3px", textTransform: "uppercase", fontWeight: 600 }}>PASSWORD RESET</div>
                 </div>
 

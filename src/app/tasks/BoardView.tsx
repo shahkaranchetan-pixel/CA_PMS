@@ -3,10 +3,12 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
+import EscalationModal from "@/components/EscalationModal";
 
 export default function BoardView({ tasks: initialTasks, taskMap }: { tasks: any[], taskMap: any }) {
     const [tasks, setTasks] = useState(initialTasks);
     const [draggingId, setDraggingId] = useState<string | null>(null);
+    const [escalateTaskId, setEscalateTaskId] = useState<string | null>(null);
 
     const columns = [
         { id: "PENDING", title: "To Do", color: "#FFB020", icon: "📝" },
@@ -59,8 +61,9 @@ export default function BoardView({ tasks: initialTasks, taskMap }: { tasks: any
     };
 
     return (
-        <div style={{ display: 'flex', gap: '14px', marginTop: '16px', overflowX: 'auto', paddingBottom: '16px', minHeight: '600px' }}>
-            {columns.map(col => {
+        <>
+            <div style={{ display: 'flex', gap: '14px', marginTop: '16px', overflowX: 'auto', paddingBottom: '16px', minHeight: '600px' }}>
+                {columns.map(col => {
                 const colTasks = tasks.filter(t => t.status === col.id);
                 return (
                     <div
@@ -107,9 +110,18 @@ export default function BoardView({ tasks: initialTasks, taskMap }: { tasks: any
                                             <span style={{ fontSize: '10px', fontWeight: 600, color: tm.color, background: tm.color + '15', padding: '2px 6px', borderRadius: '4px' }}>
                                                 {tm.icon} {tm.label}
                                             </span>
-                                            <span className={`badge b-${task.priority?.toLowerCase() || 'medium'}`} style={{ fontSize: '9px', padding: '1px 6px' }}>
-                                                {task.priority?.toUpperCase() || 'MEDIUM'}
-                                            </span>
+                                            <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                                <span className={`badge b-${task.priority?.toLowerCase() || 'medium'}`} style={{ fontSize: '9px', padding: '1px 6px' }}>
+                                                    {task.priority?.toUpperCase() || 'MEDIUM'}
+                                                </span>
+                                                <button 
+                                                    onClick={(e) => { e.stopPropagation(); setEscalateTaskId(task.id); }}
+                                                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ca-saffron)', fontSize: '14px', padding: 0 }}
+                                                    title="Escalate Task"
+                                                >
+                                                    ↗️
+                                                </button>
+                                            </div>
                                         </div>
 
                                         <Link href={`/tasks/${task.id}`} style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text)', display: 'block', marginBottom: '4px', lineHeight: 1.3 }}>
@@ -137,7 +149,7 @@ export default function BoardView({ tasks: initialTasks, taskMap }: { tasks: any
                                             <div style={{ display: 'flex', alignItems: 'center' }}>
                                                 {task.taskAssignees && task.taskAssignees.length > 0 ? (
                                                     task.taskAssignees.slice(0, 3).map((ta: any, i: number) => (
-                                                        <div key={ta.id} style={{ width: 22, height: 22, borderRadius: '50%', background: ta.user?.color || 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 700, color: '#000', marginLeft: i > 0 ? '-6px' : 0, border: '2px solid var(--surface2)', zIndex: 3 - i }} title={ta.user?.name}>
+                                                        <div key={ta.id} style={{ width: 22, height: 22, borderRadius: '50%', background: ta.user?.color || 'var(--ca-saffron)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 700, color: '#000', marginLeft: i > 0 ? '-6px' : 0, border: '2px solid var(--surface2)', zIndex: 3 - i }} title={ta.user?.name}>
                                                             {ta.user?.name?.substring(0, 2).toUpperCase() || 'U'}
                                                         </div>
                                                     ))
@@ -167,5 +179,12 @@ export default function BoardView({ tasks: initialTasks, taskMap }: { tasks: any
                 )
             })}
         </div>
+            {escalateTaskId && (
+                <EscalationModal 
+                    taskId={escalateTaskId} 
+                    onClose={() => setEscalateTaskId(null)} 
+                />
+            )}
+        </>
     )
 }
